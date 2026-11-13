@@ -1,0 +1,102 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./use-auth";
+import type { FinanceRecurrence } from "@/lib/finance-recurrence";
+export function useFinanceRecurrences() {
+  const { user, hasPermission } = useAuth();
+  const qc = useQueryClient();
+  const key = ["finance-recurrences", user?.id];
+  const query = useQuery({
+    queryKey: key,
+    enabled: !!user && hasPermission("finance"),
+    queryFn: async () => {
+      const all: FinanceRecurrence[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const r = await (supabase.from("finance_recurring_expenses" as any) as any)
+          .select("*")
+          .order("description")
+          .order("id")
+          .range(offset, offset + 499);
+        if (r.error) throw new Error(r.error.message);
+        all.push(...r.data);
+        if (r.data.length < 500) break;
+      }
+      return all;
+    },
+  });
+  const refresh = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: key }),
+      qc.invalidateQueries({ queryKey: ["enterprise-finance-accounts"] }),
+      qc.invalidateQueries({ queryKey: ["finance-card-purchases"] }),
+    ]);
+  const save = useMutation({
+    mutationFn: async ({
+      old,
+      values,
+      effective,
+    }: {
+      old?: FinanceRecurrence;
+      values: Record<string, unknown>;
+      effective: string;
+    }) => {
+      const r = await (supabase.rpc as any)("save_finance_recurrence", {
+        payload: values,
+        target_id: old?.id || null,
+        expected_updated_at: old?.updated_at || null,
+        effective_on: effective,
+      });
+      if (r.error) throw new Error(r.error.message);
+    },
+    onSuccess: refresh,
+  });
+  const setActive = useMutation({
+    mutationFn: async ({ rule, active }: { rule: FinanceRecurrence; active: boolean }) => {
+      const r = await (supabase.rpc as any)("set_finance_recurrence_active", {
+        target_id: rule.id,
+        expected_updated_at: rule.updated_at,
+        is_active: active,
+      });
+      if (r.error) throw new Error(r.error.message);
+    },
+    onSuccess: refresh,
+  });
+  const deletePayableSeries = useMutation({
+    mutationFn: async (rule: FinanceRecurrence) => {
+      const result = await (supabase.rpc as any)("delete_payable_recurrence", {
+        target_id: rule.id,
+        expected_updated_at: rule.updated_at,
+      });
+      if (result.error) throw new Error(result.error.message);
+      return Number(result.data);
+    },
+    onSettled: refresh,
+  });
+  const saveInline = useMutation({
+    mutationFn: async ({
+      card = false,
+      old,
+      values,
+      repeat,
+    }: {
+      card?: boolean;
+      old?: { id: string; updated_at: string };
+      values: Record<string, unknown>;
+      repeat: import("@/lib/finance-recurrence").InlineRecurrence;
+    }) => {
+      const r = await (supabase.rpc as any)(
+        card ? "save_inline_card_purchase" : "save_inline_payable",
+        {
+          payload: values,
+          target_id: old?.id || null,
+          expected_updated_at: old?.updated_at || null,
+          repeat_options: repeat,
+        },
+      );
+      if (r.error) throw new Error(r.error.message);
+      return r.data as string;
+    },
+    onSuccess: refresh,
+  });
+  return { ...query, save, setActive, saveInline, deletePayableSeries };
+}

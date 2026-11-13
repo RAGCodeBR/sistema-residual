@@ -1,0 +1,369 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  /* Identidade Residual: branco orgânico, verde folha intenso e amarelo borboleta. */
+  --background: #fafcf8;
+  --foreground: #1e2d21;
+  --card: #ffffff;
+  --card-foreground: #1e2d21;
+  --popover: #ffffff;
+  --popover-foreground: #1e2d21;
+
+  --primary: #185126;
+  --primary-foreground: #ffffff;
+  --primary-glow: #2fae4e;
+
+  --secondary: #eef7ec;
+  --secondary-foreground: #1f5d2e;
+  --muted: #f2f6f0;
+  --muted-foreground: #5f6f61;
+  --accent: #d6f1da;
+  --accent-foreground: #11692f;
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: #1f9a49;
+  --warning: #e6ad4b;
+  --info: #3a9fd0;
+
+  --border: #dde7da;
+  --input: #d6e2d3;
+  --ring: #28753b;
+
+  --chart-1: #185126;
+  --chart-2: #4caf3f;
+  --chart-3: #e5b450;
+  --chart-4: #db795e;
+  --chart-5: #3fae9a;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1e2d21;
+  --sidebar-primary: #185126;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #cdeed3;
+  --sidebar-accent-foreground: #0f5f2a;
+  --sidebar-border: #dde7da;
+  --sidebar-ring: #28753b;
+
+  --gradient-primary: linear-gradient(135deg, #103f1c, #28753b);
+  --gradient-sidebar: linear-gradient(180deg, #ffffff, #f6faf4);
+  --shadow-elegant: 0 10px 30px -10px color-mix(in oklab, var(--primary) 35%, transparent);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-lift: 0 8px 20px -10px color-mix(in oklab, var(--primary) 40%, transparent), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  --background: #0f1a12;
+  --foreground: #e9f4ea;
+  --card: #16241a;
+  --card-foreground: #e9f4ea;
+  --popover: #16241a;
+  --popover-foreground: #e9f4ea;
+  --primary: #76c484;
+  --primary-foreground: #06200e;
+  --primary-glow: #7ee08f;
+  --secondary: #1c2e21;
+  --secondary-foreground: #e9f4ea;
+  --muted: #1c2e21;
+  --muted-foreground: #a3b8a6;
+  --accent: #1f3d27;
+  --accent-foreground: #d4f5da;
+  --border: #2a4130;
+  --input: #2f4835;
+  --ring: #76c484;
+  --success: #76c484;
+  --sidebar: #0d1810;
+  --sidebar-foreground: #d9eadb;
+  --sidebar-primary: #76c484;
+  --sidebar-primary-foreground: #06200e;
+  --sidebar-accent: #1d3a25;
+  --sidebar-accent-foreground: #c8f0d0;
+  --sidebar-border: #24382a;
+  --sidebar-ring: #76c484;
+  --gradient-sidebar: linear-gradient(180deg, #0d1810 0%, #122016 100%);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.28), 0 1px 2px -1px rgb(0 0 0 / 0.24);
+  --shadow-lift: 0 10px 24px -12px rgb(76 201 107 / 0.35), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Marca de entrada da navegação. No modo escuro, o fundo e o realce são
+   próprios para o logo verde, sem deixá-lo com aspecto apagado. */
+.jacoby-sidebar-brand {
+  display: flex;
+  min-height: 8.4rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--sidebar-border);
+  text-align: center;
+}
+.jacoby-sidebar-brand__full {
+  width: min(100%, 12.5rem);
+  height: 6.4rem;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 10px color-mix(in srgb, var(--primary) 14%, transparent));
+}
+.jacoby-sidebar-brand__caption {
+  margin-top: 0.1rem;
+  color: var(--sidebar-foreground);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* No tema escuro o menu usa a versão do logo com verdes clareados. */
+.dark .jacoby-sidebar-brand__full {
+  filter: drop-shadow(0 5px 13px rgb(76 201 107 / 0.18));
+}
+.jacoby-sidebar-brand__link {
+  display: block;
+  border-radius: 0.75rem;
+  transition: transform 300ms var(--ease-out);
+}
+.jacoby-sidebar-brand__link:hover { transform: scale(1.03); }
+.jacoby-sidebar-brand__link:active { transform: scale(0.98); }
+
+/* Marca compacta (menu recolhido e celular): o símbolo balança de leve no hover. */
+.jacoby-mark img { transition: transform 450ms var(--ease-out); transform-origin: 50% 80%; }
+.group:hover .jacoby-mark img { transform: rotate(-6deg) scale(1.08); }
+
+/* Itens do menu lateral: fundo desliza, ícone avança e o ativo ganha peso. */
+.jacoby-nav-link {
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.jacoby-nav-link svg { transition: transform 220ms var(--ease-out), color 180ms var(--ease-out); }
+.jacoby-nav-link:hover svg { transform: translateX(2px); }
+.jacoby-nav-link:active { transform: scale(0.98); }
+.jacoby-nav-link[data-active="true"] { font-weight: 600; }
+.jacoby-nav-link[data-active="true"] svg { color: var(--sidebar-primary); }
+.jacoby-nav-link:focus-visible { outline: 2px solid var(--sidebar-ring); outline-offset: 2px; }
+
+/* Os seletores de data são nativos do navegador; force ícones claros no tema escuro. */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2) !important;
+  opacity: 1 !important;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    caret-color: var(--color-primary);
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.025em; font-weight: 700; text-wrap: balance; }
+  /* Valores e datas alinham por coluna em tabelas e números. */
+  table, input[type="number"], input[type="date"], .tabular-nums { font-variant-numeric: tabular-nums; }
+  ::selection { background: color-mix(in oklab, var(--color-primary) 22%, transparent); color: inherit; }
+  a:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; border-radius: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--muted-foreground) 30%, transparent); border-radius: 999px; }
+
+/* Área principal do Kanban: mantém os dois eixos disponíveis quando houver
+   conteúdo além da tela. A reserva das barras evita que elas cubram cards. */
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
+  scrollbar-gutter: stable both-edges;
+  overscroll-behavior: contain;
+}
+
+/* No modo de colunas a barra horizontal fica sempre acessível no rodapé;
+   no modo de linhas a mesma área permite descer para as linhas seguintes. */
+.kanban-scroll--vertical { overflow-x: auto; overflow-y: auto; }
+.kanban-scroll--horizontal { overflow-x: auto; overflow-y: auto; }
+
+/* Em visualização horizontal, cada coluna vira uma linha de cards. Esta barra
+   deixa claro que é possível avançar e voltar pelos cards daquela linha. */
+.kanban-lane-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
+  scrollbar-gutter: stable;
+  overscroll-behavior-inline: contain;
+}
+
+.kanban-scroll::-webkit-scrollbar,
+.kanban-lane-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.kanban-scroll::-webkit-scrollbar-track,
+.kanban-lane-scroll::-webkit-scrollbar-track { background: color-mix(in oklab, var(--muted) 60%, transparent); border-radius: 999px; }
+.kanban-scroll::-webkit-scrollbar-thumb,
+.kanban-lane-scroll::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--muted-foreground) 45%, transparent); border: 2px solid transparent; background-clip: padding-box; border-radius: 999px; }
+.kanban-scroll::-webkit-scrollbar-thumb:hover,
+.kanban-lane-scroll::-webkit-scrollbar-thumb:hover { background-color: color-mix(in oklab, var(--muted-foreground) 70%, transparent); }
+.task-overdue { box-shadow: inset 3px 0 0 var(--destructive); }
+.task-due-soon { box-shadow: inset 3px 0 0 var(--warning); }
+
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+  pointer-events: none;
+}
+
+/* Tiptap rich-text editor styles */
+.tiptap { cursor: text; outline: none; }
+.tiptap p { margin: 0.25rem 0; }
+.tiptap ul { list-style: disc; padding-left: 1.25rem; margin: 0.25rem 0; }
+.tiptap ol { list-style: decimal; padding-left: 1.5rem; margin: 0.25rem 0; }
+.tiptap ul ul { list-style: circle; }
+.tiptap ul ul ul { list-style: square; }
+.tiptap li { margin: 0.1rem 0; }
+.tiptap li > p { margin: 0; display: inline; }
+.tiptap h2 { font-size: 0.95rem; font-weight: 600; margin: 0.4rem 0 0.2rem; }
+.tiptap h3 { font-size: 0.85rem; font-weight: 600; margin: 0.35rem 0 0.15rem; }
+.tiptap blockquote { border-left: 3px solid var(--border); padding-left: 0.6rem; color: var(--muted-foreground); margin: 0.3rem 0; }
+.tiptap code { background: color-mix(in oklab, var(--muted) 80%, transparent); padding: 0 0.25rem; border-radius: 3px; font-size: 0.85em; }
+.tiptap a { color: var(--primary); text-decoration: underline; }
+.tiptap mark, .prose mark { color: inherit; padding: 0 0.1em; border-radius: 2px; }
+.tiptap-wrapper, .tiptap-wrapper * { cursor: text; }
+.tiptap-wrapper button { cursor: pointer; }
+
+@keyframes jacoby-update-blink {
+  0%, 100% { background-color: #fde68a; border-color: #f59e0b; box-shadow: 0 0 0 0 rgb(245 158 11 / 0.4); }
+  50% { background-color: #fbbf24; border-color: #d97706; box-shadow: 0 0 0 5px rgb(245 158 11 / 0.20); }
+}
+.jacoby-update-blink { animation: jacoby-update-blink 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .jacoby-update-blink { animation: none; }
+}
+
+/* Boletim de Medição: acabamento visual sem alterar colunas nem fluxo. */
+.jacoby-billing-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-glow) 60%, var(--warning));
+}
+.jacoby-billing-tabs [role="tab"] {
+  gap: 0.45rem;
+  transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 200ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.jacoby-billing-tabs [role="tab"]:hover:not([data-state="active"]) { background: color-mix(in oklab, var(--card) 70%, transparent); color: var(--foreground); }
+.jacoby-billing-tabs [role="tab"]:active { transform: scale(0.97); }
+.jacoby-billing-tabs [role="tab"][data-state="active"] { color: var(--primary); font-weight: 600; box-shadow: var(--shadow-lift); }
+.jacoby-billing-tabs [role="tab"] svg { transition: transform 220ms var(--ease-out); }
+.jacoby-billing-tabs [role="tab"][data-state="active"] svg { transform: scale(1.1); }
+
+.jacoby-billing h2.font-semibold:not(.flex):not(.truncate)::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.55rem;
+  vertical-align: 0.1em;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+.jacoby-billing table { font-variant-numeric: tabular-nums; }
+.jacoby-billing thead tr { background: color-mix(in oklab, var(--primary) 7%, var(--muted)); border-bottom-color: color-mix(in oklab, var(--primary) 18%, var(--border)); }
+.jacoby-billing thead th {
+  color: var(--accent-foreground);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: normal;
+}
+.jacoby-billing thead th:first-child { border-top-left-radius: 0.6rem; }
+.jacoby-billing thead th:last-child { border-top-right-radius: 0.6rem; }
+.jacoby-billing tbody tr { transition: background-color 150ms var(--ease-out); }
+.jacoby-billing tbody tr:hover { background: color-mix(in oklab, var(--accent) 45%, transparent); }
+.jacoby-billing tbody tr:last-child { border-bottom-color: transparent; }
+.jacoby-billing tbody button svg { transition: transform 180ms var(--ease-out), color 150ms; }
+.jacoby-billing tbody button:hover svg { transform: scale(1.12); }
+.jacoby-billing tbody button:hover svg.lucide-pencil { color: var(--primary); }
+.jacoby-billing-form { box-shadow: var(--shadow-lift); border-color: color-mix(in oklab, var(--primary) 18%, var(--border)); }
+
+/* Aviso de contas vencidas ou vencendo hoje: precisa chamar atenção de propósito. */
+.jacoby-alert-dot {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--destructive);
+  animation: jacoby-alert-blink 1s ease-in-out infinite;
+}
+@keyframes jacoby-alert-blink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--destructive) 60%, transparent);
+  }
+  50% {
+    opacity: 0.25;
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--destructive) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jacoby-alert-dot {
+    animation: none;
+  }
+}
