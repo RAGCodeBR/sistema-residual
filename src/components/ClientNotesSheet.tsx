@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -352,14 +353,19 @@ function NoteCard({
                   <input
                     type="file"
                     multiple
-                    accept="*/*"
                     className="sr-only"
                     onChange={(e) => void onFiles(e.target.files)}
                   />
-                  <span className="rounded border bg-background px-2 py-0.5 text-[10px] hover:bg-muted">
+                  <span className="rounded border bg-background px-2 py-0.5 text-[10px] hover:bg-muted max-md:inline-flex max-md:min-h-8 max-md:items-center max-md:text-xs">
                     {uploading ? "Enviando…" : "+ Arquivo"}
                   </span>
                 </label>
+                <CameraCaptureButton
+                  disabled={uploading}
+                  className="rounded border bg-background px-2 text-xs max-md:min-h-8"
+                  iconClassName="h-3.5 w-3.5"
+                  onFiles={(files) => void onFiles(files)}
+                />
                 <button type="button" onClick={addLink} className="rounded border bg-background px-2 py-0.5 text-[10px] hover:bg-muted">
                   + Link
                 </button>
@@ -543,14 +549,18 @@ function ClientFilesPanel({ clientId }: { clientId: string }) {
           <input
             type="file"
             multiple
-            accept="*/*"
             className="sr-only"
             onChange={(e) => void onFiles(e.target.files)}
           />
-          <span className="rounded border bg-background px-3 py-1 text-xs hover:bg-muted">
+          <span className="rounded border bg-background px-3 py-1 text-xs hover:bg-muted max-md:inline-flex max-md:min-h-9 max-md:items-center max-md:text-sm">
             {uploading ? "Enviando…" : "+ Adicionar arquivo"}
           </span>
         </label>
+        <CameraCaptureButton
+          disabled={uploading}
+          className="rounded border bg-background px-3 text-sm max-md:min-h-9"
+          onFiles={(files) => void onFiles(files)}
+        />
       </div>
 
       {!collapsed && (

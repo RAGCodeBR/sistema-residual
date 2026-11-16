@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -159,6 +160,12 @@ export function PayableAttachments({
                 setFiles(Array.from(event.currentTarget.files || []));
                 event.currentTarget.value = "";
               }}
+            />
+            <CameraCaptureButton
+              disabled={busy}
+              className="h-10 w-full rounded-md border text-sm"
+              label="Tirar foto do comprovante"
+              onFiles={(picked) => setFiles((current) => [...current, ...Array.from(picked)])}
             />
             {!!files.length && (
               <ul className="space-y-1 text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -935,14 +936,18 @@ function NoteEditor({
                 <input
                   type="file"
                   multiple
-                  accept="*/*"
                   className="sr-only"
                   onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ""; }}
                 />
-                <span className="inline-flex items-center rounded-md border bg-background px-3 py-1 text-xs hover:bg-muted">
+                <span className="inline-flex items-center rounded-md border bg-background px-3 py-1 text-xs hover:bg-muted max-md:min-h-9 max-md:text-sm">
                   {uploading ? "Enviando…" : "+ Adicionar arquivo"}
                 </span>
               </label>
+              <CameraCaptureButton
+                disabled={uploading}
+                className="rounded-md border bg-background px-3 text-sm max-md:min-h-9"
+                onFiles={(files) => void onUpload(files)}
+              />
             </div>
 
             {attachments.length === 0 ? (

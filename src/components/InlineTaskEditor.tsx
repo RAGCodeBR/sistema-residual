@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Download, ExternalLink, GripVertical, Image as ImageIcon, Link2, Paperclip, Pencil, RotateCcw, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -525,13 +526,17 @@ export function InlineTaskEditor({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="*/*"
                 className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   if (file) void uploadFile(file);
                   event.target.value = "";
                 }}
+              />
+              <CameraCaptureButton
+                className="h-6 rounded px-2 text-[10px] max-md:h-9 max-md:text-xs"
+                iconClassName="h-3 w-3"
+                onFiles={(files) => { if (files[0]) void uploadFile(files[0]); }}
               />
             </div>
 

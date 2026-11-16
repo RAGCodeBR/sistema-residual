@@ -78,11 +78,13 @@ export function ProcessTemplatesLibrary() {
       <Button
         variant="outline"
         size="sm"
-        className="ml-auto shrink-0"
+        className="ml-auto shrink-0 max-md:h-9 max-md:w-9 max-md:p-0"
         onClick={() => setOpen(true)}
+        aria-label="Modelos de processos"
+        title="Modelos de processos"
       >
-        <Layers className="mr-2 h-4 w-4" />
-        Modelos de processos
+        <Layers className="h-4 w-4 md:mr-2" />
+        <span className="hidden md:inline">Modelos de processos</span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">

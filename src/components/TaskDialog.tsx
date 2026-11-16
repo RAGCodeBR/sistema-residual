@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { safeStorageName } from "@/lib/storage-names";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { createClient } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -515,7 +517,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
     if (!user) return;
     const tid = currentTaskId ?? await ensureTask();
     if (!tid) return;
-    const path = `${tid}/subtasks/${st.id}/${Date.now()}-${file.name}`;
+    const path = `${tid}/subtasks/${st.id}/${Date.now()}-${safeStorageName(file.name)}`;
     const { error: upErr } = await supabase.storage.from("task-attachments").upload(path, file);
     if (upErr) return toast.error(upErr.message);
     const { data, error } = await (supabase.from("subtask_attachments") as any).insert({
@@ -567,7 +569,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
     if (!user) return;
     const tid = await ensureTask();
     if (!tid) return;
-    const path = `${tid}/${Date.now()}-${file.name}`;
+    const path = `${tid}/${Date.now()}-${safeStorageName(file.name)}`;
     const { error: upErr } = await supabase.storage.from("task-attachments").upload(path, file);
     if (upErr) return toast.error(upErr.message);
     const { data, error } = await supabase.from("attachments").insert({
@@ -965,10 +967,13 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => deleteSubFile(a)}><X className="h-3 w-3" /></Button>
                               </div>
                             ))}
-                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded border border-dashed py-1.5 text-[11px] text-muted-foreground hover:bg-muted/40">
+                            <div className="flex gap-1.5">
+                            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded border border-dashed py-1.5 text-[11px] text-muted-foreground hover:bg-muted/40 max-md:min-h-10 max-md:text-xs">
                               <Paperclip className="h-3 w-3" /> Anexar arquivo
                               <input type="file" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadSubFile(s, f); e.target.value = ""; }} />
                             </label>
+                            <CameraCaptureButton className="rounded border border-dashed px-3 text-xs text-muted-foreground max-md:min-h-10" iconClassName="h-3.5 w-3.5" onFiles={(files) => { if (files[0]) void uploadSubFile(s, files[0]); }} />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1059,10 +1064,13 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => deleteAttachment(a)}><X className="h-3.5 w-3.5" /></Button>
                   </div>
                 ))}
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed py-3 text-sm text-muted-foreground hover:bg-muted/40">
+                <div className="flex gap-2">
+                <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed py-3 text-sm text-muted-foreground hover:bg-muted/40">
                   <Paperclip className="h-4 w-4" /> Anexar arquivo
                   <input type="file" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
                 </label>
+                <CameraCaptureButton className="rounded-md border border-dashed px-4 text-sm text-muted-foreground" onFiles={(files) => { if (files[0]) void uploadFile(files[0]); }} />
+                </div>
               </TabsContent>
             </Tabs>
           )}

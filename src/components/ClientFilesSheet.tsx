@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,7 +164,6 @@ export function ClientFilesSheet({
             <input
               type="file"
               multiple
-              accept="*/*"
               className="sr-only"
               onChange={(e) => void onUpload(e.target.files)}
               disabled={!clientId}
@@ -172,6 +172,11 @@ export function ClientFilesSheet({
               {uploading ? "Enviando…" : "+ Adicionar arquivo"}
             </span>
           </label>
+          <CameraCaptureButton
+            disabled={!clientId || uploading}
+            className="rounded-md border bg-background px-3 py-1.5 text-sm"
+            onFiles={(files) => void onUpload(files)}
+          />
           {clientId && (
             <p className="ml-auto text-xs text-muted-foreground">{files.length} arquivo(s)</p>
           )}

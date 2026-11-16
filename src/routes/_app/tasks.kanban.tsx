@@ -43,6 +43,7 @@ import {
   Columns,
   PanelTop,
   PanelsTopLeft,
+  Tag,
 } from "lucide-react";
 import {
   Select,
@@ -125,7 +126,7 @@ function SortableTaskCard({
   } as CSSProperties;
 
   return (
-    <div ref={setNodeRef} style={style} className={`${minimal ? "w-[clamp(15rem,18vw,19rem)]" : "w-72"} max-w-full min-w-0 shrink-0 animate-in fade-in slide-in-from-bottom-1 duration-300`}>
+    <div ref={setNodeRef} style={style} className={`${minimal ? "w-[clamp(15rem,18vw,19rem)]" : "w-72"} ${orientation === "horizontal" ? "max-md:w-[78vw]" : "max-md:w-full"} max-w-full min-w-0 shrink-0 animate-in fade-in slide-in-from-bottom-1 duration-300`}>
       <TaskCard
         task={task}
         columns={columns}
@@ -186,7 +187,7 @@ function CompletedColumn({ taskIds, count, children, orientation, minimal }: any
   });
   const isVertical = orientation === "vertical";
   return (
-    <div className={isVertical ? (minimal ? "flex w-[clamp(15rem,18vw,19rem)] shrink-0 flex-col" : "flex w-72 shrink-0 flex-col") : "flex w-full flex-col"}>
+    <div id="kanban-col-done" className={isVertical ? (minimal ? "flex w-[clamp(15rem,18vw,19rem)] shrink-0 flex-col max-md:w-[calc(100vw-2.5rem)] max-md:min-w-0 max-md:snap-start" : "flex w-72 shrink-0 flex-col max-md:w-[calc(100vw-2.5rem)] max-md:min-w-0 max-md:snap-start") : "flex w-full flex-col"}>
       <div className="mb-2 flex items-center gap-1.5 px-1">
         <span className="h-3 w-3 rounded-full bg-emerald-500 dark:bg-emerald-400 dark:ring-2 dark:ring-emerald-200/40 dark:shadow-[0_0_12px_rgba(74,222,128,0.7)]" />
         <h3 className="font-semibold">Concluídas</h3>
@@ -253,8 +254,9 @@ function SortableColumn({
   return (
     <div
       ref={setSortRef}
+      id={`kanban-col-${col.id}`}
       style={style}
-      className={isVertical ? (minimal ? "flex w-[clamp(15rem,18vw,19rem)] shrink-0 flex-col" : "flex w-fit min-w-72 shrink-0 flex-col") : "flex w-full flex-col"}
+      className={isVertical ? (minimal ? "flex w-[clamp(15rem,18vw,19rem)] shrink-0 flex-col max-md:w-[calc(100vw-2.5rem)] max-md:min-w-0 max-md:snap-start" : "flex w-fit min-w-72 shrink-0 flex-col max-md:w-[calc(100vw-2.5rem)] max-md:min-w-0 max-md:snap-start") : "flex w-full flex-col"}
     >
       <div className="group/colhead mb-2 flex items-center justify-between px-1">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -287,7 +289,7 @@ function SortableColumn({
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 transition-transform hover:rotate-90 hover:text-primary dark:text-slate-100 dark:hover:bg-white/10"
+            className="h-7 w-7 transition-transform hover:rotate-90 hover:text-primary dark:text-slate-100 dark:hover:bg-white/10 max-md:h-9 max-md:w-9"
             onClick={onAdd}
             title="Nova tarefa nesta coluna"
           >
@@ -299,7 +301,7 @@ function SortableColumn({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-7 w-7 dark:text-slate-100 dark:hover:bg-white/10"
+                  className="h-7 w-7 dark:text-slate-100 dark:hover:bg-white/10 max-md:h-9 max-md:w-9"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -1221,14 +1223,43 @@ function KanbanPage() {
 
   return (
     <div className="flex h-[calc(100dvh-3rem)] min-h-0 flex-col md:h-[calc(100dvh-49px)]">
-      <header className="shrink-0 border-b bg-background px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">
+      <header className="shrink-0 border-b bg-background px-4 py-3 max-md:px-3 max-md:py-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 max-md:flex-nowrap">
+          <p className="min-w-0 text-sm text-muted-foreground max-md:truncate">
             <span className="font-display text-base font-bold tabular-nums text-foreground">{totalVisibleTasks}</span>{" "}
             {totalVisibleTasks === 1 ? "tarefa em andamento" : "tarefas em andamento"}
             {completedTasks.length > 0 && <span> · {completedTasks.length} concluídas</span>}
           </p>
-          <div className="flex flex-wrap gap-2 [&_button]:h-8 [&_button]:text-xs">
+          <div className="flex flex-wrap gap-2 max-md:shrink-0 [&_button]:h-8 [&_button]:text-xs max-md:flex-nowrap max-md:[&_button]:h-10 max-md:[&_button]:text-sm">
+            {/* Celular: ações secundárias agrupadas em um menu; "Tarefa" fica sempre à mão. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-10 px-0 md:hidden" aria-label="Mais ações">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem className="py-2.5" disabled={exportingPdf} onClick={() => void exportPdf()}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  {exportingPdf ? "Gerando…" : "Exportar PDF"}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="py-2.5" onClick={() => setFilesOpen(true)}>
+                  <FolderOpen className="mr-2 h-4 w-4" />
+                  Arquivos Cliente
+                </DropdownMenuItem>
+                <DropdownMenuItem className="py-2.5" onClick={() => setTagsOpen(true)}>
+                  <Tag className="mr-2 h-4 w-4" />
+                  Etiquetas
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem className="py-2.5" onClick={addColumn}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nova coluna
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="hidden gap-2 md:contents">
             <Button variant="outline" onClick={() => void exportPdf()} disabled={exportingPdf}>
               <FileDown className="mr-2 h-4 w-4" />
               {exportingPdf ? "Gerando…" : "Exportar PDF"}
@@ -1246,6 +1277,7 @@ function KanbanPage() {
                 Coluna
               </Button>
             )}
+            </div>
             <Button
               onClick={() => {
                 setEditTask(null);
@@ -1258,7 +1290,7 @@ function KanbanPage() {
             </Button>
           </div>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 max-md:mt-2">
           <TaskFilters filters={filters} onChange={setFilters}>
             <FilterGroup label="Exibição" className="order-last ml-auto">
               <Button
@@ -1400,6 +1432,16 @@ function KanbanPage() {
             </FilterGroup>
           </TaskFilters>
         </div>
+        {orientation === "vertical" && (
+          <KanbanColumnTabs
+            columns={columns.map((col) => ({
+              id: `kanban-col-${col.id}`,
+              name: col.name,
+              color: col.color || "#1e3a8a",
+              count: tasksByCol.get(col.id)?.length ?? 0,
+            })).concat({ id: "kanban-col-done", name: "Concluídas", color: "#10b981", count: completedTasks.length })}
+          />
+        )}
       </header>
 
       <KanbanScrollArea orientation={orientation}>
@@ -1661,10 +1703,95 @@ function KanbanScrollArea({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
-        className={`kanban-scroll kanban-scroll--${orientation} min-h-0 flex-1 overflow-auto p-4`}
+        id="kanban-scroll"
+        className={`kanban-scroll kanban-scroll--${orientation} min-h-0 flex-1 overflow-auto p-4 max-md:p-3 ${orientation === "vertical" ? "max-md:snap-x max-md:snap-mandatory max-md:scroll-px-3" : ""}`}
       >
         {children}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Celular: cada coluna ocupa a largura da tela. Estas abas mostram onde você
+ * está e levam direto a qualquer coluna, sem precisar deslizar uma a uma.
+ */
+function KanbanColumnTabs({
+  columns,
+}: {
+  columns: { id: string; name: string; color: string; count: number }[];
+}) {
+  const [active, setActive] = useState<string | null>(columns[0]?.id ?? null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const ids = columns.map((column) => column.id).join("|");
+
+  // As colunas carregam depois da "Concluídas"; sem isto o deslize com encaixe
+  // ficaria preso nela. Ao montar o quadro, começa sempre pela primeira coluna.
+  const startedAtFirst = useRef(false);
+  useEffect(() => {
+    const root = document.getElementById("kanban-scroll");
+    if (!root || startedAtFirst.current || columns.length < 2) return;
+    startedAtFirst.current = true;
+    requestAnimationFrame(() => root.scrollTo({ left: 0 }));
+  }, [ids, columns.length]);
+
+  useEffect(() => {
+    const root = document.getElementById("kanban-scroll");
+    if (!root || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { root, threshold: [0.55] },
+    );
+    for (const id of ids.split("|")) {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    }
+    return () => observer.disconnect();
+  }, [ids]);
+
+  useEffect(() => {
+    // Mantém a aba ativa visível quando a pessoa desliza pelas colunas.
+    const tab = tabsRef.current?.querySelector<HTMLElement>(`[data-col="${active}"]`);
+    tab?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [active]);
+
+  return (
+    <div
+      ref={tabsRef}
+      className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 pb-0.5 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      role="tablist"
+      aria-label="Colunas do Kanban"
+    >
+      {columns.map((column) => {
+        const selected = active === column.id;
+        return (
+          <button
+            key={column.id}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            data-col={column.id}
+            onClick={() => {
+              setActive(column.id);
+              document
+                .getElementById(column.id)
+                ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+            }}
+            className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors ${
+              selected ? "border-primary/40 bg-accent font-semibold text-accent-foreground" : "bg-background text-muted-foreground"
+            }`}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: column.color }} />
+            <span className="max-w-36 truncate">{column.name}</span>
+            <span className="tabular-nums text-xs opacity-70">{column.count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

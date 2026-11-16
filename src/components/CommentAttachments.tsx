@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -132,6 +133,7 @@ export function CommentAttachments({
         <button
           type="button"
           onPointerDown={stop}
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
             stop(e);
             inputRef.current?.click();
@@ -149,6 +151,12 @@ export function CommentAttachments({
           multiple
           className="sr-only"
           onChange={(e) => void upload(e.target.files)}
+        />
+        <CameraCaptureButton
+          disabled={uploading}
+          className="ml-1 rounded px-1.5 py-0.5 text-[10px] text-primary max-md:min-h-8 max-md:text-xs"
+          iconClassName="h-3 w-3"
+          onFiles={(files) => void upload(files)}
         />
       </div>
       {items.length > 0 ? (

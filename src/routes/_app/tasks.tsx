@@ -16,9 +16,9 @@ function TasksLayout() {
   ] as const;
   return (
     <div className="flex flex-col">
-      <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 border-b bg-background/95 px-6 py-3 backdrop-blur">
-        <span className="mr-2 text-sm font-medium text-muted-foreground">Visualizar como:</span>
-        <div className="inline-flex rounded-lg border bg-muted/40 p-1">
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b bg-background/95 px-3 py-2 backdrop-blur md:flex-wrap md:px-6 md:py-3">
+        <span className="mr-2 hidden text-sm font-medium text-muted-foreground md:inline">Visualizar como:</span>
+        <div className="flex min-w-0 flex-1 rounded-lg border bg-muted/40 p-1 md:inline-flex md:flex-none">
           {views.map((v) => {
             const active = pathname === v.to || pathname.startsWith(v.to + "/");
             const Icon = v.icon;
@@ -26,7 +26,7 @@ function TasksLayout() {
               <Link
                 key={v.to}
                 to={v.to}
-                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition sm:px-3 ${
+                className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition md:flex-none md:justify-start md:gap-2 md:px-3 ${
                   active
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

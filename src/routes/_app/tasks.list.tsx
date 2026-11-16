@@ -165,13 +165,14 @@ function ListPage() {
   const allVisibleSelected = list.length > 0 && list.every((task) => selectedTaskIds.has(task.id));
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-6 max-md:space-y-3 max-md:p-3">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           <span className="font-display text-base font-bold tabular-nums text-foreground">{list.length}</span>{" "}
           {list.length === 1 ? "tarefa" : "tarefas"}
         </p>
         <Button
+          className="max-md:h-10"
           onClick={() => {
             setEdit(null);
             setOpen(true);
@@ -184,7 +185,7 @@ function ListPage() {
       <TaskFilters filters={filters} onChange={setFilters} />
 
       {selectedTaskIds.size > 0 && (
-        <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-accent/50 px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-accent/50 px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200 max-md:sticky max-md:top-14 max-md:z-20">
           <span className="font-medium text-accent-foreground">
             <span className="tabular-nums">{selectedTaskIds.size}</span> tarefa(s) selecionada(s)
           </span>
@@ -199,7 +200,116 @@ function ListPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      {/* Celular: cada tarefa vira um cartão com as informações principais. */}
+      <div className="space-y-2 md:hidden">
+        {list.length === 0 ? (
+          <div className="rounded-xl border bg-card py-12 text-center">
+            <p className="font-medium">Nenhuma tarefa encontrada</p>
+            <p className="mt-1 text-xs text-muted-foreground">Ajuste os filtros ou crie uma nova tarefa.</p>
+          </div>
+        ) : (
+          list.map((t) => {
+            const client = clients.find((c) => c.id === t.client_id);
+            const assignee = profiles.find((p) => p.id === t.assignee_id);
+            const statusColumn = columns.find((column) => column.id === t.column_id);
+            const done = t.completed_at !== null;
+            const overdue = t.due_date && isPast(new Date(t.due_date)) && t.status !== "done" && !done;
+            const selected = selectedTaskIds.has(t.id);
+            return (
+              <article
+                key={t.id}
+                className={`rounded-xl border bg-card p-3 shadow-sm transition-colors ${selected ? "border-primary/40 bg-accent/50" : ""}`}
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    className="mt-0.5 h-5 w-5"
+                    aria-label={`Selecionar tarefa ${t.title}`}
+                    checked={selected}
+                    onCheckedChange={(checked) => toggleTaskSelection(t.id, checked === true)}
+                  />
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 text-left"
+                    onClick={() => {
+                      setEdit(t);
+                      setOpen(true);
+                    }}
+                  >
+                    <span className={`block font-medium leading-snug [overflow-wrap:anywhere] ${done ? "line-through decoration-muted-foreground/50" : ""}`}>{t.title}</span>
+                    {client && (
+                      <span className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: client.color || "var(--primary)" }} />
+                        <span className="truncate">{client.name}</span>
+                      </span>
+                    )}
+                  </button>
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pl-8 text-[11px]">
+                  {statusColumn && (
+                    <span
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-0.5 font-medium"
+                      style={{ background: `color-mix(in oklab, ${statusColumn.color || "var(--primary)"} 14%, transparent)` }}
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: statusColumn.color || "var(--primary)" }} />
+                      <span className="truncate">{statusColumn.name}</span>
+                    </span>
+                  )}
+                  {t.priority && (
+                    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium" style={{ color: priorityColors[t.priority] }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: priorityColors[t.priority] }} />
+                      {priorityLabels[t.priority]}
+                    </span>
+                  )}
+                  {t.due_date && (
+                    <span className={`inline-flex rounded-full px-2 py-0.5 tabular-nums ${overdue ? "bg-destructive/10 font-medium text-destructive" : "bg-muted text-muted-foreground"}`}>
+                      {format(new Date(t.due_date), "dd MMM yyyy", { locale: ptBR })}
+                      {t.due_time ? ` · ${t.due_time.slice(0, 5)}` : ""}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 pl-8">
+                  {assignee ? (
+                    <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={assignee.avatar_url || undefined} alt={assignee.full_name || assignee.email || "Usuário"} />
+                        <AvatarFallback className="bg-accent text-[9px] font-semibold text-accent-foreground">
+                          {(assignee.full_name || assignee.email || "?").slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">{assignee.full_name || assignee.email}</span>
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem responsável</span>
+                  )}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-9 w-9 hover:text-primary"
+                      aria-label="Concluir tarefa"
+                      disabled={done}
+                      onClick={() => void completeTask(t.id)}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Mover para a lixeira"
+                      className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => void moveToTrash(t)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border bg-card shadow-sm md:block">
         <table className="w-full table-fixed border-collapse text-sm">
           <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
             <tr>

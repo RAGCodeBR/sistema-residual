@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from "react";
+import { CameraCaptureButton } from "@/components/CameraCaptureButton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlignLeft,
@@ -1613,15 +1614,23 @@ export function TaskCard({
 
 
           {/* Upload button */}
+          <div className="flex items-center gap-1">
           <button
             type="button"
             onPointerDown={stop}
+            onTouchStart={(e) => e.stopPropagation()}
             onClick={(e) => { stop(e); fileRef.current?.click(); }}
-            className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-[11px] text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+            className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-[11px] text-muted-foreground/70 hover:bg-muted hover:text-foreground max-md:min-h-9 max-md:text-xs"
           >
             <Upload className="h-3 w-3" />
             <span>Adicionar arquivo</span>
           </button>
+          <CameraCaptureButton
+            className="shrink-0 rounded px-2 text-xs text-muted-foreground max-md:min-h-9"
+            iconClassName="h-3.5 w-3.5"
+            onFiles={(files) => { if (files[0]) void uploadFile(files[0]); }}
+          />
+          </div>
           <input
             ref={fileRef}
             type="file"
