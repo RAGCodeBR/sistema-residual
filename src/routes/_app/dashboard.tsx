@@ -50,7 +50,7 @@ const isAlert = (doc: Doc) => !!doc.expires_at && (!isValidDate(doc.expires_at) 
 const toneClass = { danger: "text-destructive bg-destructive/10", warning: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-950/30", ok: "text-primary bg-primary/10" };
 
 function Stat({ label, hint, value, icon: Icon, color, onClick }: { label: string; hint: string; value: number; icon: typeof FileText; color: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="group rounded-xl text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+  return <button type="button" onClick={onClick} className="group min-w-0 rounded-xl text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
     <Card className="flex h-full items-center gap-3 p-4 group-hover:border-primary/40 group-hover:shadow-[var(--shadow-lift)]">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3" style={{ background: `${color}20`, color }}><Icon className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1"><p className="text-2xl font-bold leading-tight tracking-tight tabular-nums">{value}</p><p className="truncate text-sm font-medium">{label}</p><p className="truncate text-xs text-muted-foreground">{hint}</p></div>

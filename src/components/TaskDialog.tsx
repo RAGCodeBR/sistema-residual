@@ -967,7 +967,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                             ))}
                             <label className="flex cursor-pointer items-center justify-center gap-2 rounded border border-dashed py-1.5 text-[11px] text-muted-foreground hover:bg-muted/40">
                               <Paperclip className="h-3 w-3" /> Anexar arquivo
-                              <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadSubFile(s, f); e.target.value = ""; }} />
+                              <input type="file" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadSubFile(s, f); e.target.value = ""; }} />
                             </label>
                           </div>
                         </div>
@@ -1061,7 +1061,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                 ))}
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed py-3 text-sm text-muted-foreground hover:bg-muted/40">
                   <Paperclip className="h-4 w-4" /> Anexar arquivo
-                  <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
+                  <input type="file" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
                 </label>
               </TabsContent>
             </Tabs>

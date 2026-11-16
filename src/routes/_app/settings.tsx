@@ -181,7 +181,7 @@ function Settings() {
             <Label htmlFor="profile-avatar" className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted">
               <ImageUp className="h-4 w-4" /> Escolher foto
             </Label>
-            <Input
+            <input
               id="profile-avatar"
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -228,7 +228,7 @@ function Settings() {
           <div className="space-y-2"><Label>E-mail</Label><Input value={companyForm.email} onChange={(event) => setCompanyForm({ ...companyForm, email: event.target.value })} /></div>
           <div className="space-y-2 md:col-span-2"><Label>Endereço</Label><Input value={companyForm.address} onChange={(event) => setCompanyForm({ ...companyForm, address: event.target.value })} /></div>
           <div className="space-y-2 md:col-span-2"><Label>Licença ambiental / CETESB</Label><Input value={companyForm.environmentalLicense} onChange={(event) => setCompanyForm({ ...companyForm, environmentalLicense: event.target.value })} /></div>
-          <div className="space-y-2"><Label>Logo da Residual</Label><input ref={companyLogoInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => setCompanyLogoFile(event.target.files?.[0] || null)} /><div className="flex items-center gap-3"><Button type="button" variant="outline" onClick={() => companyLogoInputRef.current?.click()}><ImageUp className="mr-2 h-4 w-4" />{companyLogoFile ? "Trocar logo" : companyForm.logoUrl ? "Substituir logo" : "Adicionar logo"}</Button>{companyLogoFile && <span className="max-w-48 truncate text-xs text-muted-foreground">{companyLogoFile.name}</span>}{!companyLogoFile && companyForm.logoUrl && <img src={companyForm.logoUrl} className="h-9 w-16 rounded border bg-white object-contain p-1" alt="Logo Residual" />}</div></div>
+          <div className="space-y-2"><Label>Logo da Residual</Label><input ref={companyLogoInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => setCompanyLogoFile(event.target.files?.[0] || null)} /><div className="flex items-center gap-3"><Button type="button" variant="outline" onClick={() => companyLogoInputRef.current?.click()}><ImageUp className="mr-2 h-4 w-4" />{companyLogoFile ? "Trocar logo" : companyForm.logoUrl ? "Substituir logo" : "Adicionar logo"}</Button>{companyLogoFile && <span className="max-w-48 truncate text-xs text-muted-foreground">{companyLogoFile.name}</span>}{!companyLogoFile && companyForm.logoUrl && <img src={companyForm.logoUrl} className="h-9 w-16 rounded border bg-white object-contain p-1" alt="Logo Residual" />}</div></div>
         </div>
         <Button onClick={() => void saveCompany()} disabled={companySaving}>{companySaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Salvar dados da Residual"}</Button>
       </Card>}

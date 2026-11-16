@@ -26,7 +26,7 @@ function TasksLayout() {
               <Link
                 key={v.to}
                 to={v.to}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition ${
+                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition sm:px-3 ${
                   active
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

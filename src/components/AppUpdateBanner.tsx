@@ -159,7 +159,8 @@ function InternalAppUpdateBanner() {
     <div className={`inline-flex items-center gap-1 rounded-full border p-0.5 transition-colors ${needsUpdate ? "jacoby-update-blink border-amber-500 bg-amber-200 text-amber-950 shadow-md" : "border-primary/25 bg-accent/60 text-accent-foreground"}`}>
       <button type="button" onClick={() => setDetailsOpen(true)} className="inline-flex min-h-8 items-center gap-2 rounded-full px-3 text-xs font-bold transition hover:bg-black/5" title="Ver as novidades desta versão">
         {needsUpdate ? <Sparkles className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-        {needsUpdate ? "Nova atualização!" : status === "current" ? "Novidades" : "Verificando versão"}
+        {/* Em celulares estreitos o rótulo vira só ícone para o cabeçalho caber na tela. */}
+        <span className="sr-only min-[440px]:not-sr-only">{needsUpdate ? "Nova atualização!" : status === "current" ? "Novidades" : "Verificando versão"}</span>
         <span className="hidden font-normal tabular-nums sm:inline">{releaseNotes.version}</span>
       </button>
       <span className="h-4 border-l border-current opacity-20" aria-hidden="true" />

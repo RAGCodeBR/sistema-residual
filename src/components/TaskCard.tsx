@@ -923,7 +923,7 @@ export function TaskCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 shrink-0 text-success opacity-0 transition group-hover:opacity-100"
+            className="h-6 w-6 shrink-0 text-success pointer-fine:opacity-0 transition pointer-fine:group-hover:opacity-100"
             onPointerDown={stop}
             onClick={(e) => { stop(e); void completeTask(); }}
             title="Concluir tarefa"
@@ -933,7 +933,7 @@ export function TaskCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 shrink-0 opacity-0 transition group-hover:opacity-100"
+            className="h-6 w-6 shrink-0 pointer-fine:opacity-0 transition pointer-fine:group-hover:opacity-100"
             onPointerDown={stop}
             onClick={(e) => { stop(e); onDuplicate?.(); }}
             title="Duplicar tarefa"
@@ -943,7 +943,7 @@ export function TaskCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 shrink-0 text-destructive opacity-0 transition group-hover:opacity-100"
+            className="h-6 w-6 shrink-0 text-destructive pointer-fine:opacity-0 transition pointer-fine:group-hover:opacity-100"
             onPointerDown={stop}
             onClick={(e) => { stop(e); void moveToTrash(); }}
             title="Mover para a lixeira"
@@ -1018,7 +1018,7 @@ export function TaskCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 shrink-0 opacity-0 transition group-hover:opacity-100"
+            className="h-6 w-6 shrink-0 pointer-fine:opacity-0 transition pointer-fine:group-hover:opacity-100"
             onPointerDown={stop}
             onClick={(e) => {
               stop(e);
@@ -1135,7 +1135,7 @@ export function TaskCard({
                 title="Renomear seção"
                 onPointerDown={stop}
                 onClick={(e) => { stop(e); renameSubtasksTitle(); }}
-                className="rounded p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-muted"
+                className="rounded p-0.5 pointer-fine:opacity-0 transition pointer-fine:group-hover:opacity-100 hover:bg-muted"
               >
                 <Pencil className="h-3 w-3" />
               </button>
@@ -1182,7 +1182,7 @@ export function TaskCard({
                         <RichTextView html={s.title} />
                       </div>
                     )}
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover/sub:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 pointer-fine:opacity-0 transition pointer-fine:group-hover/sub:opacity-100">
                       <button
                         type="button"
                         title="Mover para cima"
@@ -1339,7 +1339,7 @@ export function TaskCard({
                     type="button"
                     onPointerDown={stop}
                     onClick={(e) => { stop(e); void deleteAttachment(a); }}
-                    className="absolute right-0.5 top-0.5 rounded-full bg-background/80 p-0.5 opacity-0 transition group-hover/att:opacity-100"
+                    className="absolute right-0.5 top-0.5 rounded-full bg-background/80 p-0.5 pointer-fine:opacity-0 transition pointer-fine:group-hover/att:opacity-100"
                     title="Remover"
                   >
                     <X className="h-2.5 w-2.5" />
@@ -1625,7 +1625,7 @@ export function TaskCard({
           <input
             ref={fileRef}
             type="file"
-            hidden
+            className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void uploadFile(f);

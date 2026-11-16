@@ -147,7 +147,7 @@ export function CommentAttachments({
           ref={inputRef}
           type="file"
           multiple
-          className="hidden"
+          className="sr-only"
           onChange={(e) => void upload(e.target.files)}
         />
       </div>
@@ -194,7 +194,7 @@ export function CommentAttachments({
                     stop(e);
                     void remove(a);
                   }}
-                  className="absolute right-0.5 top-0.5 rounded-full bg-background/80 p-0.5 opacity-0 transition group-hover/cf:opacity-100"
+                  className="absolute right-0.5 top-0.5 rounded-full bg-background/80 p-0.5 pointer-fine:opacity-0 transition pointer-fine:group-hover/cf:opacity-100"
                   title="Remover"
                 >
                   <X className="h-2.5 w-2.5" />

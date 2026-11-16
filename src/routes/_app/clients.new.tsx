@@ -169,7 +169,7 @@ function NewClientPage() {
                     </span>
                   </span>
                 </Label>
-                <Input
+                <input
                   id="new-client-avatar"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"

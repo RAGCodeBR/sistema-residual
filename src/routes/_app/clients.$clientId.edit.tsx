@@ -466,7 +466,7 @@ function EditClientPage() {
                       </span>
                     </span>
                   </Label>
-                  <Input
+                  <input
                     id="edit-client-avatar"
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
@@ -658,7 +658,7 @@ function EditClientPage() {
                             <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground"><ImageUp className="h-4 w-4" /></span>
                             <span><span className="block text-sm font-medium">Selecionar foto do funcionário</span><span className="block text-xs text-muted-foreground">PNG, JPG ou WebP</span></span>
                           </label>
-                          <Input id="employee-avatar" type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => setEmployeeAvatarFile(event.target.files?.[0] ?? null)} />
+                          <input id="employee-avatar" type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => setEmployeeAvatarFile(event.target.files?.[0] ?? null)} />
                           {employeeAvatarFile && employeeAvatarPreview && <div className="mt-2 flex items-center gap-2 rounded-md border p-2"><img src={employeeAvatarPreview} alt="Prévia" className="h-9 w-9 rounded-full object-cover" /><span className="truncate text-sm">{employeeAvatarFile.name}</span></div>}
                         </div>
                         <div className="flex justify-end gap-2"><Button variant="outline" onClick={resetEmployeeForm}>Cancelar</Button><Button onClick={saveEmployee}>Salvar funcionário</Button></div>

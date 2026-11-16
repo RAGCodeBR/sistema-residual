@@ -164,7 +164,7 @@ export function ClientFilesSheet({
               type="file"
               multiple
               accept="*/*"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => void onUpload(e.target.files)}
               disabled={!clientId}
             />

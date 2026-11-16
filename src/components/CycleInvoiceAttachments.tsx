@@ -176,7 +176,7 @@ export function CycleInvoiceAttachments({
       <input
         ref={replacementInput}
         type="file"
-        className="hidden"
+        className="sr-only"
         onChange={(event) => {
           const previous = replacing.current;
           const file = event.currentTarget.files?.[0];

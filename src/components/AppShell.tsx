@@ -137,6 +137,9 @@ export function AppShell({
   useEffect(() => {
     localStorage.setItem("sidebar-open", String(sidebarOpen));
   }, [sidebarOpen]);
+  // No celular o menu é uma sobreposição de tela cheia: começa sempre fechado
+  // e não herda a preferência "menu expandido" do computador.
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const activeWasteTab = useRouterState({
@@ -285,13 +288,19 @@ export function AppShell({
       </aside>
 
       {/* Mobile sidebar toggle header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-background border-b px-3 py-2">
-        <Button size="icon" variant="ghost" onClick={() => setSidebarOpen((o) => !o)}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between gap-2 bg-background border-b px-3 py-2">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="shrink-0"
+          onClick={() => setMobileMenuOpen((o) => !o)}
+          aria-label="Abrir menu"
+        >
           <PanelLeft className="h-5 w-5" />
         </Button>
-        <span className="group flex items-center gap-2 font-display font-bold tracking-tight text-primary">
-          <JacobyMark className="h-7 w-7" />
-          Residual
+        <span className="group flex min-w-0 items-center gap-2 font-display font-bold tracking-tight text-primary">
+          <JacobyMark className="h-7 w-7 shrink-0" />
+          <span className="hidden truncate min-[480px]:inline">Residual</span>
         </span>
         <div id="app-updates-mobile" />
         {!isClient && <EnvironmentSwitch active="management" />}
@@ -299,10 +308,10 @@ export function AppShell({
       </div>
 
       {/* Mobile overlay sidebar */}
-      {sidebarOpen && (
+      {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="w-56 bg-background border-r flex flex-col"
+            className="w-56 max-w-[85vw] bg-background border-r flex min-h-0 flex-col"
             style={{ background: "var(--gradient-sidebar)" }}
           >
             <div className="flex items-center justify-between px-5 py-4">
@@ -312,11 +321,16 @@ export function AppShell({
                   Residual
                 </span>
               </div>
-              <Button size="icon" variant="ghost" onClick={() => setSidebarOpen(false)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Fechar menu"
+              >
                 <PanelLeft className="h-5 w-5" />
               </Button>
             </div>
-            <nav className="flex-1 space-y-1 px-3">
+            <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 pb-2">
               {nav.map((n) => {
                 if (n.to === "/contas-a-receber")
                   return (
@@ -324,7 +338,7 @@ export function AppShell({
                       key="finance"
                       expanded
                       pathname={pathname}
-                      onNavigate={() => setSidebarOpen(false)}
+                      onNavigate={() => setMobileMenuOpen(false)}
                     />
                   );
                 if (n.to === "/portal")
@@ -336,7 +350,7 @@ export function AppShell({
                       isClient={isClient}
                       showClientIso={showClientIso}
                       hasPermission={hasPermission}
-                      onNavigate={() => setSidebarOpen(false)}
+                      onNavigate={() => setMobileMenuOpen(false)}
                     />
                   );
                 const Active = n.tab
@@ -348,7 +362,7 @@ export function AppShell({
                     key={`${n.to}:${n.tab ?? ""}`}
                     to={n.to}
                     search={n.tab ? { aba: n.tab } : undefined}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => setMobileMenuOpen(false)}
                     data-active={Active}
                     className={`jacoby-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
                       Active
@@ -356,7 +370,7 @@ export function AppShell({
                         : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 shrink-0" />
                     {n.label}
                   </Link>
                 );
@@ -407,7 +421,7 @@ export function AppShell({
               </div>
             </div>
           </div>
-          <div className="flex-1 bg-black/50" onClick={() => setSidebarOpen(false)} />
+          <div className="flex-1 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
         </div>
       )}
 

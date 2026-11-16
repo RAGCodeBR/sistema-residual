@@ -407,9 +407,9 @@ function NotesPage() {
               Anotações dedicadas por cliente, com data, grifos e anexos.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={clientId ?? undefined} onValueChange={(v) => setClientId(v)}>
-              <SelectTrigger className="w-[260px]"><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
+              <SelectTrigger className="w-[260px] max-w-full"><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
               <SelectContent>
                 {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
@@ -936,7 +936,7 @@ function NoteEditor({
                   type="file"
                   multiple
                   accept="*/*"
-                  className="hidden"
+                  className="sr-only"
                   onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ""; }}
                 />
                 <span className="inline-flex items-center rounded-md border bg-background px-3 py-1 text-xs hover:bg-muted">

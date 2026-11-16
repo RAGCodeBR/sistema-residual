@@ -526,7 +526,7 @@ export function InlineTaskEditor({
                 ref={fileInputRef}
                 type="file"
                 accept="*/*"
-                hidden
+                className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   if (file) void uploadFile(file);

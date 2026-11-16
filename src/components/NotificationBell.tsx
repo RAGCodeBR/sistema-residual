@@ -176,7 +176,7 @@ export function NotificationBell() {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                className="h-7 w-7 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   remove(n.id);

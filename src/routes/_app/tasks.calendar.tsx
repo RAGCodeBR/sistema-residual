@@ -168,7 +168,7 @@ function CalendarPage() {
                     {format(day, "d")}
                   </span>
                   {ts.length > 0 && (
-                    <span className="text-[10px] tabular-nums text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="text-[10px] tabular-nums text-muted-foreground pointer-fine:opacity-0 transition-opacity pointer-fine:group-hover:opacity-100">
                       {ts.length}
                     </span>
                   )}

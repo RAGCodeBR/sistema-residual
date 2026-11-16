@@ -320,7 +320,7 @@ function ListPage() {
                     ) : <span className="text-muted-foreground">—</span>}
                   </td>
                   <td className="px-1 py-2 text-center">
-                    <div className="flex justify-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100">
+                    <div className="flex justify-center gap-0.5 pointer-fine:opacity-0 transition-opacity duration-150 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100">
                       <Button
                         size="icon"
                         variant="ghost"

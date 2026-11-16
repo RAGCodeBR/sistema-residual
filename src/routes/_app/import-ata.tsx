@@ -246,7 +246,7 @@ function ImportAtaPage() {
                 <div className="text-sm font-medium">{file ? file.name : "Selecionar PDF"}</div>
                 <div className="text-xs text-muted-foreground">{file ? `${(file.size / 1024).toFixed(0)} KB` : "Aceita atas em PDF (até ~10MB)"}</div>
               </div>
-              <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              <input type="file" accept="application/pdf" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             </label>
           </TabsContent>
           <TabsContent value="text" className="mt-3 space-y-3">

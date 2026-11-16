@@ -353,7 +353,7 @@ function NoteCard({
                     type="file"
                     multiple
                     accept="*/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={(e) => void onFiles(e.target.files)}
                   />
                   <span className="rounded border bg-background px-2 py-0.5 text-[10px] hover:bg-muted">
@@ -412,7 +412,7 @@ function NoteCard({
                       <button
                         type="button"
                         onClick={() => void removeAtt(a)}
-                        className="absolute right-0.5 top-0.5 hidden rounded bg-black/60 p-0.5 text-white group-hover:block"
+                        className="absolute right-0.5 top-0.5 block rounded bg-black/60 p-0.5 text-white pointer-fine:hidden pointer-fine:group-hover:block"
                         title="Remover"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -544,7 +544,7 @@ function ClientFilesPanel({ clientId }: { clientId: string }) {
             type="file"
             multiple
             accept="*/*"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => void onFiles(e.target.files)}
           />
           <span className="rounded border bg-background px-3 py-1 text-xs hover:bg-muted">
@@ -587,7 +587,7 @@ function ClientFilesPanel({ clientId }: { clientId: string }) {
                     <button
                       type="button"
                       onClick={() => void remove(f)}
-                      className="absolute right-0.5 top-0.5 hidden rounded bg-black/60 p-0.5 text-white group-hover:block"
+                      className="absolute right-0.5 top-0.5 block rounded bg-black/60 p-0.5 text-white pointer-fine:hidden pointer-fine:group-hover:block"
                       title="Excluir"
                     >
                       <Trash2 className="h-3 w-3" />

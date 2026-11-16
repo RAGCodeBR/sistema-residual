@@ -2014,7 +2014,7 @@ export function BillingV2Module() {
       )}
       {!cycleId && homeTab === "boletins" && (
       <Card className="p-5">
-        <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+        <div className="grid gap-4 md:grid-cols-2 md:items-end xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
           <Field label="Cliente">
             <Select
               value={clientId || "__all_clients__"}
@@ -2049,7 +2049,7 @@ export function BillingV2Module() {
           </Field>
           <Field label="Resíduo">
             <Select value={listResidue} onValueChange={value=>{setListResidue(value);setAllClientsLimit(50);setSelectedBulkCycleIds([]);}} disabled={listResiduesQuery.isLoading || !!listResiduesQuery.error}>
-              <SelectTrigger aria-label="Filtrar boletins por resíduo"><SelectValue placeholder="Todos os resíduos"/></SelectTrigger>
+              <SelectTrigger aria-label="Filtrar boletins por resíduo" className="min-w-0 [&>span]:min-w-0"><SelectValue placeholder="Todos os resíduos"/></SelectTrigger>
               <SelectContent className="max-h-72"><SelectItem value="all">Todos os resíduos</SelectItem>{listResidueOptions.map(item=><SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
             </Select>
             {listResiduesQuery.error && <p className="text-xs text-destructive">Não foi possível carregar os resíduos.</p>}

@@ -191,13 +191,13 @@ export function ClientsIndexPage() {
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou informação do cliente..." className="h-11 rounded-full border-transparent bg-muted/60 pl-11 focus-visible:bg-background" />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {statusTabs.map(([value, label]) => (
             <button key={value} type="button" onClick={() => setStatusFilter(value)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${statusFilter === value ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground/80 hover:bg-muted"}`}>{label}</button>
           ))}
         </div>
         {isAdmin && (
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <span className="mr-1 text-sm text-muted-foreground">Portal:</span>
             {portalTabs.map(([value, label]) => (
               <button key={value} type="button" onClick={() => setPortalFilter(value)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${portalFilter === value ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground/80 hover:bg-muted"}`}>{label}</button>

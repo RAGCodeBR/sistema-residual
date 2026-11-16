@@ -139,7 +139,7 @@ export function InterruptionsBlock({ task, color }: { task: Task; color: string 
                         {it.reason || <span className="italic text-muted-foreground">Sem motivo — clique para editar</span>}
                       </button>
                     )}
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover/it:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 pointer-fine:opacity-0 transition pointer-fine:group-hover/it:opacity-100">
                       {isEditing ? (
                         <>
                           <button type="button" onPointerDown={stop} onClick={(e) => { stop(e); void saveEdit(it.id); }} className="rounded p-0.5 text-success hover:bg-muted" title="Salvar">
