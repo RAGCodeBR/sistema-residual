@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { isPhoneViewport } from "@/hooks/use-keyboard-inset";
 import { supabase } from "@/integrations/supabase/client";
 import { safeStorageName } from "@/lib/storage-names";
 import { isImageFile, prepareDocumentFile } from "@/lib/scan-files";
@@ -190,7 +191,7 @@ export function CompanyDocumentDialog({
             </Select>
             {link === NEW_EQUIPMENT && (
               <div className="grid gap-2 rounded-xl border bg-muted/30 p-3 sm:grid-cols-[1fr_9rem]">
-                <Input value={newEquipment.name} onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })} placeholder="Nome (ex.: Caminhão baú VW)" autoFocus />
+                <Input value={newEquipment.name} onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })} placeholder="Nome (ex.: Caminhão baú VW)" autoFocus={!isPhoneViewport()} />
                 <Select value={newEquipment.kind} onValueChange={(kind) => setNewEquipment({ ...newEquipment, kind })}>
                   <SelectTrigger aria-label="Tipo de equipamento"><SelectValue /></SelectTrigger>
                   <SelectContent>{EQUIPMENT_KINDS.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>

@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { isPhoneViewport, useKeyboardInset } from "@/hooks/use-keyboard-inset";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -32,15 +33,28 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onOpenAutoFocus, ...props }, ref) => {
+  // Celular: a folha acompanha o teclado (ver use-keyboard-inset).
+  useKeyboardInset();
+  return (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      onOpenAutoFocus={(event) => {
+        onOpenAutoFocus?.(event);
+        // No celular, focar um campo ao abrir já sobe o teclado por cima da
+        // janela. A pessoa toca no campo quando quiser escrever.
+        if (!event.defaultPrevented && isPhoneViewport()) {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
+        }
+      }}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full grid-cols-[minmax(0,1fr)] max-w-lg overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
         // Celular: a janela vira uma folha que sobe da base da tela.
-        "max-md:inset-x-0 max-md:mx-auto max-md:bottom-0 max-md:top-auto max-md:left-0 max-md:w-full max-md:max-w-none max-md:max-h-[92dvh] max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-[0_-8px_30px_-12px_rgb(0_0_0/0.25)] max-md:duration-300 max-md:ease-[cubic-bezier(0.32,0.72,0,1)] max-md:data-[state=open]:zoom-in-100 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom max-md:data-[state=closed]:slide-out-to-bottom",
+        // bottom/max-height seguem o teclado: --kb e --vvh (use-keyboard-inset).
+        "max-md:inset-x-0 max-md:mx-auto max-md:bottom-[var(--kb,0px)] max-md:top-auto max-md:left-0 max-md:w-full max-md:max-w-none max-md:max-h-[min(92dvh,calc(var(--vvh,100dvh)-0.75rem))] max-md:overscroll-contain max-md:transition-[bottom,max-height] max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-[0_-8px_30px_-12px_rgb(0_0_0/0.25)] max-md:duration-300 max-md:ease-[cubic-bezier(0.32,0.72,0,1)] max-md:data-[state=open]:zoom-in-100 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom max-md:data-[state=closed]:slide-out-to-bottom",
         className,
       )}
       {...props}
@@ -52,7 +66,8 @@ const DialogContent = React.forwardRef<
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
-));
+  );
+});
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

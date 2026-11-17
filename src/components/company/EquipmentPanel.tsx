@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, MoreHorizontal, Pencil, Plus, Search, Trash2, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { isPhoneViewport } from "@/hooks/use-keyboard-inset";
 import { EQUIPMENT_KINDS, STATUS, plural, statusOf, table, type CompanyDocument, type Equipment } from "@/lib/company";
 import { EquipmentIcon } from "@/components/company/EquipmentIcon";
 import { Button } from "@/components/ui/button";
@@ -157,7 +158,7 @@ function EquipmentDialog({ open, editing, onOpenChange }: { open: boolean; editi
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Nome *</Label>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Caminhão baú VW 9.170" autoFocus={!editing} />
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Caminhão baú VW 9.170" autoFocus={!editing && !isPhoneViewport()} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
