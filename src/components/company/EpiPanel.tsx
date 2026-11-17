@@ -14,6 +14,7 @@ import { compressImage } from "@/lib/scan-files";
 import { EPI_BUCKET as BUCKET, isMissingTable, table, useEmployees, useEpiDeliveries, type Employee, type EpiDelivery as Delivery } from "@/lib/company";
 import { safeStorageName } from "@/lib/storage-names";
 import { FileSourcePicker, PickedFiles } from "@/components/FileSourcePicker";
+import { ZoomableImage } from "@/components/ZoomViewer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -198,7 +199,9 @@ export function EpiPanel({ canManage }: { canManage: boolean }) {
           </DialogHeader>
           {viewer && (
             <div className="relative">
-              <img src={viewer.urls[viewer.index]} alt={`Foto ${viewer.index + 1}`} className="max-h-[75dvh] w-full rounded-lg object-contain" />
+              <div className="h-[70dvh] overflow-hidden rounded-lg bg-muted/40">
+                <ZoomableImage key={viewer.urls[viewer.index]} src={viewer.urls[viewer.index]} alt={`Foto ${viewer.index + 1}`} />
+              </div>
               {viewer.urls.length > 1 && (
                 <div className="mt-2 flex items-center justify-center gap-3">
                   <Button size="icon" variant="outline" className="rounded-full" aria-label="Foto anterior" onClick={() => setViewer({ ...viewer, index: (viewer.index - 1 + viewer.urls.length) % viewer.urls.length })}><ChevronLeft className="h-4 w-4" /></Button>

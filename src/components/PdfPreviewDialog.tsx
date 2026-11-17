@@ -7,6 +7,8 @@ import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ZoomableImage, ZoomablePdf } from "@/components/ZoomViewer";
+import { isPhoneViewport } from "@/hooks/use-keyboard-inset";
 
 export type PdfPreviewTarget = {
   title: string;
@@ -19,6 +21,8 @@ export type PdfPreviewTarget = {
 };
 
 const INLINE_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "webp", "gif", "svg", "txt"];
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
+const extensionOf = (fileName: string) => fileName.split(".").pop()?.toLowerCase() ?? "";
 
 /** Indica se o navegador consegue exibir o arquivo dentro do visualizador. */
 export function canPreviewInline(fileName: string) {
@@ -35,9 +39,15 @@ export function usePdfPreview() {
 function PdfPreviewDialog({ target, onClose }: { target: PdfPreviewTarget | null; onClose: () => void }) {
   const [loaded, setLoaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState("");
+  // Imagens abrem inteiras na tela, com zoom opcional. No celular o PDF é
+  // desenhado pelo app (o iPhone mostra só a 1ª página dentro de iframe).
+  const ext = target ? extensionOf(target.fileName) : "";
+  const mode: "image" | "pdf" | "frame" = IMAGE_EXTENSIONS.includes(ext) ? "image" : ext === "pdf" && isPhoneViewport() ? "pdf" : "frame";
 
   useEffect(() => {
     setLoaded(false);
+    setError("");
     if (!target?.revokeOnClose) return;
     const url = target.url;
     return () => URL.revokeObjectURL(url);
@@ -88,14 +98,30 @@ function PdfPreviewDialog({ target, onClose }: { target: PdfPreviewTarget | null
             </Button>
           </div>
         </DialogHeader>
-        <div className="relative min-h-0 flex-1 bg-muted/40 p-3">
-          {!loaded && (
+        <div className={`relative min-h-0 flex-1 bg-muted/40 ${mode === "frame" ? "p-3" : "max-md:p-0 p-3"}`}>
+          {error && (
+            <div className="absolute inset-3 flex flex-col items-center justify-center gap-3 rounded-lg border bg-card p-6 text-center">
+              <p className="text-sm text-muted-foreground">{error}</p>
+              {target && <Button variant="outline" size="sm" asChild><a href={target.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" />Abrir em nova aba</a></Button>}
+            </div>
+          )}
+          {!loaded && !error && (
             <div className="absolute inset-3 flex flex-col items-center justify-center gap-3 rounded-lg border bg-card">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Carregando documento…</p>
             </div>
           )}
-          {target && (
+          {target && mode === "image" && (
+            <div className={`h-full w-full transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}>
+              <ZoomableImage key={target.url} src={target.url} alt={target.title} onLoad={() => setLoaded(true)} />
+            </div>
+          )}
+          {target && mode === "pdf" && !error && (
+            <div className={`h-full w-full transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}>
+              <ZoomablePdf key={target.url} url={target.url} title={target.title} onLoad={() => setLoaded(true)} onError={setError} />
+            </div>
+          )}
+          {target && mode === "frame" && (
             <iframe
               key={target.url}
               src={target.url}
