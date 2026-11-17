@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { format, isPast } from "date-fns";
+import { endOfWeek, format, isPast, isToday, isTomorrow, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ function ListPage() {
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Task | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
 
   // Auto-open a task when arriving with ?task=<id>
   useEffect(() => {
@@ -157,10 +158,39 @@ function ListPage() {
     if (error) return toast.error(error.message);
 
     setSelectedTaskIds(new Set());
+    setSelectMode(false);
     await queryClient.invalidateQueries({ queryKey: ["tasks"] });
     await queryClient.invalidateQueries({ queryKey: ["tasks", "deleted"] });
     toast.success(`${ids.length} tarefa(s) movida(s) para a lixeira.`);
   };
+
+  // Celular: agrupa a lista (já ordenada por prazo) em faixas de tempo.
+  const mobileGroups = useMemo(() => {
+    const now = new Date();
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const defs = [
+      { key: "overdue", label: "Atrasadas" },
+      { key: "today", label: "Hoje" },
+      { key: "tomorrow", label: "Amanhã" },
+      { key: "week", label: "Esta semana" },
+      { key: "later", label: "Próximas" },
+      { key: "none", label: "Sem prazo" },
+    ] as const;
+    const buckets = new Map<string, Task[]>(defs.map((d) => [d.key, []]));
+    for (const t of list) {
+      let key: (typeof defs)[number]["key"] = "none";
+      if (t.due_date) {
+        const due = new Date(t.due_date);
+        if (isToday(due)) key = "today";
+        else if (due < startOfDay(now)) key = "overdue";
+        else if (isTomorrow(due)) key = "tomorrow";
+        else if (due <= weekEnd) key = "week";
+        else key = "later";
+      }
+      buckets.get(key)!.push(t);
+    }
+    return defs.map((d) => ({ ...d, tasks: buckets.get(d.key)! })).filter((g) => g.tasks.length > 0);
+  }, [list]);
 
   const allVisibleSelected = list.length > 0 && list.every((task) => selectedTaskIds.has(task.id));
 
@@ -171,141 +201,153 @@ function ListPage() {
           <span className="font-display text-base font-bold tabular-nums text-foreground">{list.length}</span>{" "}
           {list.length === 1 ? "tarefa" : "tarefas"}
         </p>
-        <Button
-          className="max-md:h-10"
-          onClick={() => {
-            setEdit(null);
-            setOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Nova tarefa
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 rounded-full px-3 text-sm md:hidden"
+            aria-pressed={selectMode}
+            onClick={() => {
+              setSelectMode((on) => !on);
+              setSelectedTaskIds(new Set());
+            }}
+          >
+            {selectMode ? "Pronto" : "Selecionar"}
+          </Button>
+          <Button
+            className="max-md:h-10 max-md:w-10 max-md:rounded-full max-md:p-0"
+            aria-label="Nova tarefa"
+            onClick={() => {
+              setEdit(null);
+              setOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 max-md:h-5 max-md:w-5" />
+            <span className="max-md:sr-only">Nova tarefa</span>
+          </Button>
+        </div>
       </header>
       <TaskFilters filters={filters} onChange={setFilters} />
 
       {selectedTaskIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-accent/50 px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200 max-md:sticky max-md:top-14 max-md:z-20">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-accent/50 px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200 max-md:fixed max-md:inset-x-3 max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:z-40 max-md:flex-nowrap max-md:rounded-full max-md:border-border max-md:bg-background/95 max-md:py-1.5 max-md:pl-4 max-md:pr-1.5 max-md:shadow-lg max-md:backdrop-blur max-md:slide-in-from-bottom-4">
           <span className="font-medium text-accent-foreground">
-            <span className="tabular-nums">{selectedTaskIds.size}</span> tarefa(s) selecionada(s)
+            <span className="tabular-nums">{selectedTaskIds.size}</span> <span className="max-md:hidden">tarefa(s) selecionada(s)</span><span className="md:hidden">{selectedTaskIds.size === 1 ? "selecionada" : "selecionadas"}</span>
           </span>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setSelectedTaskIds(new Set())}>
+            <Button size="sm" variant="ghost" onClick={() => { setSelectedTaskIds(new Set()); setSelectMode(false); }}>
               Cancelar
             </Button>
             <Button size="sm" variant="destructive" onClick={() => void moveSelectedToTrash()}>
-              <Trash2 className="h-4 w-4" />Mover para a lixeira
+              <Trash2 className="h-4 w-4" /><span className="max-md:hidden">Mover para a lixeira</span><span className="md:hidden">Lixeira</span>
             </Button>
           </div>
         </div>
       )}
 
-      {/* Celular: cada tarefa vira um cartão com as informações principais. */}
-      <div className="space-y-2 md:hidden">
+      {/* Celular: linhas leves agrupadas por prazo. Círculo conclui; "Selecionar" ativa a lixeira em lote. */}
+      <div className={`space-y-4 md:hidden ${selectMode ? "pb-20" : ""}`}>
         {list.length === 0 ? (
-          <div className="rounded-xl border bg-card py-12 text-center">
+          <div className="rounded-2xl border bg-card py-12 text-center">
             <p className="font-medium">Nenhuma tarefa encontrada</p>
             <p className="mt-1 text-xs text-muted-foreground">Ajuste os filtros ou crie uma nova tarefa.</p>
           </div>
         ) : (
-          list.map((t) => {
-            const client = clients.find((c) => c.id === t.client_id);
-            const assignee = profiles.find((p) => p.id === t.assignee_id);
-            const statusColumn = columns.find((column) => column.id === t.column_id);
-            const done = t.completed_at !== null;
-            const overdue = t.due_date && isPast(new Date(t.due_date)) && t.status !== "done" && !done;
-            const selected = selectedTaskIds.has(t.id);
-            return (
-              <article
-                key={t.id}
-                className={`rounded-xl border bg-card p-3 shadow-sm transition-colors ${selected ? "border-primary/40 bg-accent/50" : ""}`}
-              >
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    className="mt-0.5 h-5 w-5"
-                    aria-label={`Selecionar tarefa ${t.title}`}
-                    checked={selected}
-                    onCheckedChange={(checked) => toggleTaskSelection(t.id, checked === true)}
-                  />
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 text-left"
-                    onClick={() => {
-                      setEdit(t);
-                      setOpen(true);
-                    }}
-                  >
-                    <span className={`block font-medium leading-snug [overflow-wrap:anywhere] ${done ? "line-through decoration-muted-foreground/50" : ""}`}>{t.title}</span>
-                    {client && (
-                      <span className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: client.color || "var(--primary)" }} />
-                        <span className="truncate">{client.name}</span>
-                      </span>
-                    )}
-                  </button>
-                </div>
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pl-8 text-[11px]">
-                  {statusColumn && (
-                    <span
-                      className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-0.5 font-medium"
-                      style={{ background: `color-mix(in oklab, ${statusColumn.color || "var(--primary)"} 14%, transparent)` }}
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: statusColumn.color || "var(--primary)" }} />
-                      <span className="truncate">{statusColumn.name}</span>
-                    </span>
-                  )}
-                  {t.priority && (
-                    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium" style={{ color: priorityColors[t.priority] }}>
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: priorityColors[t.priority] }} />
-                      {priorityLabels[t.priority]}
-                    </span>
-                  )}
-                  {t.due_date && (
-                    <span className={`inline-flex rounded-full px-2 py-0.5 tabular-nums ${overdue ? "bg-destructive/10 font-medium text-destructive" : "bg-muted text-muted-foreground"}`}>
-                      {format(new Date(t.due_date), "dd MMM yyyy", { locale: ptBR })}
-                      {t.due_time ? ` · ${t.due_time.slice(0, 5)}` : ""}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 pl-8">
-                  {assignee ? (
-                    <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={assignee.avatar_url || undefined} alt={assignee.full_name || assignee.email || "Usuário"} />
-                        <AvatarFallback className="bg-accent text-[9px] font-semibold text-accent-foreground">
-                          {(assignee.full_name || assignee.email || "?").slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">{assignee.full_name || assignee.email}</span>
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Sem responsável</span>
-                  )}
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-9 w-9 hover:text-primary"
-                      aria-label="Concluir tarefa"
-                      disabled={done}
-                      onClick={() => void completeTask(t.id)}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Mover para a lixeira"
-                      className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => void moveToTrash(t)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          mobileGroups.map((group) => (
+            <section key={group.key} aria-label={group.label}>
+              <h3 className={`mb-1.5 flex items-baseline gap-2 px-1 text-xs font-semibold ${group.key === "overdue" ? "text-destructive" : "text-muted-foreground"}`}>
+                {group.label}
+                <span className="font-normal tabular-nums opacity-70">{group.tasks.length}</span>
+              </h3>
+              <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
+                {group.tasks.map((t) => {
+                  const client = clients.find((c) => c.id === t.client_id);
+                  const assignee = profiles.find((p) => p.id === t.assignee_id);
+                  const statusColumn = columns.find((column) => column.id === t.column_id);
+                  const done = t.completed_at !== null;
+                  const overdue = t.due_date && isPast(new Date(t.due_date)) && t.status !== "done" && !done;
+                  const selected = selectedTaskIds.has(t.id);
+                  const when = t.due_date
+                    ? group.key === "today" || group.key === "tomorrow"
+                      ? t.due_time ? t.due_time.slice(0, 5) : null
+                      : `${format(new Date(t.due_date), "dd MMM", { locale: ptBR })}${t.due_time ? ` · ${t.due_time.slice(0, 5)}` : ""}`
+                    : null;
+                  return (
+                    <li key={t.id} className={`flex items-center gap-1 pr-3 transition-colors ${selected ? "bg-accent/50" : ""}`}>
+                      {selectMode ? (
+                        <label className="grid h-14 w-12 shrink-0 cursor-pointer place-items-center">
+                          <Checkbox
+                            className="h-5 w-5 rounded-full"
+                            aria-label={`Selecionar tarefa ${t.title}`}
+                            checked={selected}
+                            onCheckedChange={(checked) => toggleTaskSelection(t.id, checked === true)}
+                          />
+                        </label>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-label={`Concluir tarefa ${t.title}`}
+                          disabled={done}
+                          onClick={() => void completeTask(t.id)}
+                          className="group/done grid h-14 w-12 shrink-0 place-items-center"
+                        >
+                          <span
+                            className={`grid h-5 w-5 place-items-center rounded-full border-[1.5px] transition-colors duration-150 group-active/done:bg-primary/15 ${
+                              overdue ? "border-destructive/70" : "border-muted-foreground/40"
+                            }`}
+                            style={t.priority === "urgent" || t.priority === "high" ? { borderColor: priorityColors[t.priority] } : undefined}
+                          >
+                            <Check className="h-3 w-3 text-primary opacity-0 transition-opacity group-active/done:opacity-100" />
+                          </span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 py-2.5 text-left"
+                        onClick={() => {
+                          if (selectMode) return toggleTaskSelection(t.id, !selected);
+                          setEdit(t);
+                          setOpen(true);
+                        }}
+                      >
+                        <span className={`block text-[15px] font-medium leading-snug [overflow-wrap:anywhere] ${done ? "text-muted-foreground line-through" : ""}`}>
+                          {t.title}
+                        </span>
+                        <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                          {client && (
+                            <>
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: client.color || "var(--primary)" }} />
+                              <span className="min-w-0 truncate">{client.name}</span>
+                            </>
+                          )}
+                          {when && (
+                            <>
+                              {client && <span aria-hidden className="opacity-50">·</span>}
+                              <span className={`shrink-0 tabular-nums ${overdue ? "font-medium text-destructive" : ""}`}>{when}</span>
+                            </>
+                          )}
+                          {statusColumn && (
+                            <>
+                              {(client || when) && <span aria-hidden className="opacity-50">·</span>}
+                              <span className="min-w-0 shrink truncate">{statusColumn.name}</span>
+                            </>
+                          )}
+                        </span>
+                      </button>
+                      {assignee ? (
+                        <Avatar className="h-7 w-7 shrink-0" title={assignee.full_name || assignee.email || "Usuário"}>
+                          <AvatarImage src={assignee.avatar_url || undefined} alt={assignee.full_name || assignee.email || "Usuário"} />
+                          <AvatarFallback className="bg-accent text-[10px] font-semibold text-accent-foreground">
+                            {(assignee.full_name || assignee.email || "?").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
         )}
       </div>
 

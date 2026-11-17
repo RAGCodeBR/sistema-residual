@@ -17,7 +17,9 @@ import { isStaticPreview, useAuth } from "@/hooks/use-auth";
 import { useClients, useColumns, useTaskProfiles, type Task } from "@/hooks/use-data";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Paperclip, Send, Download, ExternalLink, X, Plus, Link2, ChevronDown, ChevronRight, Clock3 } from "lucide-react";
+import { Trash2, Paperclip, Send, Download, ExternalLink, X, Plus, Link2, ChevronDown, ChevronRight, Clock3, Layers, CalendarDays, CircleDot, UserRound, Building2, Flag, Users, AlignLeft, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
 import { collaboratorChanges } from "@/lib/task-notifications";
@@ -50,6 +52,18 @@ const deadlineToIso = (date: string) =>
 const normalizeDueTime = (time: string | null) => time?.slice(0, 5) ?? "";
 interface Attachment { id: string; file_name: string; storage_path: string; mime_type: string | null; size_bytes: number | null; }
 const LINK_MIME = "text/uri-list";
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+
+/** Celular: uma linha de propriedade (ícone + rótulo à esquerda, controle à direita). */
+function PropRow({ icon: Icon, label, children }: { icon: LucideIcon; label: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex min-h-11 items-center gap-2.5 pl-3 pr-2">
+      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <span className="w-[5.75rem] shrink-0 text-sm text-muted-foreground">{label}</span>
+      <div className="flex min-w-0 flex-1 justify-end">{children}</div>
+    </div>
+  );
+}
 
 export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialTemplate, initialDraft }: Props) {
   const qc = useQueryClient();
@@ -57,6 +71,8 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
   const { data: cols } = useColumns();
   const { data: clients } = useClients();
   const { data: profiles } = useTaskProfiles();
+  const isMobile = useIsMobile();
+  const [mobileDescriptionOpen, setMobileDescriptionOpen] = useState(false);
 
   const templates = useProcessTemplates();
   const [templateDraft, setTemplateDraft] = useState<ProcessTemplate | null>(null);
@@ -119,6 +135,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
   useEffect(() => {
     if (!open) return;
     setTemplateDraft(null);
+    setMobileDescriptionOpen(false);
     if (task) {
       setTitle(task.title);
       setDescription(task.description ?? "");
@@ -609,22 +626,208 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
     setAttachments(attachments.filter(a => a.id !== att.id));
   };
 
+  /* Controles compartilhados entre o layout de computador e o de celular. */
+  const priorityControl = (triggerClass?: string) => (
+    <Select value={priority ?? "none"} onValueChange={(v) => setPriority(v === "none" ? null : (v as Task["priority"]))}>
+      <SelectTrigger className={triggerClass} aria-label="Prioridade"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Sem prioridade</SelectItem>
+        <SelectItem value="low">Baixa</SelectItem>
+        <SelectItem value="medium">Média</SelectItem>
+        <SelectItem value="high">Alta</SelectItem>
+        <SelectItem value="urgent">Urgente</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+  const statusControl = (triggerClass?: string) => (
+    <Select value={columnId || "none"} onValueChange={(v) => setColumnId(v === "none" ? "" : v)}>
+      <SelectTrigger className={triggerClass} aria-label="Status"><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Nenhuma</SelectItem>
+        {cols?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+  const clientControl = (triggerClass?: string) => (
+    <Select value={clientId || "none"} onValueChange={(v) => setClientId(v === "none" ? "" : v)}>
+      <SelectTrigger className={triggerClass} aria-label="Cliente"><SelectValue placeholder="Nenhum" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Nenhum</SelectItem>
+        {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+  const assigneeControl = (triggerClass?: string) => (
+    <Select value={assigneeId || "none"} onValueChange={(v) => setAssigneeId(v === "none" ? "" : v)}>
+      <SelectTrigger className={triggerClass} aria-label="Responsável"><SelectValue placeholder="Ninguém" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Ninguém</SelectItem>
+        {profiles?.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name || p.email}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
+  const collaboratorsControl = (triggerClass?: string, compact = false) => (
+    <Popover open={collaboratorPickerOpen} onOpenChange={setCollaboratorPickerOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className={triggerClass ?? "w-full justify-between font-normal"} aria-label="Colaboradores">
+          <span className="truncate">
+            {collaboratorIds.length === 0
+              ? compact ? "Ninguém" : "Selecionar nomes"
+              : `${collaboratorIds.length} selecionado${collaboratorIds.length === 1 ? "" : "s"}`}
+          </span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align={compact ? "end" : "start"} className="w-64 p-2">
+        <div className="max-h-56 space-y-0.5 overflow-y-auto">
+          {(profiles ?? []).filter((profile) => profile.is_active !== false).map((profile) => {
+            const selected = collaboratorIds.includes(profile.id);
+            const name = profile.full_name || profile.email || "Usuário sem nome";
+            return (
+              <label
+                key={profile.id}
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted max-md:min-h-10"
+              >
+                <Checkbox
+                  checked={selected}
+                  onCheckedChange={() => toggleCollaborator(profile.id)}
+                />
+                <span className="truncate">{name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+  const templateSelect = (triggerClass?: string) => (
+    <Select value={templateDraft?.id || "__blank__"} onValueChange={id=>{
+      const model=templates.data?.find(item=>item.id===id);
+      if(model) applyTemplate(model);
+      else {setTemplateDraft(null);setTitle("");setDescription("");setAssigneeId(user?.id || "");}
+    }}><SelectTrigger className={triggerClass} aria-label="Modelo de processo"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="__blank__">Criar sem modelo</SelectItem>{templates.data?.map(model=><SelectItem key={model.id} value={model.id}>{model.name} · {model.steps.length} etapas</SelectItem>)}</SelectContent></Select>
+  );
+  const showTemplatePicker = !task && !currentTaskId;
+
+  // Celular: gatilhos sem borda, alinhados à direita, dentro de linhas de propriedades.
+  const mTrigger = "h-11 w-full min-w-0 justify-end gap-1.5 rounded-none border-0 bg-transparent px-0 text-right text-sm font-medium shadow-none focus:ring-0 focus-visible:ring-0";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <div className="flex flex-wrap items-center justify-between gap-3 pr-6"><DialogTitle>{task ? "Editar tarefa" : templateDraft ? "Novo processo a partir de modelo" : "Nova tarefa"}</DialogTitle>
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto max-md:gap-3 max-md:px-4 max-md:pb-0 max-md:pt-4">
+        <DialogHeader className="max-md:text-left">
+          <div className="flex flex-wrap items-center justify-between gap-3 pr-6 max-md:min-h-8 max-md:flex-nowrap max-md:gap-2 max-md:pr-10"><DialogTitle className="max-md:text-sm max-md:font-medium max-md:text-muted-foreground">{task ? "Editar tarefa" : templateDraft ? "Novo processo a partir de modelo" : "Nova tarefa"}</DialogTitle>
             {task && <SaveProcessTemplate taskId={task.id} title={task.title} disabled={saving}/>}</div>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {!task && !currentTaskId && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="space-y-4 max-md:space-y-3">
+          {isMobile ? (
+            <>
+              <textarea
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="O que precisa ser feito?"
+                aria-label="Título"
+                rows={1}
+                className="block w-full resize-none bg-transparent text-xl font-semibold leading-snug outline-none [field-sizing:content] placeholder:text-muted-foreground/60"
+              />
+
+              <div className="divide-y overflow-hidden rounded-2xl border bg-card">
+                {showTemplatePicker && (
+                  <PropRow icon={Layers} label="Modelo">{templateSelect(mTrigger)}</PropRow>
+                )}
+                <PropRow icon={CalendarDays} label={<>Prazo{!task ? <span className="text-destructive"> *</span> : null}</>}>
+                  <div className="flex min-w-0 items-center justify-end gap-1">
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      aria-label="Data do prazo"
+                      required={!task && !recurrenceEnabled}
+                      className="h-11 min-w-0 flex-1 bg-transparent text-right text-sm font-medium outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                    <input
+                      type="time"
+                      value={dueTime}
+                      onChange={(e) => setDueTime(e.target.value)}
+                      step="300"
+                      disabled={!dueDate}
+                      aria-label="Hora do prazo (opcional)"
+                      className="h-11 w-[3.25rem] shrink-0 bg-transparent text-right text-sm text-muted-foreground outline-none disabled:opacity-40 [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                    {dueDate && (
+                      <button type="button" className="grid h-9 w-7 shrink-0 place-items-center text-muted-foreground" onClick={() => { setDueDate(""); setDueTime(""); }} aria-label="Remover prazo">
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </PropRow>
+                <PropRow icon={CircleDot} label="Status">{statusControl(mTrigger)}</PropRow>
+                <PropRow icon={UserRound} label="Responsável">{assigneeControl(mTrigger)}</PropRow>
+                <PropRow icon={Building2} label={`Cliente${templateDraft ? " *" : ""}`}>{clientControl(mTrigger)}</PropRow>
+                <PropRow icon={Flag} label="Prioridade">{priorityControl(mTrigger)}</PropRow>
+                <PropRow icon={Users} label="Colaboradores">
+                  {collaboratorsControl("h-11 w-full min-w-0 justify-end gap-1.5 rounded-none border-0 bg-transparent px-0 text-sm font-medium shadow-none hover:bg-transparent", true)}
+                </PropRow>
+              </div>
+
+              {showTemplatePicker && templateDraft && (
+                <p className="px-1 text-xs text-muted-foreground">Etapas do modelo carregadas em Subtarefas. Defina cliente, prazos e responsáveis; os do modelo não são copiados.</p>
+              )}
+              {showTemplatePicker && templates.error && <p className="px-1 text-xs text-destructive">{templates.error.message}</p>}
+
+              {clientId && (
+                <div className="divide-y overflow-hidden rounded-2xl border bg-card text-sm">
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3">
+                    <Checkbox
+                      checked={clientDocumentRequest}
+                      onCheckedChange={(checked) => {
+                        const enabled = Boolean(checked);
+                        setClientDocumentRequest(enabled);
+                        if (enabled) setClientPortalVisible(true);
+                      }}
+                    />
+                    Solicitar documento ao cliente
+                  </label>
+                  <label className={`flex min-h-11 cursor-pointer items-center gap-3 px-3 ${clientDocumentRequest ? "" : "text-muted-foreground"}`}>
+                    <Checkbox
+                      checked={clientPortalVisible}
+                      disabled={!clientDocumentRequest}
+                      onCheckedChange={(checked) => setClientPortalVisible(Boolean(checked))}
+                    />
+                    Mostrar no portal do cliente
+                  </label>
+                  {clientDocumentRequest && (
+                    <p className="px-3 py-2 text-[11px] text-muted-foreground">O cliente verá só título, descrição, prazo e arquivos desta solicitação.</p>
+                  )}
+                </div>
+              )}
+
+              {mobileDescriptionOpen || stripHtml(description) ? (
+                <div className="space-y-1.5">
+                  <Label className="px-1 text-xs text-muted-foreground">Descrição</Label>
+                  <RichTextEditor
+                    value={description}
+                    onChange={setDescription}
+                    placeholder="Descreva a tarefa..."
+                    minHeight={80}
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMobileDescriptionOpen(true)}
+                  className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-dashed px-3 text-sm text-muted-foreground transition-colors active:bg-muted/50"
+                >
+                  <AlignLeft className="h-4 w-4" /> Adicionar descrição
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+          {showTemplatePicker && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
             <Label>Usar um modelo de processo</Label>
-            <Select value={templateDraft?.id || "__blank__"} onValueChange={id=>{
-              const model=templates.data?.find(item=>item.id===id);
-              if(model) applyTemplate(model);
-              else {setTemplateDraft(null);setTitle("");setDescription("");setAssigneeId(user?.id || "");}
-            }}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="__blank__">Criar sem modelo</SelectItem>{templates.data?.map(model=><SelectItem key={model.id} value={model.id}>{model.name} · {model.steps.length} etapas</SelectItem>)}</SelectContent></Select>
+            {templateSelect()}
             {templates.error && <p className="text-xs text-destructive">{templates.error.message}</p>}
             {templateDraft ? <>
               <p className="text-xs text-muted-foreground">Escolha um novo cliente e prazo. Todas as etapas começam pendentes e a descrição começa vazia. As tarefas criadas seguem o fluxo normal do sistema.</p>
@@ -640,16 +843,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
             <div className="space-y-2">
               <Label className="text-xs">Prioridade</Label>
-              <Select value={priority ?? "none"} onValueChange={(v) => setPriority(v === "none" ? null : (v as Task["priority"]))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem prioridade</SelectItem>
-                  <SelectItem value="low">Baixa</SelectItem>
-                  <SelectItem value="medium">Média</SelectItem>
-                  <SelectItem value="high">Alta</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
-                </SelectContent>
-              </Select>
+              {priorityControl()}
             </div>
             <div className="space-y-2">
               <Label className="text-xs">
@@ -687,38 +881,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Colaboradores</Label>
-              <Popover open={collaboratorPickerOpen} onOpenChange={setCollaboratorPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between font-normal">
-                    <span className="truncate">
-                      {collaboratorIds.length === 0
-                        ? "Selecionar nomes"
-                        : `${collaboratorIds.length} selecionado${collaboratorIds.length === 1 ? "" : "s"}`}
-                    </span>
-                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-64 p-2">
-                  <div className="max-h-56 space-y-0.5 overflow-y-auto">
-                    {(profiles ?? []).filter((profile) => profile.is_active !== false).map((profile) => {
-                      const selected = collaboratorIds.includes(profile.id);
-                      const name = profile.full_name || profile.email || "Usuário sem nome";
-                      return (
-                        <label
-                          key={profile.id}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
-                        >
-                          <Checkbox
-                            checked={selected}
-                            onCheckedChange={() => toggleCollaborator(profile.id)}
-                          />
-                          <span className="truncate">{name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              {collaboratorsControl()}
             </div>
 
           </div>
@@ -726,33 +889,15 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="space-y-2">
               <Label className="text-xs">Status</Label>
-              <Select value={columnId || "none"} onValueChange={(v) => setColumnId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {cols?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {statusControl()}
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Cliente{templateDraft ? " *" : ""}</Label>
-              <Select value={clientId || "none"} onValueChange={(v) => setClientId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {clientControl()}
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Responsável</Label>
-              <Select value={assigneeId || "none"} onValueChange={(v) => setAssigneeId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Ninguém" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Ninguém</SelectItem>
-                  {profiles?.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name || p.email}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {assigneeControl()}
             </div>
           </div>
 
@@ -791,12 +936,14 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
               minHeight={100}
             />
           </div>
+            </>
+          )}
 
           {!currentTaskId && !templateDraft && (
-            <div className="space-y-3 rounded-md border bg-muted/20 p-3">
-              <label className="flex items-center gap-2 text-sm font-medium">
+            <div className="space-y-3 rounded-md border bg-muted/20 p-3 max-md:rounded-2xl max-md:bg-card max-md:py-0">
+              <label className="flex items-center gap-2 text-sm font-medium max-md:min-h-11 max-md:gap-3 max-md:font-normal">
                 <Checkbox checked={recurrenceEnabled} onCheckedChange={(v) => setRecurrenceEnabled(!!v)} />
-                Criar como tarefa recorrente
+                {isMobile ? "Repetir esta tarefa" : "Criar como tarefa recorrente"}
               </label>
               {recurrenceEnabled && (
                 <div className="space-y-3">
@@ -855,10 +1002,10 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
           {(
 
             <Tabs defaultValue="subtasks">
-              <TabsList>
-                <TabsTrigger value="subtasks">Subtarefas ({!currentTaskId && templateDraft ? templateDraft.steps.length : subtasks.length})</TabsTrigger>
-                <TabsTrigger value="comments">Comentários ({comments.length})</TabsTrigger>
-                <TabsTrigger value="files">Arquivos ({attachments.length})</TabsTrigger>
+              <TabsList className="max-md:grid max-md:h-10 max-md:w-full max-md:grid-cols-3 max-md:rounded-full">
+                <TabsTrigger value="subtasks" className="max-md:gap-1 max-md:rounded-full max-md:px-1 max-md:text-xs">{isMobile ? <>Subtarefas <span className="tabular-nums opacity-60">{!currentTaskId && templateDraft ? templateDraft.steps.length : subtasks.length}</span></> : <>Subtarefas ({!currentTaskId && templateDraft ? templateDraft.steps.length : subtasks.length})</>}</TabsTrigger>
+                <TabsTrigger value="comments" className="max-md:gap-1 max-md:rounded-full max-md:px-1 max-md:text-xs">{isMobile ? <>Comentários <span className="tabular-nums opacity-60">{comments.length}</span></> : <>Comentários ({comments.length})</>}</TabsTrigger>
+                <TabsTrigger value="files" className="max-md:gap-1 max-md:rounded-full max-md:px-1 max-md:text-xs">{isMobile ? <>Arquivos <span className="tabular-nums opacity-60">{attachments.length}</span></> : <>Arquivos ({attachments.length})</>}</TabsTrigger>
               </TabsList>
               <TabsContent value="subtasks" className="space-y-2">
                 {!currentTaskId && templateDraft && <>
@@ -884,15 +1031,15 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                         <Checkbox checked={s.done} onCheckedChange={() => toggleSubtask(s)} />
                         <span className={`flex-1 text-sm ${s.done ? "line-through text-muted-foreground" : ""}`}>{s.title}</span>
                         {assignee && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary max-md:max-w-24 max-md:truncate">
                             {assignee.full_name || assignee.email}
                           </span>
                         )}
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleSubExpanded(s.id)} title="Detalhes">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 max-md:h-9 max-md:w-9" onClick={() => toggleSubExpanded(s.id)} title="Detalhes">
                           {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                         </Button>
                         {canDeleteSubtask(s) && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => deleteSubtask(s.id)}><X className="h-3.5 w-3.5" /></Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 max-md:h-9 max-md:w-9" onClick={() => deleteSubtask(s.id)}><X className="h-3.5 w-3.5" /></Button>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 pl-6">
@@ -901,7 +1048,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                           type="date"
                           value={dueStr}
                           onChange={(e) => updateSubtaskDue(s, e.target.value)}
-                          className="h-7 w-52 text-xs"
+                          className="h-7 w-52 text-xs max-md:h-8 max-md:w-36"
                         />
                         {s.due_date && (
                           <Button
@@ -981,10 +1128,10 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                   );
                 })}
                 <div className="flex flex-wrap gap-2">
-                  <Input placeholder="Nova subtarefa" value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addSubtask()} className="min-w-[180px] flex-1" />
-                  <Input type="date" value={newSubtaskDue} onChange={(e) => setNewSubtaskDue(e.target.value)} className="w-52" title="Prazo (opcional)" />
+                  <Input placeholder="Nova subtarefa" value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addSubtask()} className="min-w-[180px] flex-1 max-md:basis-full" />
+                  <Input type="date" value={newSubtaskDue} onChange={(e) => setNewSubtaskDue(e.target.value)} className="w-52 max-md:w-auto max-md:min-w-0 max-md:flex-1" title="Prazo (opcional)" />
                   <Select value={newSubtaskAssignee || "none"} onValueChange={(v) => setNewSubtaskAssignee(v === "none" ? "" : v)}>
-                    <SelectTrigger className="w-44" title="Responsável (opcional)"><SelectValue placeholder="Responsável" /></SelectTrigger>
+                    <SelectTrigger className="w-44 max-md:w-auto max-md:min-w-0 max-md:flex-1" title="Responsável (opcional)"><SelectValue placeholder="Responsável" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Sem responsável</SelectItem>
                       {profiles?.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name || p.email}</SelectItem>)}
@@ -992,7 +1139,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
                   </Select>
                   <Button onClick={addSubtask} size="icon"><Plus className="h-4 w-4" /></Button>
                 </div>
-                <p className="text-[11px] text-muted-foreground">Defina responsável e prazo já ao criar. Use a seta para editar anotações e anexar arquivos.</p>
+                <p className="text-[11px] text-muted-foreground max-md:hidden">Defina responsável e prazo já ao criar. Use a seta para editar anotações e anexar arquivos.</p>
 
               </TabsContent>
 
@@ -1075,17 +1222,17 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumnId, initialT
             </Tabs>
           )}
 
-          <div className="flex justify-between gap-2 pt-2">
+          <div className="flex justify-between gap-2 pt-2 max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-4 max-md:items-center max-md:border-t max-md:bg-background/95 max-md:px-4 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-md:pt-3 max-md:backdrop-blur">
             <div>
               {currentTaskId && canDeleteTask && (
-                <Button variant="ghost" onClick={remove} className="text-destructive hover:text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                <Button variant="ghost" onClick={remove} aria-label="Mover para a lixeira" className="text-destructive hover:text-destructive max-md:h-11 max-md:w-11 max-md:rounded-full max-md:px-0">
+                  <Trash2 className="mr-2 h-4 w-4 max-md:mr-0" /> <span className="max-md:sr-only">Excluir</span>
                 </Button>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={saving}>{saving ? "Salvando…" : templateDraft && !currentTaskId ? "Criar processo" : "Salvar"}</Button>
+            <div className="flex gap-2 max-md:flex-1">
+              <Button variant="outline" className="max-md:hidden" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={save} disabled={saving} className="max-md:h-11 max-md:flex-1 max-md:rounded-full">{saving ? "Salvando…" : templateDraft && !currentTaskId ? "Criar processo" : "Salvar"}</Button>
             </div>
           </div>
         </div>

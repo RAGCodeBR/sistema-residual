@@ -27,7 +27,7 @@ export function SaveProcessTemplate({taskId,title,disabled=false}:{taskId:string
       toast.success(where==="shared"?"Modelo salvo para toda a equipe. A tarefa original foi preservada.":"Modelo salvo neste navegador. A tarefa original foi preservada.");setOpen(false);
     } catch(error) {toast.error((error as Error).message);} finally {setSaving(false);}
   }
-  return <><Button type="button" variant="outline" size="sm" disabled={disabled} onClick={()=>{setName(title);setOpen(true);}}><CopyPlus className="mr-2 h-4 w-4"/>Salvar como modelo</Button>
+  return <><Button type="button" variant="outline" size="sm" disabled={disabled} className="max-md:h-8 max-md:gap-1.5 max-md:rounded-full max-md:px-3 max-md:text-xs" onClick={()=>{setName(title);setOpen(true);}}><CopyPlus className="mr-2 h-4 w-4 max-md:mr-0"/><span className="max-md:hidden">Salvar como modelo</span><span className="md:hidden">Modelo</span></Button>
     <Dialog open={open} onOpenChange={value=>{if(!saving)setOpen(value);}}><DialogContent>
       <DialogTitle>Salvar padrão do processo</DialogTitle><DialogDescription>Preserva o título, a descrição, a ordem das subtarefas e os responsáveis padrão. Cliente, datas fixas, conclusões, comentários e arquivos do atendimento não são copiados.</DialogDescription>
       <Label htmlFor="process-model-name">Nome do modelo</Label><Input id="process-model-name" value={name} onChange={event=>setName(event.target.value)}/>
