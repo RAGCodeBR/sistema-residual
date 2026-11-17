@@ -45,6 +45,18 @@ export function updateReloadUrl(address: string, version: string) {
   return url.toString();
 }
 
+/**
+ * Endereço usado para confirmar a conexão antes de recarregar. Não pode ser a
+ * página atual: no GitHub Pages toda rota interna (/tasks, /portal/...) responde
+ * 404 (o app carrega pelo 404.html), o que fazia o botão "Atualizar" falhar.
+ * O manifesto de versão existe sempre, na raiz da publicação.
+ */
+export function updateProbeUrl(address: string, base: string, now: number) {
+  const url = new URL(`${base.endsWith("/") ? base : `${base}/`}app-version.json`, address);
+  url.searchParams.set("t", String(now));
+  return url.toString();
+}
+
 export function updateStatus(hasNewVersion: boolean, localPreview: boolean, localUpdated: boolean, checked: boolean) {
   if (hasNewVersion || (localPreview && !localUpdated)) return "available";
   return localPreview || checked ? "current" : "checking";

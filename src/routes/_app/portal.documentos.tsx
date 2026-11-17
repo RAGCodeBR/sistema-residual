@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, HardHat, MoreHorizontal, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useClients } from "@/hooks/use-data";
@@ -13,8 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DocumentUploadDialog } from "@/components/DocumentUploadDialog";
+import { EpiDeliveries } from "@/components/EpiDeliveries";
 
-export const Route = createFileRoute("/_app/portal/documentos")({ component: ClientDocumentsPortal });
+export const Route = createFileRoute("/_app/portal/documentos")({
+  component: ClientDocumentsPortal,
+  validateSearch: (s: Record<string, unknown>): { secao?: "epis" } => (s.secao === "epis" ? { secao: "epis" } : {}),
+});
 type Branch = { id: string; client_id: string; name: string; cnpj: string | null };
 type Doc = { id: string; client_id: string; branch_id: string | null; title: string; description: string | null; file_name: string; storage_path: string; expires_at: string | null; notify_days_before: number; active: boolean };
 type Status = "overdue" | "due_soon" | "ok" | "none";
@@ -52,6 +58,15 @@ const dueText = (doc: Doc) => {
   if (days === 0) return `Vence hoje · ${formatDate(doc.expires_at)}`;
   return `Vence em ${formatDate(doc.expires_at)} · faltam ${plural(days, "dia")}`;
 };
+// Celular: vencimento em poucas palavras, ao lado da situação.
+const shortDue = (doc: Doc) => {
+  if (!doc.expires_at) return "";
+  const days = daysUntil(doc.expires_at);
+  if (days < 0) return `há ${plural(Math.abs(days), "dia")}`;
+  if (days === 0) return "hoje";
+  if (days <= 60) return `em ${plural(days, "dia")}`;
+  return `até ${formatDate(doc.expires_at)}`;
+};
 const DOC_COLUMNS = "id,client_id,branch_id,title,description,file_name,storage_path,expires_at,notify_days_before,active";
 
 function ClientDocumentsPortal() {
@@ -69,6 +84,11 @@ function ClientDocumentsPortal() {
   const [savingDoc, setSavingDoc] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "", branchId: "matrix", expiresAt: "", notifyDays: "30" });
   const manageDocs = hasPermission("documents") && !isClient;
+  const { secao } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const section: "docs" | "epis" = secao === "epis" && manageDocs ? "epis" : "docs";
+  const setSection = (next: "docs" | "epis") => void navigate({ search: { secao: next === "epis" ? "epis" : undefined }, replace: true });
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   // Uma única consulta traz tudo que o usuário pode ver; para clientes, o RLS limita à própria empresa e filiais.
   const { data: documents = [], isLoading } = useQuery({ queryKey: ["portal-client-documents"], queryFn: async () => { const { data, error } = await (supabase.from("client_documents") as any).select(DOC_COLUMNS).eq("active", true); if (error) throw error; return (data ?? []) as Doc[]; } });
@@ -201,13 +221,24 @@ function ClientDocumentsPortal() {
   const filtersActive = view !== "all" || !!search.trim() || (!isClient && clientFilter !== "all");
   const clearFilters = () => { setView("all"); setSearch(""); setClientFilter("all"); };
 
-  return <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header>
-      <h1 className="text-2xl font-bold">Documentos</h1>
-      <p className="text-sm text-muted-foreground">{isClient ? "Todos os documentos da sua empresa e filiais, com os vencimentos em destaque." : "Documentos de todas as empresas e unidades, com os vencimentos em destaque."}</p>
+  return <div className="mx-auto max-w-6xl space-y-6 p-4 max-md:space-y-3 max-md:p-3 max-md:pb-28 sm:p-6">
+    <header className="flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold max-md:text-xl">Documentos</h1>
+        <p className="text-sm text-muted-foreground max-md:hidden">{section === "epis" ? "Entregas de EPI por funcionário, com as fotos de cada entrega." : isClient ? "Todos os documentos da sua empresa e filiais, com os vencimentos em destaque." : "Documentos de todas as empresas e unidades, com os vencimentos em destaque."}</p>
+      </div>
+      {manageDocs && section === "docs" && <Button onClick={() => setUploadOpen(true)} className="max-md:hidden"><Plus className="h-4 w-4" />Anexar documento</Button>}
     </header>
 
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {manageDocs && <div className="flex w-full rounded-full border bg-muted/40 p-0.5 sm:inline-flex sm:w-auto sm:rounded-lg sm:p-1" role="tablist" aria-label="Seção">
+      {([["docs", "Documentos", FileText], ["epis", "EPIs", HardHat]] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={section === id} onClick={() => setSection(id)}
+        className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm transition sm:flex-none sm:rounded-md sm:py-1.5 ${section === id ? "bg-background font-medium text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+        <Icon className="h-4 w-4" />{label}
+      </button>)}
+    </div>}
+
+    {section === "epis" ? <EpiDeliveries clients={clients} canManage={manageDocs} /> : <>
+    <div className="grid grid-cols-2 gap-3 max-md:grid-cols-4 max-md:gap-0 max-md:divide-x max-md:overflow-hidden max-md:rounded-2xl max-md:border max-md:bg-card lg:grid-cols-4">
       <Metric icon={AlertTriangle} label="Vencidos" value={counts.overdue} hint="Precisam ser renovados" tone={STATUS.overdue.tone} urgent={counts.overdue > 0} onClick={() => toggleView("overdue")} active={view === "overdue"} />
       <Metric icon={CalendarClock} label="Vencem em breve" value={counts.due_soon} hint="Dentro do prazo de aviso" tone={STATUS.due_soon.tone} onClick={() => toggleView("due_soon")} active={view === "due_soon"} />
       <Metric icon={CheckCircle2} label="Em dia" value={counts.ok} hint="Vigentes, sem alerta" tone={STATUS.ok.tone} onClick={() => toggleView("ok")} active={view === "ok"} />
@@ -215,7 +246,7 @@ function ClientDocumentsPortal() {
     </div>
 
     <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-      <div className="flex flex-wrap items-center gap-3 border-b p-3">
+      <div className="flex flex-wrap items-center gap-3 border-b p-3 max-md:gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={isClient ? "Buscar por documento, arquivo ou unidade" : "Buscar por documento, arquivo, empresa ou unidade"} className="pl-9" aria-label="Buscar documentos" />
@@ -225,7 +256,7 @@ function ClientDocumentsPortal() {
           <SelectContent><SelectItem value="all">Todas as empresas</SelectItem>{clients.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
         </Select>}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2 max-md:hidden">
         <div className="flex flex-wrap gap-1" role="tablist" aria-label="Situação">
           {VIEWS.map((item) => <button key={item.id} type="button" role="tab" aria-selected={view === item.id} onClick={() => setView(item.id)}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${view === item.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:bg-card/60 hover:text-foreground"}`}>
@@ -240,7 +271,7 @@ function ClientDocumentsPortal() {
           <FileText className="h-8 w-8 text-muted-foreground/60" />
           <div>
             <p className="font-medium">{filtersActive ? "Nenhum documento com esses filtros" : "Nenhum documento cadastrado ainda"}</p>
-            <p className="text-sm text-muted-foreground">{filtersActive ? "Tente outra situação ou limpe a busca." : isClient ? "Quando a Residual enviar documentos, eles aparecem aqui." : "Cadastre documentos pela ficha do cliente."}</p>
+            <p className="text-sm text-muted-foreground">{filtersActive ? "Tente outra situação ou limpe a busca." : isClient ? "Quando a Residual enviar documentos, eles aparecem aqui." : "Use “Anexar documento” para enviar o primeiro."}</p>
           </div>
           {filtersActive && <Button variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button>}
         </div>
@@ -257,7 +288,7 @@ function ClientDocumentsPortal() {
               <div className="flex items-center gap-2 px-4 pb-1 pt-3 text-xs font-medium text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" /><span>{unit.name}</span>{unit.cnpj && <span className="tabular-nums opacity-80">· {unit.cnpj}</span>}
               </div>
-              <ul className="pb-2">
+              <ul className="pb-2 max-md:divide-y max-md:pb-0">
                 {unit.docs.map((doc) => <DocRow key={doc.id} doc={doc} busy={busyId === doc.id} manage={manageDocs} onPreview={() => void previewDocument(doc)} onDownload={() => void download(doc)} onEdit={() => startEdit(doc)} onRemove={() => void removeDoc(doc)} />)}
               </ul>
             </div>)}
@@ -265,7 +296,14 @@ function ClientDocumentsPortal() {
         </div>}
     </section>
 
+    </>}
+
+    {manageDocs && section === "docs" && <Button onClick={() => setUploadOpen(true)} className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 z-30 h-14 rounded-full pl-5 pr-6 text-base shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] md:hidden">
+      <Plus className="h-5 w-5" />Anexar
+    </Button>}
+
     {pdfPreviewDialog}
+    <DocumentUploadDialog open={uploadOpen} onOpenChange={setUploadOpen} clients={clients} branches={branches} defaultClientId={clientFilter} />
 
     <Dialog open={!!editing && manageDocs} onOpenChange={(open) => !open && closeEdit()}>
       <DialogContent className="max-w-2xl">
@@ -297,7 +335,31 @@ function ClientDocumentsPortal() {
 function DocRow({ doc, busy, manage, onPreview, onDownload, onEdit, onRemove }: { doc: Doc; busy: boolean; manage: boolean; onPreview: () => void; onDownload: () => void; onEdit: () => void; onRemove: () => void }) {
   const status = statusOf(doc);
   const tone = STATUS[status];
-  return <li className="group mx-2 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/40">
+  return <li className="group mx-2 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/40 md:flex md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2 max-md:mx-0 max-md:rounded-none max-md:px-4 max-md:py-0 max-md:hover:bg-transparent">
+    {/* Celular: nome inteiro, situação compacta; tocar abre o documento. */}
+    <div className="flex items-center gap-1 md:hidden">
+      <button type="button" onClick={onPreview} disabled={busy} className="flex min-w-0 flex-1 items-start gap-3 py-3 text-left active:opacity-70">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${tone.className}`}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-medium leading-snug [overflow-wrap:anywhere]">{doc.title}</span>
+          <span className="mt-1 flex min-w-0 items-center gap-1.5 text-xs">
+            <span className={`shrink-0 rounded-full px-2 py-0.5 font-medium ${tone.className}`}>{tone.label}</span>
+            {doc.expires_at && <span className={`truncate tabular-nums ${status === "overdue" ? "text-destructive" : "text-muted-foreground"}`}>{shortDue(doc)}</span>}
+          </span>
+        </span>
+      </button>
+      <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0 text-muted-foreground" onClick={onDownload} aria-label="Baixar documento"><Download className="h-4 w-4" /></Button>
+      {manage && <DropdownMenu>
+        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="-mr-2 h-10 w-10 shrink-0 text-muted-foreground" aria-label="Mais ações"><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={onPreview} className="min-h-10"><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>
+          <DropdownMenuItem onClick={onEdit} className="min-h-10"><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onRemove} className="min-h-10 text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>}
+    </div>
+    <div className="hidden md:contents">
     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tone.className}`}><FileText className="h-4 w-4" /></span>
     <button type="button" onClick={onPreview} className="min-w-0 flex-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" title="Visualizar documento">
       <span className="block truncate font-medium group-hover:text-primary">{doc.title}</span>
@@ -315,20 +377,21 @@ function DocRow({ doc, busy, manage, onPreview, onDownload, onEdit, onRemove }: 
         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onRemove} title="Excluir documento" aria-label="Excluir documento"><Trash2 className="h-4 w-4 text-destructive" /></Button>
       </>}
     </div>
+    </div>
   </li>;
 }
 
 function Metric({ icon: Icon, label, value, hint, tone, onClick, active, urgent }: { icon: typeof FileText; label: string; value: number; hint: string; tone: string; onClick: () => void; active: boolean; urgent?: boolean }) {
   // O cartão inteiro filtra a lista; clicar de novo volta para "Todos".
   return <button type="button" onClick={onClick} aria-pressed={active}
-    className={`rounded-xl border bg-card p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "border-primary/50 ring-2 ring-primary/15" : urgent ? "border-destructive/40" : ""}`}>
-    <span className="flex items-start justify-between gap-2">
-      <span>
-        <span className="block text-sm text-muted-foreground">{label}</span>
-        <span className={`mt-1 block text-2xl font-bold tabular-nums ${tone}`}>{value}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>
+    className={`rounded-xl border bg-card p-4 text-left shadow-sm max-md:rounded-none max-md:border-0 max-md:px-2 max-md:py-2.5 max-md:text-center max-md:shadow-none max-md:hover:translate-y-0 max-md:aria-pressed:bg-accent/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "border-primary/50 ring-2 ring-primary/15" : urgent ? "border-destructive/40" : ""}`}>
+    <span className="flex items-start justify-between gap-2 max-md:block">
+      <span className="max-md:flex max-md:flex-col max-md:items-center max-md:gap-0.5">
+        <span className="block text-sm text-muted-foreground max-md:order-2 max-md:text-[11px] max-md:leading-tight">{label}</span>
+        <span className={`mt-1 block text-2xl font-bold tabular-nums max-md:mt-0 max-md:text-xl ${tone}`}>{value}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground max-md:hidden">{hint}</span>
       </span>
-      <Icon className={`h-5 w-5 ${tone}`} />
+      <Icon className={`h-5 w-5 max-md:hidden ${tone}`} />
     </span>
   </button>;
 }

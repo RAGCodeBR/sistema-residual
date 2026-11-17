@@ -6,6 +6,7 @@ import { ClientImpersonationBanner } from "@/components/ClientImpersonationBanne
 import { useQuery } from "@tanstack/react-query";
 import { getClientIsoWorkspaceId, isoRemoteEnabled } from "@/lib/iso-remote";
 import { IsoShell } from "@/components/iso/IsoShell";
+import { DOCUMENTS_ONLY, DOCUMENTS_PATH } from "@/lib/app-mode";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -40,6 +41,8 @@ function AppLayout() {
     );
   }
   if (!user) return <Navigate to="/auth" search={{ autorizacao: pathname === "/integracoes-chatgpt" ? search.authorization_id : undefined }} />;
+  // Modo temporário "só Documentos": qualquer outra área volta para Documentos.
+  if (DOCUMENTS_ONLY && pathname !== DOCUMENTS_PATH) return <Navigate to={DOCUMENTS_PATH} replace />;
   // O cliente começa pela consulta operacional e navega somente nas áreas do portal.
   if (isClient && isIso && clientIso.isPending)
     return <div className="p-8 text-sm">Verificando acesso ao ISO…</div>;

@@ -8,7 +8,7 @@ import jacobySymbol from "@/assets/residual-logo.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RefreshCw, CheckCircle2, Sparkles, Check, PlayCircle } from "lucide-react";
 import { ReleaseTutorialVideo } from "@/components/ReleaseTutorialVideo";
-import { parseAppVersion, updateReloadUrl, updateStatus, type AppVersion, type ReleaseNotes } from "@/lib/app-update";
+import { parseAppVersion, updateProbeUrl, updateReloadUrl, updateStatus, type AppVersion, type ReleaseNotes } from "@/lib/app-update";
 
 declare const __JACOBY_BUILD_ID__: string;
 
@@ -105,12 +105,19 @@ function InternalAppUpdateBanner() {
       // Unique URL bypasses cached HTML; JS/CSS already have content hashes.
       // Verify connectivity before leaving the current editing session.
       const target = updateReloadUrl(window.location.href,available?.id || __JACOBY_BUILD_ID__);
-      const response = await fetch(target,{cache:"reload",headers:{Accept:"text/html"},signal:AbortSignal.timeout(15000)});
-      if (!response.ok) throw new Error();
+      // Confere a conexão pelo manifesto de versão (a página atual responde 404
+      // no GitHub Pages). AbortController manual: iPhones antigos não têm AbortSignal.timeout.
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(updateProbeUrl(window.location.href,import.meta.env.BASE_URL || "/",Date.now()),{cache:"no-store",signal:controller.signal});
+        if (!response.ok) throw new Error();
+      } finally { window.clearTimeout(timeout); }
       if (localPreview) writeStorage("session","jacoby-update-preview",releaseNotes.version);
       window.location.replace(target);
     } catch {
       setError("Não foi possível atualizar agora. Verifique a conexão e tente novamente.");
+      toast.error("Não foi possível atualizar agora. Verifique a conexão e tente novamente.");
       setReloading(false);
     }
   }, [available?.id, localPreview]);
@@ -168,7 +175,7 @@ function InternalAppUpdateBanner() {
         <RefreshCw className={`h-3.5 w-3.5 ${reloading ? "animate-spin" : ""}`} />
       </button>
     </div>
-    {error && <p role="alert" className="absolute right-0 top-full mt-2 w-64 rounded-lg border bg-background p-2 text-xs text-destructive shadow-sm">{error}</p>}
+    {error && <p role="alert" className="absolute right-0 top-full mt-2 w-64 max-md:hidden rounded-lg border bg-background p-2 text-xs text-destructive shadow-sm">{error}</p>}
     <span role="status" aria-live="polite" className="sr-only">{needsUpdate ? "Nova atualização disponível. Salve sua edição antes de atualizar." : status === "current" ? "Você está na versão atual do sistema." : "Verificando atualizações."}</span>
   </aside>, headerTarget)}
     <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>

@@ -3,6 +3,7 @@
  * Não contém regras de uma tela específica; novas áreas devem ser adicionadas em `allNav`.
  */
 import { canManageChatGpt } from "@/lib/chatgpt-connection";
+import { DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH } from "@/lib/app-mode";
 import { Bot } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { usePayableAlerts } from "@/hooks/use-payable-alerts";
@@ -106,6 +107,8 @@ export function AppShell({
 }) {
   const { profile, user, signOut, isAdmin, isClient, hasPermission } = useAuth();
   const nav = useMemo(() => {
+    // Modo temporário: só a aba Documentos fica visível para todos.
+    if (DOCUMENTS_ONLY) return allNav.filter((item) => item.to === DOCUMENTS_PATH);
     const visibleItems = allNav.filter(
       (item) =>
         (!item.adminOnly || isAdmin) &&
@@ -165,7 +168,7 @@ export function AppShell({
         <div className={`jacoby-sidebar-brand ${sidebarOpen ? "px-4 py-5" : "px-2 py-5"}`}>
           {sidebarOpen ? (
             <>
-              <Link to="/dashboard" className="jacoby-sidebar-brand__link" title="Ir para o início">
+              <Link to={HOME_PATH} className="jacoby-sidebar-brand__link" title="Ir para o início">
                 <img
                   src={jacobyLogoFull}
                   alt="Residual Assessoria em Meio Ambiente"
@@ -179,7 +182,7 @@ export function AppShell({
               </Link>
             </>
           ) : (
-            <Link to="/dashboard" className="group rounded-xl" title="Ir para o início">
+            <Link to={HOME_PATH} className="group rounded-xl" title="Ir para o início">
               <JacobyMark className="h-10 w-10" />
             </Link>
           )}
@@ -303,7 +306,7 @@ export function AppShell({
           <span className="hidden truncate min-[480px]:inline">Residual</span>
         </span>
         <div id="app-updates-mobile" />
-        {!isClient && <EnvironmentSwitch active="management" />}
+        {!isClient && !DOCUMENTS_ONLY && <EnvironmentSwitch active="management" />}
         <NotificationBell />
       </div>
 
@@ -429,7 +432,7 @@ export function AppShell({
         <div className="hidden md:flex sticky top-0 z-30 items-center justify-between px-4 py-2 bg-background/80 backdrop-blur border-b">
           {isAdmin || hasPermission("dashboard") ? (
             <Link
-              to="/dashboard"
+              to={DOCUMENTS_ONLY ? DOCUMENTS_PATH : "/dashboard"}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md text-destructive transition hover:bg-destructive/10"
               title="Alertas de documentos"
             >
@@ -440,7 +443,7 @@ export function AppShell({
           )}
           <div className="flex items-center gap-3">
             <div id="app-updates-desktop" />
-            {!isClient && <EnvironmentSwitch active="management" />}
+            {!isClient && !DOCUMENTS_ONLY && <EnvironmentSwitch active="management" />}
             <NotificationBell />
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { HOME_PATH } from "@/lib/app-mode";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ function AuthPage() {
   useEffect(() => {
     if (user) {
       if (autorizacao) void navigate({ to: "/integracoes-chatgpt", search: { authorization_id: autorizacao }, replace: true });
-      else void navigate({ to: "/dashboard", replace: true });
+      else void navigate({ to: HOME_PATH, replace: true });
     }
   }, [user, navigate, autorizacao]);
 
