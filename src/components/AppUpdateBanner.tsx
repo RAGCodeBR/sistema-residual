@@ -52,6 +52,15 @@ function InternalAppUpdateBanner() {
     window.addEventListener("resize",locate);
     return () => { observer.disconnect(); window.removeEventListener("resize",locate); };
   }, []);
+  // Depois do "Atualizar", confirma que o sistema recarregou e limpa o marcador da URL.
+  useEffect(() => {
+    if (import.meta.env.DEV) return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("_jacobyUpdate")) return;
+    url.searchParams.delete("_jacobyUpdate");
+    window.history.replaceState(window.history.state, "", url.toString());
+    toast.success("Sistema atualizado", { description: `Você está na versão mais recente (${releaseNotes.version}).`, duration: 4000 });
+  }, []);
   const [available, setAvailable] = useState<AppVersion | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [reloading, setReloading] = useState(false);

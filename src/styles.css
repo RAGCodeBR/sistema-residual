@@ -367,3 +367,16 @@
     animation: none;
   }
 }
+
+/* iPhone: o campo de data/hora tem largura mínima própria e não encolhe,
+   invadindo o campo ao lado. Força a caber no espaço disponível. */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  min-width: 0;
+  max-width: 100%;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+}

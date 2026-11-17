@@ -22,6 +22,7 @@ import { Route as AppContasAPagarRouteImport } from './routes/_app/contas-a-paga
 import { Route as AppContasAReceberRouteImport } from './routes/_app/contas-a-receber'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDespesasRecorrentesRouteImport } from './routes/_app/despesas-recorrentes'
+import { Route as AppDocumentosRouteImport } from './routes/_app/documentos'
 import { Route as AppFinanceiroRouteImport } from './routes/_app/financeiro'
 import { Route as AppImportAtaRouteImport } from './routes/_app/import-ata'
 import { Route as AppIntegracoesChatgptRouteImport } from './routes/_app/integracoes-chatgpt'
@@ -129,6 +130,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppDespesasRecorrentesRoute = AppDespesasRecorrentesRouteImport.update({
   id: '/despesas-recorrentes',
   path: '/despesas-recorrentes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentosRoute = AppDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/contas-a-receber': typeof AppContasAReceberRoute
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
+  '/documentos': typeof AppDocumentosRoute
   '/financeiro': typeof AppFinanceiroRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/contas-a-receber': typeof AppContasAReceberRoute
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
+  '/documentos': typeof AppDocumentosRoute
   '/financeiro': typeof AppFinanceiroRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -476,6 +484,7 @@ export interface FileRoutesById {
   '/_app/contas-a-receber': typeof AppContasAReceberRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
+  '/_app/documentos': typeof AppDocumentosRoute
   '/_app/financeiro': typeof AppFinanceiroRoute
   '/_app/import-ata': typeof AppImportAtaRoute
   '/_app/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/contas-a-receber'
     | '/dashboard'
     | '/despesas-recorrentes'
+    | '/documentos'
     | '/financeiro'
     | '/import-ata'
     | '/integracoes-chatgpt'
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/contas-a-receber'
     | '/dashboard'
     | '/despesas-recorrentes'
+    | '/documentos'
     | '/financeiro'
     | '/import-ata'
     | '/integracoes-chatgpt'
@@ -648,6 +659,7 @@ export interface FileRouteTypes {
     | '/_app/contas-a-receber'
     | '/_app/dashboard'
     | '/_app/despesas-recorrentes'
+    | '/_app/documentos'
     | '/_app/financeiro'
     | '/_app/import-ata'
     | '/_app/integracoes-chatgpt'
@@ -792,6 +804,13 @@ declare module '@tanstack/react-router' {
       path: '/despesas-recorrentes'
       fullPath: '/despesas-recorrentes'
       preLoaderRoute: typeof AppDespesasRecorrentesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documentos': {
+      id: '/_app/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof AppDocumentosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/financeiro': {
@@ -1173,6 +1192,7 @@ interface AppRouteChildren {
   AppContasAReceberRoute: typeof AppContasAReceberRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDespesasRecorrentesRoute: typeof AppDespesasRecorrentesRoute
+  AppDocumentosRoute: typeof AppDocumentosRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppImportAtaRoute: typeof AppImportAtaRoute
   AppIntegracoesChatgptRoute: typeof AppIntegracoesChatgptRoute
@@ -1208,6 +1228,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContasAReceberRoute: AppContasAReceberRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDespesasRecorrentesRoute: AppDespesasRecorrentesRoute,
+  AppDocumentosRoute: AppDocumentosRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppImportAtaRoute: AppImportAtaRoute,
   AppIntegracoesChatgptRoute: AppIntegracoesChatgptRoute,
@@ -1261,6 +1282,7 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
 
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'

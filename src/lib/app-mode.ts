@@ -7,7 +7,10 @@
  */
 export const DOCUMENTS_ONLY = true;
 
-export const DOCUMENTS_PATH = "/portal/documentos" as const;
+/** Documentos da própria empresa (equipe interna). */
+export const DOCUMENTS_PATH = "/documentos" as const;
+/** Documentos do cliente, no portal (perfil Cliente). */
+export const CLIENT_DOCUMENTS_PATH = "/portal/documentos" as const;
 
 /** Tela inicial depois do login. */
 export const HOME_PATH = DOCUMENTS_ONLY ? DOCUMENTS_PATH : ("/dashboard" as const);

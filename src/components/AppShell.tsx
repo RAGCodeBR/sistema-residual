@@ -3,7 +3,7 @@
  * Não contém regras de uma tela específica; novas áreas devem ser adicionadas em `allNav`.
  */
 import { canManageChatGpt } from "@/lib/chatgpt-connection";
-import { DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH } from "@/lib/app-mode";
+import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH } from "@/lib/app-mode";
 import { Bot } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { usePayableAlerts } from "@/hooks/use-payable-alerts";
@@ -108,7 +108,10 @@ export function AppShell({
   const { profile, user, signOut, isAdmin, isClient, hasPermission } = useAuth();
   const nav = useMemo(() => {
     // Modo temporário: só a aba Documentos fica visível para todos.
-    if (DOCUMENTS_ONLY) return allNav.filter((item) => item.to === DOCUMENTS_PATH);
+    if (DOCUMENTS_ONLY)
+      return isClient
+        ? allNav.filter((item) => item.to === CLIENT_DOCUMENTS_PATH)
+        : [{ to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" } satisfies NavItem];
     const visibleItems = allNav.filter(
       (item) =>
         (!item.adminOnly || isAdmin) &&

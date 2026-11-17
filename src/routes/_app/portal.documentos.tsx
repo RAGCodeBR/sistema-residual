@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, HardHat, MoreHorizontal, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, MoreHorizontal, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useClients } from "@/hooks/use-data";
@@ -15,12 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DocumentUploadDialog } from "@/components/DocumentUploadDialog";
-import { EpiDeliveries } from "@/components/EpiDeliveries";
 
-export const Route = createFileRoute("/_app/portal/documentos")({
-  component: ClientDocumentsPortal,
-  validateSearch: (s: Record<string, unknown>): { secao?: "epis" } => (s.secao === "epis" ? { secao: "epis" } : {}),
-});
+export const Route = createFileRoute("/_app/portal/documentos")({ component: ClientDocumentsPortal });
 type Branch = { id: string; client_id: string; name: string; cnpj: string | null };
 type Doc = { id: string; client_id: string; branch_id: string | null; title: string; description: string | null; file_name: string; storage_path: string; expires_at: string | null; notify_days_before: number; active: boolean };
 type Status = "overdue" | "due_soon" | "ok" | "none";
@@ -84,10 +80,6 @@ function ClientDocumentsPortal() {
   const [savingDoc, setSavingDoc] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "", branchId: "matrix", expiresAt: "", notifyDays: "30" });
   const manageDocs = hasPermission("documents") && !isClient;
-  const { secao } = Route.useSearch();
-  const navigate = Route.useNavigate();
-  const section: "docs" | "epis" = secao === "epis" && manageDocs ? "epis" : "docs";
-  const setSection = (next: "docs" | "epis") => void navigate({ search: { secao: next === "epis" ? "epis" : undefined }, replace: true });
   const [uploadOpen, setUploadOpen] = useState(false);
 
   // Uma única consulta traz tudo que o usuário pode ver; para clientes, o RLS limita à própria empresa e filiais.
@@ -225,19 +217,11 @@ function ClientDocumentsPortal() {
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         <h1 className="text-2xl font-bold max-md:text-xl">Documentos</h1>
-        <p className="text-sm text-muted-foreground max-md:hidden">{section === "epis" ? "Entregas de EPI por funcionário, com as fotos de cada entrega." : isClient ? "Todos os documentos da sua empresa e filiais, com os vencimentos em destaque." : "Documentos de todas as empresas e unidades, com os vencimentos em destaque."}</p>
+        <p className="text-sm text-muted-foreground max-md:hidden">{isClient ? "Todos os documentos da sua empresa e filiais, com os vencimentos em destaque." : "Documentos de todas as empresas e unidades, com os vencimentos em destaque."}</p>
       </div>
-      {manageDocs && section === "docs" && <Button onClick={() => setUploadOpen(true)} className="max-md:hidden"><Plus className="h-4 w-4" />Anexar documento</Button>}
+      {manageDocs && <Button onClick={() => setUploadOpen(true)} className="max-md:hidden"><Plus className="h-4 w-4" />Anexar documento</Button>}
     </header>
 
-    {manageDocs && <div className="flex w-full rounded-full border bg-muted/40 p-0.5 sm:inline-flex sm:w-auto sm:rounded-lg sm:p-1" role="tablist" aria-label="Seção">
-      {([["docs", "Documentos", FileText], ["epis", "EPIs", HardHat]] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={section === id} onClick={() => setSection(id)}
-        className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm transition sm:flex-none sm:rounded-md sm:py-1.5 ${section === id ? "bg-background font-medium text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-        <Icon className="h-4 w-4" />{label}
-      </button>)}
-    </div>}
-
-    {section === "epis" ? <EpiDeliveries clients={clients} canManage={manageDocs} /> : <>
     <div className="grid grid-cols-2 gap-3 max-md:grid-cols-4 max-md:gap-0 max-md:divide-x max-md:overflow-hidden max-md:rounded-2xl max-md:border max-md:bg-card lg:grid-cols-4">
       <Metric icon={AlertTriangle} label="Vencidos" value={counts.overdue} hint="Precisam ser renovados" tone={STATUS.overdue.tone} urgent={counts.overdue > 0} onClick={() => toggleView("overdue")} active={view === "overdue"} />
       <Metric icon={CalendarClock} label="Vencem em breve" value={counts.due_soon} hint="Dentro do prazo de aviso" tone={STATUS.due_soon.tone} onClick={() => toggleView("due_soon")} active={view === "due_soon"} />
@@ -296,9 +280,7 @@ function ClientDocumentsPortal() {
         </div>}
     </section>
 
-    </>}
-
-    {manageDocs && section === "docs" && <Button onClick={() => setUploadOpen(true)} className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 z-30 h-14 rounded-full pl-5 pr-6 text-base shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] md:hidden">
+    {manageDocs && <Button onClick={() => setUploadOpen(true)} className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 z-30 h-14 rounded-full pl-5 pr-6 text-base shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] md:hidden">
       <Plus className="h-5 w-5" />Anexar
     </Button>}
 

@@ -1,8 +1,7 @@
 /**
- * EPIs: entregas de equipamentos de proteção por funcionário, com as fotos
- * tiradas no momento da entrega. Os funcionários vêm do organograma do
- * cliente (setores → funcionários); quem ainda não está cadastrado pode ser
- * registrado digitando o nome.
+ * EPIs: entregas de equipamentos de proteção para os funcionários da empresa,
+ * com as fotos tiradas no momento da entrega. Quem ainda não está cadastrado
+ * pode ser registrado digitando o nome; ele fica salvo para as próximas.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,108 +11,51 @@ import { ChevronLeft, ChevronRight, HardHat, Loader2, Plus, Search, Trash2 } fro
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/scan-files";
+import { EPI_BUCKET as BUCKET, isMissingTable, table, useEmployees, useEpiDeliveries, type Employee, type EpiDelivery as Delivery } from "@/lib/company";
 import { safeStorageName } from "@/lib/storage-names";
 import { FileSourcePicker, PickedFiles } from "@/components/FileSourcePicker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const BUCKET = "epi-photos";
 const NEW_EMPLOYEE = "__new__";
 const COMMON_EPIS = ["Capacete", "Luvas", "Botina", "Óculos", "Protetor auricular", "Respirador", "Uniforme", "Avental"];
 
-type ClientLite = { id: string; name: string };
-type Department = { id: string; client_id: string; name: string };
-type Employee = { id: string; department_id: string; full_name: string; role: string | null };
-type Delivery = {
-  id: string;
-  client_id: string;
-  employee_id: string | null;
-  employee_name: string;
-  delivered_on: string;
-  items: string | null;
-  notes: string | null;
-  photo_paths: string[] | null;
-  created_at: string;
-};
-
-const isMissingTable = (error: { code?: string; message?: string } | null) =>
-  !!error && (error.code === "42P01" || error.code === "PGRST205" || /epi_deliveries/i.test(error.message ?? "") && /exist|schema cache/i.test(error.message ?? ""));
 const dateLabel = (iso: string) => format(new Date(`${iso}T12:00:00`), "dd MMM yyyy", { locale: ptBR });
 const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?";
 const todayIso = () => format(new Date(), "yyyy-MM-dd");
 
-export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; canManage: boolean }) {
+export function EpiPanel({ canManage }: { canManage: boolean }) {
   const qc = useQueryClient();
-  const [clientFilter, setClientFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [dialog, setDialog] = useState<{ clientId?: string; employeeId?: string; employeeName?: string } | null>(null);
+  const [dialog, setDialog] = useState<{ employeeId?: string; employeeName?: string } | null>(null);
   const [viewer, setViewer] = useState<{ urls: string[]; index: number; title: string } | null>(null);
+  const deliveriesQuery = useEpiDeliveries();
+  const { data: employees = [] } = useEmployees();
 
-  const deliveriesQuery = useQuery({
-    queryKey: ["epi-deliveries"],
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await (supabase.from("epi_deliveries") as any)
-        .select("id,client_id,employee_id,employee_name,delivered_on,items,notes,photo_paths,created_at")
-        .order("delivered_on", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Delivery[];
-    },
-  });
-  const { data: departments = [] } = useQuery({
-    queryKey: ["epi-departments"],
-    queryFn: async () => {
-      const { data, error } = await (supabase.from("client_departments") as any).select("id,client_id,name").order("position");
-      if (error) throw error;
-      return (data ?? []) as Department[];
-    },
-  });
-  const { data: employees = [] } = useQuery({
-    queryKey: ["epi-employees"],
-    queryFn: async () => {
-      const { data, error } = await (supabase.from("client_department_employees") as any).select("id,department_id,full_name,role").order("full_name");
-      if (error) throw error;
-      return (data ?? []) as Employee[];
-    },
-  });
-
-  const deliveries = deliveriesQuery.data ?? [];
-  const missingTable = isMissingTable(deliveriesQuery.error as { code?: string; message?: string } | null);
-  const clientName = (id: string) => clients.find((c) => c.id === id)?.name ?? "Empresa";
-  const deptById = useMemo(() => new Map(departments.map((d) => [d.id, d])), [departments]);
+  const deliveries = useMemo(() => deliveriesQuery.data ?? [], [deliveriesQuery.data]);
+  const missingTable = isMissingTable(deliveriesQuery.error);
   const employeeById = useMemo(() => new Map(employees.map((e) => [e.id, e])), [employees]);
 
   // Agrupa por funcionário (cadastrado ou digitado), mais recentes primeiro.
   const groups = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
-    const map = new Map<string, { key: string; clientId: string; employeeId: string | null; name: string; subtitle: string; list: Delivery[] }>();
+    const map = new Map<string, { key: string; employeeId: string | null; name: string; subtitle: string; list: Delivery[] }>();
     for (const d of deliveries) {
-      if (clientFilter !== "all" && d.client_id !== clientFilter) continue;
-      if (term && ![d.employee_name, d.items ?? "", d.notes ?? "", clientName(d.client_id)].some((t) => t.toLocaleLowerCase("pt-BR").includes(term))) continue;
-      const key = d.employee_id ?? `${d.client_id}:${d.employee_name.trim().toLocaleLowerCase("pt-BR")}`;
+      if (term && ![d.employee_name, d.items ?? "", d.notes ?? ""].some((t) => t.toLocaleLowerCase("pt-BR").includes(term))) continue;
+      const key = d.employee_id ?? `nome:${d.employee_name.trim().toLocaleLowerCase("pt-BR")}`;
       if (!map.has(key)) {
         const emp = d.employee_id ? employeeById.get(d.employee_id) : undefined;
-        const dept = emp ? deptById.get(emp.department_id) : undefined;
-        map.set(key, {
-          key,
-          clientId: d.client_id,
-          employeeId: d.employee_id,
-          name: emp?.full_name ?? d.employee_name,
-          subtitle: [clientName(d.client_id), dept?.name, emp?.role].filter(Boolean).join(" · "),
-          list: [],
-        });
+        map.set(key, { key, employeeId: d.employee_id, name: emp?.full_name ?? d.employee_name, subtitle: emp?.role ?? "", list: [] });
       }
       map.get(key)!.list.push(d);
     }
     return [...map.values()];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveries, clientFilter, search, employeeById, deptById, clients]);
+  }, [deliveries, search, employeeById]);
 
   const visiblePaths = useMemo(() => groups.flatMap((g) => g.list.flatMap((d) => d.photo_paths ?? [])), [groups]);
   const { data: photoUrls = {} } = useQuery({
@@ -143,7 +85,7 @@ export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; c
         <HardHat className="mx-auto h-8 w-8 text-primary" />
         <p className="mt-3 font-medium">A área de EPIs ainda não foi ativada no banco de dados</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-          Rode a migração <code className="rounded bg-muted px-1 text-xs">20261117120000_create_epi_deliveries.sql</code> no SQL Editor do Supabase e recarregue a página.
+          Rode a migração <code className="rounded bg-muted px-1 text-xs">20261117130000_company_documents_equipment_epis.sql</code> no Supabase e recarregue a página.
         </p>
       </div>
     );
@@ -156,20 +98,13 @@ export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; c
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar funcionário ou EPI" className="pl-9 max-md:h-11 max-md:rounded-xl" aria-label="Buscar entregas de EPI" />
         </div>
-        <Select value={clientFilter} onValueChange={setClientFilter}>
-          <SelectTrigger className="w-full sm:w-60 max-md:h-11 max-md:rounded-xl" aria-label="Filtrar por empresa"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as empresas</SelectItem>
-            {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
         {canManage && (
           <>
-            <Button onClick={() => setDialog({ clientId: clientFilter !== "all" ? clientFilter : undefined })} className="max-md:hidden">
+            <Button onClick={() => setDialog({})} className="max-md:hidden">
               <Plus className="h-4 w-4" />Registrar entrega
             </Button>
             {/* Celular: botão flutuante no alcance do polegar. */}
-            <Button onClick={() => setDialog({ clientId: clientFilter !== "all" ? clientFilter : undefined })} className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 z-30 h-14 rounded-full pl-5 pr-6 text-base shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] md:hidden">
+            <Button onClick={() => setDialog({})} className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-4 z-30 h-14 rounded-full pl-5 pr-6 text-base shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] md:hidden">
               <Plus className="h-5 w-5" />Registrar entrega
             </Button>
           </>
@@ -183,7 +118,7 @@ export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; c
       ) : groups.length === 0 ? (
         <div className="rounded-xl border bg-card p-10 text-center">
           <HardHat className="mx-auto h-8 w-8 text-muted-foreground/60" />
-          <p className="mt-3 font-medium">{search || clientFilter !== "all" ? "Nenhuma entrega com esses filtros" : "Nenhuma entrega de EPI registrada"}</p>
+          <p className="mt-3 font-medium">{search ? "Nenhuma entrega encontrada" : "Nenhuma entrega de EPI registrada"}</p>
           <p className="mt-1 text-sm text-muted-foreground">Registre a entrega e fotografe o funcionário com os EPIs ou a ficha assinada.</p>
         </div>
       ) : (
@@ -194,14 +129,14 @@ export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; c
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/12 text-sm font-semibold text-primary">{initials(group.name)}</span>
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-semibold">{group.name}</h3>
-                  <p className="truncate text-xs text-muted-foreground">{group.subtitle}</p>
+                  {group.subtitle && <p className="truncate text-xs text-muted-foreground">{group.subtitle}</p>}
                 </div>
                 {canManage && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="shrink-0 max-md:h-9 max-md:rounded-full"
-                    onClick={() => setDialog({ clientId: group.clientId, employeeId: group.employeeId ?? undefined, employeeName: group.employeeId ? undefined : group.name })}
+                    onClick={() => setDialog({ employeeId: group.employeeId ?? undefined, employeeName: group.employeeId ? undefined : group.name })}
                   >
                     <Plus className="h-4 w-4" /><span className="max-sm:sr-only">Nova entrega</span>
                   </Button>
@@ -252,8 +187,6 @@ export function EpiDeliveries({ clients, canManage }: { clients: ClientLite[]; c
         open={!!dialog}
         initial={dialog}
         onOpenChange={(open) => !open && setDialog(null)}
-        clients={clients}
-        departments={departments}
         employees={employees}
       />
 
@@ -285,21 +218,17 @@ function EpiDeliveryDialog({
   open,
   initial,
   onOpenChange,
-  clients,
-  departments,
   employees,
 }: {
   open: boolean;
-  initial: { clientId?: string; employeeId?: string; employeeName?: string } | null;
+  initial: { employeeId?: string; employeeName?: string } | null;
   onOpenChange: (open: boolean) => void;
-  clients: ClientLite[];
-  departments: Department[];
   employees: Employee[];
 }) {
   const qc = useQueryClient();
-  const [clientId, setClientId] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState("");
   const [deliveredOn, setDeliveredOn] = useState(todayIso());
   const [items, setItems] = useState("");
   const [notes, setNotes] = useState("");
@@ -307,20 +236,18 @@ function EpiDeliveryDialog({
   const [saving, setSaving] = useState(false);
   const [stage, setStage] = useState("");
 
+  const activeEmployees = employees.filter((e) => e.active !== false);
   useEffect(() => {
     if (!open) return;
-    setClientId(initial?.clientId ?? "");
-    setEmployeeId(initial?.employeeId ?? (initial?.employeeName ? NEW_EMPLOYEE : ""));
+    setEmployeeId(initial?.employeeId ?? (initial?.employeeName || activeEmployees.length === 0 ? NEW_EMPLOYEE : ""));
     setNewName(initial?.employeeName ?? "");
+    setNewRole("");
     setDeliveredOn(todayIso());
     setItems("");
     setNotes("");
     setPhotos([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
-
-  const clientDepartments = departments.filter((d) => d.client_id === clientId);
-  const hasEmployees = clientDepartments.some((d) => employees.some((e) => e.department_id === d.id));
-  const effectiveEmployee = !hasEmployees && clientId ? NEW_EMPLOYEE : employeeId;
 
   const itemList = items.split(",").map((s) => s.trim()).filter(Boolean);
   const toggleItem = (name: string) => {
@@ -333,29 +260,41 @@ function EpiDeliveryDialog({
   };
 
   const save = async () => {
-    const employee = effectiveEmployee && effectiveEmployee !== NEW_EMPLOYEE ? employees.find((e) => e.id === effectiveEmployee) : undefined;
+    const employee = employeeId && employeeId !== NEW_EMPLOYEE ? employees.find((e) => e.id === employeeId) : undefined;
     const employeeName = employee?.full_name ?? newName.trim();
-    if (!clientId) return toast.error("Escolha a empresa.");
     if (!employeeName) return toast.error("Escolha ou digite o nome do funcionário.");
     if (!deliveredOn) return toast.error("Informe a data da entrega.");
     if (!photos.length) return toast.error("Tire ao menos uma foto da entrega.");
     setSaving(true);
     const id = crypto.randomUUID();
     const uploaded: string[] = [];
+    let createdEmployeeId: string | null = null;
     try {
+      let finalEmployeeId = employee?.id ?? null;
+      if (!employee) {
+        // Funcionário novo fica cadastrado para as próximas entregas.
+        const existing = employees.find((e) => e.full_name.trim().toLocaleLowerCase("pt-BR") === employeeName.toLocaleLowerCase("pt-BR"));
+        if (existing) finalEmployeeId = existing.id;
+        else {
+          setStage("Cadastrando funcionário…");
+          createdEmployeeId = crypto.randomUUID();
+          const { error } = await table("company_employees").insert({ id: createdEmployeeId, full_name: employeeName, role: newRole.trim() || null });
+          if (error) throw error;
+          finalEmployeeId = createdEmployeeId;
+        }
+      }
       for (let i = 0; i < photos.length; i += 1) {
         setStage(`Enviando foto ${i + 1} de ${photos.length}…`);
         const file = await compressImage(photos[i]);
-        const path = `${clientId}/${id}/${i + 1}-${Date.now()}-${safeStorageName(file.name)}`;
+        const path = `${id}/${i + 1}-${Date.now()}-${safeStorageName(file.name)}`;
         const { error } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type || "image/jpeg" });
         if (error) throw error;
         uploaded.push(path);
       }
       setStage("Salvando…");
-      const { error } = await (supabase.from("epi_deliveries") as any).insert({
+      const { error } = await table("epi_deliveries").insert({
         id,
-        client_id: clientId,
-        employee_id: employee?.id ?? null,
+        employee_id: finalEmployeeId,
         employee_name: employeeName,
         delivered_on: deliveredOn,
         items: itemList.join(", ") || null,
@@ -363,11 +302,12 @@ function EpiDeliveryDialog({
         photo_paths: uploaded,
       });
       if (error) throw error;
-      await qc.invalidateQueries({ queryKey: ["epi-deliveries"] });
+      await Promise.all([qc.invalidateQueries({ queryKey: ["epi-deliveries"] }), qc.invalidateQueries({ queryKey: ["company-employees"] })]);
       toast.success("Entrega de EPI registrada.");
       onOpenChange(false);
     } catch (error) {
       if (uploaded.length) await supabase.storage.from(BUCKET).remove(uploaded);
+      if (createdEmployeeId) await table("company_employees").delete().eq("id", createdEmployeeId);
       toast.error((error as { message?: string })?.message || "Não foi possível registrar a entrega.");
     } finally {
       setSaving(false);
@@ -390,44 +330,29 @@ function EpiDeliveryDialog({
             <PickedFiles files={photos} disabled={saving} onRemove={(index) => setPhotos((current) => current.filter((_, i) => i !== index))} />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Empresa *</Label>
-              <Select value={clientId || undefined} onValueChange={(value) => { setClientId(value); setEmployeeId(""); setNewName(""); }}>
-                <SelectTrigger aria-label="Empresa"><SelectValue placeholder="Escolha a empresa" /></SelectTrigger>
-                <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Data da entrega *</Label>
-              <Input type="date" value={deliveredOn} max={todayIso()} onChange={(e) => setDeliveredOn(e.target.value)} />
-            </div>
-          </div>
-
           <div className="space-y-1.5">
             <Label>Funcionário *</Label>
-            {hasEmployees && (
-              <Select value={employeeId || undefined} onValueChange={setEmployeeId} disabled={!clientId}>
+            {activeEmployees.length > 0 && (
+              <Select value={employeeId || undefined} onValueChange={setEmployeeId}>
                 <SelectTrigger aria-label="Funcionário"><SelectValue placeholder="Escolha o funcionário" /></SelectTrigger>
                 <SelectContent>
-                  {clientDepartments.map((dept) => {
-                    const list = employees.filter((e) => e.department_id === dept.id);
-                    if (!list.length) return null;
-                    return (
-                      <SelectGroup key={dept.id}>
-                        <SelectLabel>{dept.name}</SelectLabel>
-                        {list.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}{e.role ? ` · ${e.role}` : ""}</SelectItem>)}
-                      </SelectGroup>
-                    );
-                  })}
-                  <SelectItem value={NEW_EMPLOYEE}>Outro (digitar o nome)</SelectItem>
+                  {activeEmployees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}{e.role ? ` · ${e.role}` : ""}</SelectItem>)}
+                  <SelectSeparator />
+                  <SelectItem value={NEW_EMPLOYEE}>+ Novo funcionário</SelectItem>
                 </SelectContent>
               </Select>
             )}
-            {effectiveEmployee === NEW_EMPLOYEE && (
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nome completo do funcionário" autoComplete="off" />
+            {employeeId === NEW_EMPLOYEE && (
+              <div className="grid gap-2 sm:grid-cols-[1fr_11rem]">
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nome completo" autoComplete="off" />
+                <Input value={newRole} onChange={(e) => setNewRole(e.target.value)} placeholder="Função (opcional)" autoComplete="off" />
+              </div>
             )}
-            {!clientId && <p className="text-xs text-muted-foreground">Escolha a empresa para ver os funcionários do organograma.</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Data da entrega *</Label>
+            <Input type="date" value={deliveredOn} max={todayIso()} onChange={(e) => setDeliveredOn(e.target.value)} className="block w-full min-w-0 sm:w-56" />
           </div>
 
           <div className="space-y-1.5">
