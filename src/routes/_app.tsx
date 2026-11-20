@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, loading, isClient, hasPermission } = useAuth();
+  const { user, loading, isAdmin, isClient, hasPermission } = useAuth();
   const search = useRouterState({ select: (state) => state.location.search }) as { aba?: string; authorization_id?: string };
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isIso = pathname === "/iso" || pathname.startsWith("/iso/");
@@ -41,9 +41,9 @@ function AppLayout() {
     );
   }
   if (!user) return <Navigate to="/auth" search={{ autorizacao: pathname === "/integracoes-chatgpt" ? search.authorization_id : undefined }} />;
-  // Modo temporário "só Documentos": qualquer outra área volta para Documentos.
+  // A gestão de acessos continua disponível aos administradores neste modo.
   if (DOCUMENTS_ONLY) {
-    if (isClient ? pathname !== CLIENT_DOCUMENTS_PATH : !isAllowedInternalPath(pathname))
+    if (isClient ? pathname !== CLIENT_DOCUMENTS_PATH : !isAllowedInternalPath(pathname) && !(isAdmin && pathname === "/users"))
       return <Navigate to={isClient ? CLIENT_DOCUMENTS_PATH : DOCUMENTS_PATH} replace />;
   }
   if (!isClient && (pathname === PROPOSALS_PATH || pathname.startsWith(`${PROPOSALS_PATH}/`)) && !hasPermission("proposals")) {

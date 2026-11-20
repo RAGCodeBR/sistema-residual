@@ -107,7 +107,7 @@ export function AppShell({
 }) {
   const { profile, user, signOut, isAdmin, isClient, hasPermission } = useAuth();
   const nav = useMemo(() => {
-    // Modo temporário: só a aba Documentos fica visível para todos.
+    // Administradores também precisam gerenciar logins e senhas neste modo.
     if (DOCUMENTS_ONLY)
       return isClient
         ? allNav.filter((item) => item.to === CLIENT_DOCUMENTS_PATH)
@@ -115,6 +115,7 @@ export function AppShell({
             [
               { to: PROPOSALS_PATH, label: "Propostas", icon: FileSignature, permission: "proposals" },
               { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
+              ...(isAdmin ? [{ to: "/users", label: "Usuários", icon: Users, adminOnly: true }] : []),
             ] as NavItem[]
           ).filter((item) => !item.permission || hasPermission(item.permission));
     const visibleItems = allNav.filter(
