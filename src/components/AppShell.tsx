@@ -40,8 +40,8 @@ import { EnvironmentSwitch } from "@/components/EnvironmentSwitch";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AssignmentPopup } from "@/components/AssignmentPopup";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import jacobyLogoFull from "@/assets/residual-logo.webp";
-import jacobyLogoDark from "@/assets/residual-logo.webp";
+import jacobyLogoFull from "@/assets/residual-logo-transparent.png";
+import jacobyLogoDark from "@/assets/residual-logo-dark.png";
 import { JacobyMark } from "@/components/JacobyMark";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,8 +113,8 @@ export function AppShell({
         ? allNav.filter((item) => item.to === CLIENT_DOCUMENTS_PATH)
         : (
             [
-              { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
               { to: PROPOSALS_PATH, label: "Propostas", icon: FileSignature, permission: "proposals" },
+              { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
             ] as NavItem[]
           ).filter((item) => !item.permission || hasPermission(item.permission));
     const visibleItems = allNav.filter(

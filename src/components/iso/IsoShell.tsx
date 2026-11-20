@@ -20,7 +20,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { EnvironmentSwitch } from "@/components/EnvironmentSwitch";
 import { IsoWorkspace, useIsoWorkspace, type IsoAudit } from "./IsoWorkspace";
-import jacobyLogo from "@/assets/residual-logo.webp";
+import jacobyLogo from "@/assets/residual-logo-transparent.png";
 
 const links = [
   { title: "Kit Pré-Auditoria", url: "/iso", icon: CheckSquare2 },

@@ -10,7 +10,7 @@
  *  - bloco de aceite para o cliente assinar e devolver;
  *  - cabeçalho, rodapé e "Página x de y" em todas as páginas.
  */
-import residualLogo from "@/assets/residual-logo.webp";
+import residualLogo from "@/assets/residual-logo-transparent.png";
 import {
   RESIDUAL,
   longDate,
@@ -51,10 +51,8 @@ function loadLogo(): Promise<string | null> {
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext("2d");
         if (!ctx) return resolve(null);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/jpeg", 0.92));
+        resolve(canvas.toDataURL("image/png"));
       } catch {
         resolve(null);
       }
@@ -238,7 +236,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   };
 
   /* Cabeçalho da 1ª página ------------------------------------------------- */
-  if (logo) doc.addImage(logo, "JPEG", M_LEFT - 2, 12, 48, 32);
+  if (logo) doc.addImage(logo, "PNG", M_LEFT, 11, 40, 40 * (409 / 515));
   font("bold", 8, MUTED);
   doc.text(p.template === "assessoria" ? "PROPOSTA TÉCNICA E COMERCIAL" : "PROPOSTA COMERCIAL", PAGE_W - M_RIGHT, 20, { align: "right" });
   font("bold", 20, GREEN_DARK);
@@ -319,7 +317,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     fill([129, 199, 132]);
     doc.rect(PAGE_W - 9, 0, 2, PAGE_H, "F");
     if (page > 1) {
-      if (logo) doc.addImage(logo, "JPEG", M_LEFT - 1, 8, 27, 18);
+      if (logo) doc.addImage(logo, "PNG", M_LEFT, 7, 22, 22 * (409 / 515));
       font("bold", 11, GREEN_DARK);
       doc.text(code, PAGE_W - M_RIGHT, 17, { align: "right" });
       font("normal", 8, MUTED);

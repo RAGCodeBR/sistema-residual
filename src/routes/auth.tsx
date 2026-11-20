@@ -10,8 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { createLocalPreviewAccount, hasLocalPreviewAccounts, isStaticPreview, signInLocalPreviewAccount, useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import jacobyLogoTransparent from "@/assets/residual-logo.webp";
-import jacobyLogoDark from "@/assets/residual-logo.webp";
+import jacobyLogoTransparent from "@/assets/residual-logo-transparent.png";
+import jacobyLogoDark from "@/assets/residual-logo-dark.png";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { autorizacao?: string } => ({
