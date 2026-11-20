@@ -47,6 +47,7 @@ const previewPermissions = [
   "outsourced",
   "reports",
   "documents",
+  "proposals",
   "portal",
   "portal_units",
   "portal_reports",

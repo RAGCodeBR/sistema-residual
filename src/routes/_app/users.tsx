@@ -27,6 +27,7 @@ const ACCESS_OPTIONS = [
   ["outsourced", "Terceirizados"],
   ["reports", "Relatórios"],
   ["documents", "Documentos"],
+  ["proposals", "Propostas"],
   ["portal_units", "Portal do Cliente · Unidades e pátios"],
   ["portal_reports", "Portal do Cliente · Relatórios"],
   ["billing", "Boletim de Medição"],

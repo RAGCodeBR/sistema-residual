@@ -6,7 +6,7 @@ import { ClientImpersonationBanner } from "@/components/ClientImpersonationBanne
 import { useQuery } from "@tanstack/react-query";
 import { getClientIsoWorkspaceId, isoRemoteEnabled } from "@/lib/iso-remote";
 import { IsoShell } from "@/components/iso/IsoShell";
-import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH } from "@/lib/app-mode";
+import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, PROPOSALS_PATH, isAllowedInternalPath } from "@/lib/app-mode";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -43,8 +43,11 @@ function AppLayout() {
   if (!user) return <Navigate to="/auth" search={{ autorizacao: pathname === "/integracoes-chatgpt" ? search.authorization_id : undefined }} />;
   // Modo temporário "só Documentos": qualquer outra área volta para Documentos.
   if (DOCUMENTS_ONLY) {
-    const allowed = isClient ? CLIENT_DOCUMENTS_PATH : DOCUMENTS_PATH;
-    if (pathname !== allowed) return <Navigate to={allowed} replace />;
+    if (isClient ? pathname !== CLIENT_DOCUMENTS_PATH : !isAllowedInternalPath(pathname))
+      return <Navigate to={isClient ? CLIENT_DOCUMENTS_PATH : DOCUMENTS_PATH} replace />;
+  }
+  if (!isClient && (pathname === PROPOSALS_PATH || pathname.startsWith(`${PROPOSALS_PATH}/`)) && !hasPermission("proposals")) {
+    return <Navigate to={DOCUMENTS_PATH} replace />;
   }
   // O cliente começa pela consulta operacional e navega somente nas áreas do portal.
   if (isClient && isIso && clientIso.isPending)

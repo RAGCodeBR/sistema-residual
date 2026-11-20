@@ -60,6 +60,8 @@ import { Route as AppPortalMovimentacoesRouteImport } from './routes/_app/portal
 import { Route as AppPortalProjetosRouteImport } from './routes/_app/portal.projetos'
 import { Route as AppPortalResiduosRouteImport } from './routes/_app/portal.residuos'
 import { Route as AppPortalUnidadesRouteImport } from './routes/_app/portal.unidades'
+import { Route as AppPropostasIndexRouteImport } from './routes/_app/propostas.index'
+import { Route as AppPropostasProposalIdRouteImport } from './routes/_app/propostas.$proposalId'
 import { Route as AppTasksIndexRouteImport } from './routes/_app/tasks.index'
 import { Route as AppTasksCalendarRouteImport } from './routes/_app/tasks.calendar'
 import { Route as AppTasksKanbanRouteImport } from './routes/_app/tasks.kanban'
@@ -324,6 +326,16 @@ const AppPortalUnidadesRoute = AppPortalUnidadesRouteImport.update({
   path: '/portal/unidades',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPropostasIndexRoute = AppPropostasIndexRouteImport.update({
+  id: '/propostas/',
+  path: '/propostas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPropostasProposalIdRoute = AppPropostasProposalIdRouteImport.update({
+  id: '/propostas/$proposalId',
+  path: '/propostas/$proposalId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTasksIndexRoute = AppTasksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -405,11 +417,13 @@ export interface FileRoutesByFullPath {
   '/portal/projetos': typeof AppPortalProjetosRoute
   '/portal/residuos': typeof AppPortalResiduosRoute
   '/portal/unidades': typeof AppPortalUnidadesRoute
+  '/propostas/$proposalId': typeof AppPropostasProposalIdRoute
   '/tasks/calendar': typeof AppTasksCalendarRoute
   '/tasks/kanban': typeof AppTasksKanbanRoute
   '/tasks/list': typeof AppTasksListRoute
   '/api/chatgpt/$': typeof ApiChatgptSplatRoute
   '/clients/': typeof AppClientsIndexRoute
+  '/propostas/': typeof AppPropostasIndexRoute
   '/tasks/': typeof AppTasksIndexRoute
   '/clients/$clientId/edit': typeof AppClientsClientIdEditRoute
 }
@@ -461,11 +475,13 @@ export interface FileRoutesByTo {
   '/portal/projetos': typeof AppPortalProjetosRoute
   '/portal/residuos': typeof AppPortalResiduosRoute
   '/portal/unidades': typeof AppPortalUnidadesRoute
+  '/propostas/$proposalId': typeof AppPropostasProposalIdRoute
   '/tasks/calendar': typeof AppTasksCalendarRoute
   '/tasks/kanban': typeof AppTasksKanbanRoute
   '/tasks/list': typeof AppTasksListRoute
   '/api/chatgpt/$': typeof ApiChatgptSplatRoute
   '/clients': typeof AppClientsIndexRoute
+  '/propostas': typeof AppPropostasIndexRoute
   '/tasks': typeof AppTasksIndexRoute
   '/clients/$clientId/edit': typeof AppClientsClientIdEditRoute
 }
@@ -521,11 +537,13 @@ export interface FileRoutesById {
   '/_app/portal/projetos': typeof AppPortalProjetosRoute
   '/_app/portal/residuos': typeof AppPortalResiduosRoute
   '/_app/portal/unidades': typeof AppPortalUnidadesRoute
+  '/_app/propostas/$proposalId': typeof AppPropostasProposalIdRoute
   '/_app/tasks/calendar': typeof AppTasksCalendarRoute
   '/_app/tasks/kanban': typeof AppTasksKanbanRoute
   '/_app/tasks/list': typeof AppTasksListRoute
   '/api/chatgpt/$': typeof ApiChatgptSplatRoute
   '/_app/clients/': typeof AppClientsIndexRoute
+  '/_app/propostas/': typeof AppPropostasIndexRoute
   '/_app/tasks/': typeof AppTasksIndexRoute
   '/_app/clients/$clientId/edit': typeof AppClientsClientIdEditRoute
 }
@@ -581,11 +599,13 @@ export interface FileRouteTypes {
     | '/portal/projetos'
     | '/portal/residuos'
     | '/portal/unidades'
+    | '/propostas/$proposalId'
     | '/tasks/calendar'
     | '/tasks/kanban'
     | '/tasks/list'
     | '/api/chatgpt/$'
     | '/clients/'
+    | '/propostas/'
     | '/tasks/'
     | '/clients/$clientId/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -637,11 +657,13 @@ export interface FileRouteTypes {
     | '/portal/projetos'
     | '/portal/residuos'
     | '/portal/unidades'
+    | '/propostas/$proposalId'
     | '/tasks/calendar'
     | '/tasks/kanban'
     | '/tasks/list'
     | '/api/chatgpt/$'
     | '/clients'
+    | '/propostas'
     | '/tasks'
     | '/clients/$clientId/edit'
   id:
@@ -696,11 +718,13 @@ export interface FileRouteTypes {
     | '/_app/portal/projetos'
     | '/_app/portal/residuos'
     | '/_app/portal/unidades'
+    | '/_app/propostas/$proposalId'
     | '/_app/tasks/calendar'
     | '/_app/tasks/kanban'
     | '/_app/tasks/list'
     | '/api/chatgpt/$'
     | '/_app/clients/'
+    | '/_app/propostas/'
     | '/_app/tasks/'
     | '/_app/clients/$clientId/edit'
   fileRoutesById: FileRoutesById
@@ -1072,6 +1096,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPortalUnidadesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/propostas/': {
+      id: '/_app/propostas/'
+      path: '/propostas'
+      fullPath: '/propostas/'
+      preLoaderRoute: typeof AppPropostasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/propostas/$proposalId': {
+      id: '/_app/propostas/$proposalId'
+      path: '/propostas/$proposalId'
+      fullPath: '/propostas/$proposalId'
+      preLoaderRoute: typeof AppPropostasProposalIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/tasks/': {
       id: '/_app/tasks/'
       path: '/'
@@ -1216,6 +1254,8 @@ interface AppRouteChildren {
   AppPortalProjetosRoute: typeof AppPortalProjetosRoute
   AppPortalResiduosRoute: typeof AppPortalResiduosRoute
   AppPortalUnidadesRoute: typeof AppPortalUnidadesRoute
+  AppPropostasProposalIdRoute: typeof AppPropostasProposalIdRoute
+  AppPropostasIndexRoute: typeof AppPropostasIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1252,6 +1292,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppPortalProjetosRoute: AppPortalProjetosRoute,
   AppPortalResiduosRoute: AppPortalResiduosRoute,
   AppPortalUnidadesRoute: AppPortalUnidadesRoute,
+  AppPropostasProposalIdRoute: AppPropostasProposalIdRoute,
+  AppPropostasIndexRoute: AppPropostasIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -1282,7 +1324,6 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
 
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'
