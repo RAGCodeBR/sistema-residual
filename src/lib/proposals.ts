@@ -45,6 +45,8 @@ export type WasteContent = {
   /** Onde os resíduos estão (ex.: "sua área operacional em Santos/SP"). */
   site: string;
   equipment: string;
+  /** Tipo do catálogo de Caçambas (equipment_types). */
+  equipment_type_id?: string | null;
   groups: PriceGroup[];
   rental_days: number | null;
   idle_fee: number | null;

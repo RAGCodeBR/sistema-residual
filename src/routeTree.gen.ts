@@ -23,6 +23,7 @@ import { Route as AppContasAReceberRouteImport } from './routes/_app/contas-a-re
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDespesasRecorrentesRouteImport } from './routes/_app/despesas-recorrentes'
 import { Route as AppDocumentosRouteImport } from './routes/_app/documentos'
+import { Route as AppEquipamentosRouteImport } from './routes/_app/equipamentos'
 import { Route as AppFinanceiroRouteImport } from './routes/_app/financeiro'
 import { Route as AppImportAtaRouteImport } from './routes/_app/import-ata'
 import { Route as AppIntegracoesChatgptRouteImport } from './routes/_app/integracoes-chatgpt'
@@ -137,6 +138,11 @@ const AppDespesasRecorrentesRoute = AppDespesasRecorrentesRouteImport.update({
 const AppDocumentosRoute = AppDocumentosRouteImport.update({
   id: '/documentos',
   path: '/documentos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEquipamentosRoute = AppEquipamentosRouteImport.update({
+  id: '/equipamentos',
+  path: '/equipamentos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
@@ -381,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/documentos': typeof AppDocumentosRoute
+  '/equipamentos': typeof AppEquipamentosRoute
   '/financeiro': typeof AppFinanceiroRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/documentos': typeof AppDocumentosRoute
+  '/equipamentos': typeof AppEquipamentosRoute
   '/financeiro': typeof AppFinanceiroRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/_app/documentos': typeof AppDocumentosRoute
+  '/_app/equipamentos': typeof AppEquipamentosRoute
   '/_app/financeiro': typeof AppFinanceiroRoute
   '/_app/import-ata': typeof AppImportAtaRoute
   '/_app/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
@@ -563,6 +572,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/despesas-recorrentes'
     | '/documentos'
+    | '/equipamentos'
     | '/financeiro'
     | '/import-ata'
     | '/integracoes-chatgpt'
@@ -622,6 +632,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/despesas-recorrentes'
     | '/documentos'
+    | '/equipamentos'
     | '/financeiro'
     | '/import-ata'
     | '/integracoes-chatgpt'
@@ -682,6 +693,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/despesas-recorrentes'
     | '/_app/documentos'
+    | '/_app/equipamentos'
     | '/_app/financeiro'
     | '/_app/import-ata'
     | '/_app/integracoes-chatgpt'
@@ -835,6 +847,13 @@ declare module '@tanstack/react-router' {
       path: '/documentos'
       fullPath: '/documentos'
       preLoaderRoute: typeof AppDocumentosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/equipamentos': {
+      id: '/_app/equipamentos'
+      path: '/equipamentos'
+      fullPath: '/equipamentos'
+      preLoaderRoute: typeof AppEquipamentosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/financeiro': {
@@ -1231,6 +1250,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppDespesasRecorrentesRoute: typeof AppDespesasRecorrentesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
+  AppEquipamentosRoute: typeof AppEquipamentosRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppImportAtaRoute: typeof AppImportAtaRoute
   AppIntegracoesChatgptRoute: typeof AppIntegracoesChatgptRoute
@@ -1269,6 +1289,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppDespesasRecorrentesRoute: AppDespesasRecorrentesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
+  AppEquipamentosRoute: AppEquipamentosRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppImportAtaRoute: AppImportAtaRoute,
   AppIntegracoesChatgptRoute: AppIntegracoesChatgptRoute,

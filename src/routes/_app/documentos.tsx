@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { Database, FileText, HardHat, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { isMissingTable, useCompanyDocuments, useEquipment } from "@/lib/company";
@@ -31,6 +31,7 @@ const SUBTITLE: Record<Tab, string> = {
 function CompanyDocumentsPage() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("documents");
+  const canOpenEquipmentRegistry = hasPermission("dumpsters");
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const tab: Tab = search.aba ?? "documentos";
@@ -49,7 +50,7 @@ function CompanyDocumentsPage() {
       </header>
 
       <div className="flex w-full rounded-full border bg-muted/40 p-0.5 sm:inline-flex sm:w-auto sm:rounded-lg sm:p-1" role="tablist" aria-label="Seção">
-        {TABS.map(({ id, label, icon: Icon }) => (
+        {TABS.filter(({ id }) => id !== "equipamentos" || !canOpenEquipmentRegistry).map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -81,13 +82,17 @@ function CompanyDocumentsPage() {
           onEquipmentFilterChange={(value) => go(value === ALL ? {} : { equipamento: value })}
         />
       ) : tab === "equipamentos" ? (
-        <EquipmentPanel
-          equipment={equipmentQuery.data ?? []}
-          documents={docsQuery.data ?? []}
-          loading={equipmentQuery.isLoading}
-          canManage={canManage}
-          onOpenDocuments={(id) => go({ equipamento: id })}
-        />
+        canOpenEquipmentRegistry ? (
+          <Navigate to="/equipamentos" search={{ aba: "veiculos" }} replace />
+        ) : (
+          <EquipmentPanel
+            equipment={equipmentQuery.data ?? []}
+            documents={docsQuery.data ?? []}
+            loading={equipmentQuery.isLoading}
+            canManage={canManage}
+            onOpenDocuments={(id) => go({ equipamento: id })}
+          />
+        )
       ) : (
         <EpiPanel canManage={canManage} />
       )}

@@ -3,8 +3,8 @@
  * Não contém regras de uma tela específica; novas áreas devem ser adicionadas em `allNav`.
  */
 import { canManageChatGpt } from "@/lib/chatgpt-connection";
-import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH, PROPOSALS_PATH } from "@/lib/app-mode";
-import { Bot, FileSignature } from "lucide-react";
+import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH, PROPOSALS_PATH, DUMPSTERS_PATH } from "@/lib/app-mode";
+import { Bot, Container, FileSignature } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { usePayableAlerts } from "@/hooks/use-payable-alerts";
 import { seesPayableAlerts } from "@/lib/finance-access";
@@ -114,6 +114,7 @@ export function AppShell({
         : (
             [
               { to: PROPOSALS_PATH, label: "Propostas", icon: FileSignature, permission: "proposals" },
+              { to: DUMPSTERS_PATH, label: "Cadastro de Equipamentos", icon: Container, permission: "dumpsters" },
               { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
               ...(isAdmin ? [{ to: "/users", label: "Usuários", icon: Users, adminOnly: true }] : []),
             ] as NavItem[]

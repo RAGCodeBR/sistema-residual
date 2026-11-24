@@ -37,6 +37,7 @@ import {
   type Template,
   type WasteContent,
 } from "@/lib/proposals";
+import { useEquipmentTypes } from "@/lib/dumpsters";
 import { MoneyInput, PriceGroupsEditor, ScopeEditor } from "@/components/proposals/ProposalFields";
 import { MissingTable, StatusDialog, useProposalPdf } from "@/components/proposals/ProposalActions";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 type Search = { modelo?: Template; de?: string };
 const TEMPLATE_IDS = Object.keys(TEMPLATES) as Template[];
+const FREE_EQUIPMENT = "__livre__";
 
 export const Route = createFileRoute("/_app/propostas/$proposalId")({
   component: ProposalEditorPage,
@@ -84,6 +86,8 @@ function ProposalEditorPage() {
   const list = useProposals();
   const existing = useProposal(isNew ? search.de ?? null : proposalId);
   const { previewPdf, sharePdf, pdfBusy, pdfDialog } = useProposalPdf();
+  const equipmentTypesQuery = useEquipmentTypes();
+  const equipmentTypes = equipmentTypesQuery.data ?? [];
 
   const [form, setForm] = useState<ProposalFields | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -287,7 +291,24 @@ function ProposalEditorPage() {
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
-                    <Field label="Equipamento"><Input value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value })} /></Field>
+                    <Field label="Equipamento" hint={equipmentTypes.length ? undefined : "Cadastre os tipos em Cadastro de Equipamentos → Tipos para escolher daqui."}>
+                      {equipmentTypes.length > 0 && (
+                        <Select
+                          value={waste.equipment_type_id && equipmentTypes.some((t) => t.id === waste.equipment_type_id) ? waste.equipment_type_id : FREE_EQUIPMENT}
+                          onValueChange={(id) => {
+                            const t = equipmentTypes.find((x) => x.id === id);
+                            setWaste(t ? { equipment_type_id: t.id, equipment: t.proposal_text || t.name } : { equipment_type_id: null });
+                          }}
+                        >
+                          <SelectTrigger aria-label="Tipo de equipamento"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {equipmentTypes.filter((t) => t.active || t.id === waste.equipment_type_id).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                            <SelectItem value={FREE_EQUIPMENT}>Outro (texto livre)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <Input value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value })} aria-label="Texto do equipamento na proposta" />
+                    </Field>
                   </div>
                 </div>
               </Card>
