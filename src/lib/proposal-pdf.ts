@@ -352,7 +352,8 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de coleta, transporte e destinação final de ${c.waste_summary.trim() || "resíduos"}${c.site.trim() ? `, armazenados em ${c.site.trim()}` : ""}.`,
     );
 
-    const revisedScope = p.template === "residuos_peso";
+    // O escopo revisado da RESD 158/26 também se aplica ao cadastro original por caçamba.
+    const revisedScope = p.template === "residuos_peso" || code === "RESD 158/26";
     if (revisedScope) {
       renderClassOneAndTwoScope(c);
     } else {
