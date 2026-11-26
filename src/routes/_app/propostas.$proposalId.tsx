@@ -19,6 +19,7 @@ import {
   defaultSubject,
   paymentTerms,
   idleFeeClause,
+  standbyTitle,
   wasteServiceDescription,
   defaultOperationalResources,
   displayStatus,
@@ -155,6 +156,7 @@ function ProposalEditorPage() {
     setDirty(true);
   };
   const waste = isWaste(form.template) ? (form.content as WasteContent) : null;
+  const standbyOnly = waste?.charge_mode === "standby";
   const consulting = !waste ? (form.content as ConsultingContent) : null;
   const setWaste = (patch: Partial<WasteContent>) => update({ content: { ...(form.content as WasteContent), ...patch } });
   const setConsulting = (patch: Partial<ConsultingContent>) => update({ content: { ...(form.content as ConsultingContent), ...patch } });
@@ -194,6 +196,7 @@ function ProposalEditorPage() {
       const clean = (v: string | null) => (v && v.trim() ? v.trim() : null);
       const payload = {
         ...form,
+        ...(standbyOnly && waste ? {content:{...waste, groups:[], rental_days:null, idle_fee:null, separate_wastes:false, waste_summary:""}} : {}),
         subject: form.subject.trim(),
         client_name: form.client_name.trim(),
         client_cnpj: clean(form.client_cnpj),
@@ -299,12 +302,28 @@ function ProposalEditorPage() {
 
           {waste && (
             <>
+              <Card title="Composição da cobrança">
+                <Field label="O que será cobrado">
+                  <select aria-label="O que será cobrado" className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={waste.charge_mode ?? "standard"} disabled={locked} onChange={e => {
+                    const mode = e.target.value as WasteContent["charge_mode"];
+                    const automatic = !form.subject.trim() || form.subject === defaultSubject(form.template) || form.subject === standbyTitle;
+                    update({content: {...waste, charge_mode: mode}, ...(automatic ? {subject: mode === "standby" ? standbyTitle : defaultSubject(form.template)} : {})});
+                  }}>
+                    <option value="standard">Locação e serviços da proposta</option>
+                    <option value="standby">Somente diária de carreta parada</option>
+                    <option value="combined">Locação e serviços + diária de carreta parada</option>
+                  </select>
+                </Field>
+                {(standbyOnly || waste.charge_mode === "combined") && <Field label={standbyTitle} hint="Valor por dia em que a carreta permanecer parada, sem movimentação.">
+                  <MoneyInput ariaLabel="Valor da diária de carreta parada" value={waste.standby_rate ?? null} onChange={standby_rate => setWaste({standby_rate})} placeholder="A combinar" />
+                </Field>}
+              </Card>
               <Card title="Abertura da proposta">
                 <div className="space-y-3">
-                  <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste, form.template)}”`}>
+                  {!standbyOnly && <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste, form.template)}”`}>
                     <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
-                  </Field>
-                  <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => update({ service_address: e.target.value, content: { ...waste, site: e.target.value } })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
+                  </Field>}
+                  <Field label={standbyOnly ? "Local de permanência da carreta" : "Onde estão armazenados"}><Input value={waste.site} onChange={(e) => update({ service_address: e.target.value, content: { ...waste, site: e.target.value } })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
                 </div>
               </Card>
 
@@ -334,7 +353,7 @@ function ProposalEditorPage() {
                 </div>
               </Card>
 
-              <Card title="Preços" description="Cada grupo vira uma tabela no PDF. Deixe o valor em branco para sair “A combinar”.">
+              {!standbyOnly && <Card title="Preços" description="Cada grupo vira uma tabela no PDF. Deixe o valor em branco para sair “A combinar”.">
                 <PriceGroupsEditor groups={waste.groups} onChange={(groups) => setWaste({ groups })} disabled={locked} />
                 {form.template === "residuos_cacamba" && (
                   <div className="mt-4 grid gap-3 border-t pt-4">
@@ -344,9 +363,9 @@ function ProposalEditorPage() {
                     </Field>
                   </div>
                 )}
-              </Card>
+              </Card>}
 
-              <Card title={form.template === "residuos_cacamba" ? "Locação" : "Locação e pagamento"}>
+              {!standbyOnly && <Card title={form.template === "residuos_cacamba" ? "Locação" : "Locação e pagamento"}>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {form.template !== "residuos_cacamba" && rentalPeriodField}
                   {form.template !== "residuos_cacamba" && <>
@@ -374,8 +393,8 @@ function ProposalEditorPage() {
                     <span className="text-sm">Exigir uma caçamba para cada tipo de resíduo (não misturar)</span>
                   </label>
                 </div>
-              </Card>
-              {form.template === "residuos_cacamba" && (
+              </Card>}
+              {(standbyOnly || form.template === "residuos_cacamba") && (
                 <Card title="Condições de pagamento">
                   <div className="space-y-3">
                     <Field label="Texto de pagamento">

@@ -13,6 +13,8 @@ import {
   isWaste,
   money,
   paymentTerms,
+  standbyClause,
+  standbyTitle,
   proposalCode,
   type Proposal,
   type WasteContent,
@@ -22,7 +24,7 @@ export function contractDraft(p: Proposal, address: string) {
   const waste = isWaste(p.template) ? (p.content as WasteContent) : null;
   const consulting = !waste ? (p.content as ConsultingContent) : null;
   const prices = waste
-    ? waste.groups
+    ? (waste.charge_mode === "standby" ? [] : waste.groups)
         .map((g) =>
           [
             g.title,
@@ -75,6 +77,11 @@ export function contractDraft(p: Proposal, address: string) {
     PAGAMENTO: terms,
   };
   let body = template;
+  if (waste && standbyClause(waste)) vars.PREÇOS = [prices, standbyClause(waste)].filter(Boolean).join("\n\n");
+  if (waste?.charge_mode === "standby") {
+    vars.ESCOPO = [standbyTitle, p.service_address || waste.site, waste.equipment, waste.operational_resources].filter(Boolean).join("\n\n");
+    body = body.replace(/CLÁUSULA PRIMEIRA .*?II - DO PRAZO/s, "CLÁUSULA PRIMEIRA – O objeto deste contrato é exclusivamente a disponibilização da carreta por diária de permanência sem movimentação. As condições específicas de coleta, transporte e destinação de resíduos aplicam-se apenas se esses serviços forem contratados separadamente.\n\nOs serviços contratados seguem a proposta {{PROPOSTA}}: {{ESCOPO}}.\n\nII - DO PRAZO");
+  }
   if (consulting)
     body = body
       .replace(
@@ -86,7 +93,7 @@ export function contractDraft(p: Proposal, address: string) {
         "índice IGP-M (Índice Geral de Preços – Mercado), divulgado pela Fundação Getulio Vargas",
         "índice " + consulting.adjustment_index,
       );
-  if (waste?.idle_fee != null)
+  if (waste?.charge_mode !== "standby" && waste?.idle_fee != null)
     vars.PREÇOS += "\n\nMês sem movimentação: " + money(waste.idle_fee) + " por caçamba.";
   return (
     body.replace(/\{\{([^}]+)\}\}/g, (_, key) => vars[key]) +

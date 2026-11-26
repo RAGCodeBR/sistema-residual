@@ -41,7 +41,10 @@ export const UNITS = ["kg", "tonelada", "m³", "caçamba", "viagem", "unidade", 
 export type PriceItem = { freight?: boolean; id: string; description: string; price: number | null; unit: string; minimum: string };
 export type PriceGroup = { id: string; title: string; items: PriceItem[] };
 
+export const standbyTitle = "Diária de carreta parada sem movimentação";
 export type WasteContent = {
+  charge_mode?: "standard" | "standby" | "combined";
+  standby_rate?: number | null;
   /** Trecho que completa "coleta, transporte e destinação final de …". */
   waste_summary: string;
   /** Onde os resíduos estão (ex.: "sua área operacional em Santos/SP"). */
@@ -187,9 +190,15 @@ export const DEFAULT_DELIVERABLES = [
 export const defaultOperationalResources = "Serão disponibilizados os recursos operacionais necessários à realização das atividades contratadas.";
 
 export function wasteServiceDescription(c: WasteContent, template: Template) {
+  if (c.charge_mode === "standby") return "disponibilização de carreta, com cobrança por dia de permanência sem movimentação.";
   const residue = c.waste_summary.trim() || (template === "residuos_classe_i" ? "resíduos classe I" : "resíduos");
   const site = c.site.trim();
   return `coleta, transporte e destinação final de ${residue}${site ? `, armazenados em ${site}` : ""}.`;
+}
+
+export function standbyClause(c: WasteContent) {
+  if (c.charge_mode !== "standby" && c.charge_mode !== "combined") return "";
+  return standbyTitle + ": " + (c.standby_rate == null ? "valor a combinar" : money(c.standby_rate)) + " por dia de permanência sem movimentação.";
 }
 
 export function idleFeeClause(fee: number | null) {
@@ -381,6 +390,7 @@ export function valueSummary(p: Pick<ProposalFields, "template" | "content">): s
     return c.monthly_price != null ? `${money(c.monthly_price)}/mês` : "";
   }
   const c = p.content as WasteContent;
+  if (c.charge_mode === "standby") return c.standby_rate == null ? "Diária a combinar" : money(c.standby_rate) + " / dia";
   const n = c.groups?.reduce((sum, g) => sum + g.items.length, 0) ?? 0;
   return n ? `${n} ${n === 1 ? "item" : "itens"} de preço` : "";
 }

@@ -22,6 +22,8 @@ import {
   paymentTerms,
   idleFeeClause,
   wasteServiceDescription,
+  standbyClause,
+  standbyTitle,
   defaultOperationalResources,
   validUntil,
   type ConsultingContent,
@@ -376,18 +378,25 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de ${wasteServiceDescription(c, p.template)}`,
     );
 
-    renderWasteScope(c);
+    const only = c.charge_mode === "standby";
+    if (only) {
+      heading("Escopo dos serviços");
+      paragraph("Disponibilização de carreta no local indicado pelo cliente. A diária se aplica a cada dia em que a carreta permanecer parada, sem movimentação.");
+      if (c.site.trim()) paragraph("Local de permanência: " + c.site.trim());
+      if (c.equipment.trim()) paragraph(c.equipment.trim());
+      if (c.operational_resources?.trim()) paragraph(c.operational_resources.trim());
+    } else renderWasteScope(c);
 
     heading("Condições comerciais");
     font("normal", 8.6, MUTED);
-    paragraph("Custo de locação, destinação e frete por coleta.", { size: 9, c: MUTED, gap: 3 });
+    if (!only) paragraph("Custo de locação, destinação e frete por coleta.", { size: 9, c: MUTED, gap: 3 });
     const cols = [
       { label: "Item", w: CONTENT_W * 0.42 },
       { label: "Valor", w: CONTENT_W * 0.2, align: "right" as const },
       { label: "Unidade", w: CONTENT_W * 0.14 },
       { label: "Faturamento mínimo", w: CONTENT_W * 0.24 },
     ];
-    for (const g of c.groups) {
+    for (const g of only ? [] : c.groups) {
       const items = freightLast(g.items).filter(
         (i) => i.description.trim() || i.minimum.trim() || i.price != null,
       );
@@ -403,11 +412,22 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
         { title: g.title },
       );
     }
+    if (standbyClause(c)) {
+      tableBlock(
+        [
+          { label: "Serviço", w: CONTENT_W * 0.57 },
+          { label: "Valor", w: CONTENT_W * 0.26, align: "right" },
+          { label: "Unidade", w: CONTENT_W * 0.17 },
+        ],
+        [[standbyTitle, c.standby_rate == null ? "A combinar" : money(c.standby_rate), "por dia"]],
+        { title: "Permanência da carreta" },
+      );
+    }
     const notes: string[] = [];
     const feeClause = idleFeeClause(c.idle_fee);
-    if (c.rental_days) notes.push(`O período de locação da caçamba é de ${c.rental_days} dias.`);
-    if (feeClause) notes.push(feeClause);
-    if (c.separate_wastes)
+    if (!only && c.rental_days) notes.push(`O período de locação da caçamba é de ${c.rental_days} dias.`);
+    if (!only && feeClause) notes.push(feeClause);
+    if (!only && c.separate_wastes)
       notes.push(
         "Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.",
       );

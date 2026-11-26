@@ -1,3 +1,4 @@
+import { standbyClause } from "@/lib/proposals";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -116,6 +117,7 @@ function BillingRow({ p }: { p: Bill }) {
           ? null
           : (p.content as ConsultingContent).monthly_price! + exchangeTotal,
       )
+    : waste.charge_mode === "standby" ? (waste.standby_rate == null ? "Diária a combinar" : money(waste.standby_rate) + " / dia")
     : totals.length === 1 && totals[0] !== null
       ? money(totals[0] + exchangeTotal)
       : totals.length > 1
@@ -166,8 +168,9 @@ function BillingRow({ p }: { p: Bill }) {
       <div className="grid gap-5 border-t bg-muted/15 p-4 sm:p-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 space-y-3">
           <h3 className="text-sm font-semibold">{p.subject}</h3>
+          {waste && standbyClause(waste) && <p className="text-sm">{standbyClause(waste)}</p>}
           {waste ? (
-            (waste.groups || []).map((g) => (
+            (waste.charge_mode === "standby" ? [] : waste.groups || []).map((g) => (
               <section key={g.id} className="space-y-1">
                 <h4 className="font-medium">{g.title || "Condições comerciais"}</h4>
                 {freightLast(g.items).map((i) => (
