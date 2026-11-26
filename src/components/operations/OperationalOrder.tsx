@@ -19,6 +19,10 @@ export type EquipmentOrder = Order & {
   site: string | null;
   equipment: string | null;
   residue: string | null;
+  registered_address?: string | null;
+  client_contact?: string | null;
+  client_phone?: string | null;
+  delivered?: boolean;
   exchange_price: number | null;
 };
 type Kind = "entrega" | "troca" | "retirada";
@@ -36,17 +40,24 @@ type Fields = Pick<
   | "driverSignature"
 > & { replacement: string };
 type Event = { id: string; kind: Kind; seq: number; fields: Fields; amount: number | null };
-export function OperationalOrder({ order }: { order: EquipmentOrder }) {
+export function OperationalOrder({
+  order,
+  deliveryOnly = false,
+}: {
+  order: EquipmentOrder;
+  deliveryOnly?: boolean;
+}) {
   const { user, hasPermission } = useAuth(),
     qc = useQueryClient(),
     { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
-  const [action, setAction] = useState<Kind | null>(null);
+  const [chosenAction, setAction] = useState<Kind | null>(null);
   const history = useQuery({
     queryKey: ["equipment-events", user?.id, order.id],
     queryFn: () => commercialRpc<Event[]>("equipment_history", { target: order.id }),
     staleTime: 0,
   });
   const last = history.data?.at(-1);
+  const action = deliveryOnly ? (last ? null : "entrega") : chosenAction;
   async function pdf(fields: Partial<Slip>, e?: Event) {
     try {
       const title = e ? "Ficha de " + e.kind : "Romaneio anterior";
@@ -74,42 +85,50 @@ export function OperationalOrder({ order }: { order: EquipmentOrder }) {
         <img src={logo} className="h-14 rounded bg-white p-1" alt="Residual" />
         <div>
           <h1 className="text-xl font-bold">{order.client_name}</h1>
+          {(order.client_contact || order.client_phone) && (
+            <p className="text-sm text-muted-foreground">
+              {[order.client_contact, order.client_phone].filter(Boolean).join(" · ")}
+            </p>
+          )}
           <p>
             {proposalCode(order)} · {order.subject}
           </p>
         </div>
       </header>
-      {hasPermission("proposals") && <ContractAction id={order.id} />}
+
       {history.isPending ? (
         "Carregando fichas…"
       ) : history.isError ? (
         <p role="alert">{history.error.message}</p>
       ) : (
         <>
-          {history.data.map((e) => (
-            <div
-              key={e.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3"
-            >
-              <div>
-                <strong>Ficha de {e.kind}</strong>
-                <p className="text-sm">
-                  {shortDate(e.fields.day)} · {e.fields.equipment}
-                  {e.amount !== null && " · " + money(e.amount)}
-                </p>
+          {history.data
+            .filter((e) => !deliveryOnly || e.kind === "entrega")
+            .map((e) => (
+              <div
+                key={e.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3"
+              >
+                <div>
+                  <strong>Ficha de {e.kind}</strong>
+                  <p className="text-sm">
+                    {shortDate(e.fields.day)} · {e.fields.equipment}
+                    {deliveryOnly && <> · {e.fields.address}</>}
+                    {e.amount !== null && " · " + money(e.amount)}
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => void pdf(e.fields, e)}>
+                  Abrir PDF
+                </Button>
               </div>
-              <Button variant="outline" onClick={() => void pdf(e.fields, e)}>
-                Abrir PDF
-              </Button>
-            </div>
-          ))}
+            ))}
           {action ? (
             <EventForm
               key={action}
               order={order}
               kind={action}
               last={last}
-              cancel={() => setAction(null)}
+              cancel={deliveryOnly ? undefined : () => setAction(null)}
               done={async () => {
                 await Promise.all([
                   qc.invalidateQueries({ queryKey: ["equipment-events"] }),
@@ -118,7 +137,7 @@ export function OperationalOrder({ order }: { order: EquipmentOrder }) {
                 setAction(null);
               }}
             />
-          ) : !last ? (
+          ) : deliveryOnly ? null : !last ? (
             <Button onClick={() => setAction("entrega")}>Preencher ficha de entrega</Button>
           ) : last.kind !== "retirada" ? (
             <div className="flex flex-wrap gap-2">
@@ -133,6 +152,7 @@ export function OperationalOrder({ order }: { order: EquipmentOrder }) {
         </>
       )}
       <DeliveryPhotos proposalId={order.id} />
+      {hasPermission("proposals") && <ContractAction id={order.id} />}
       {order.revision > 0 && (
         <Button
           variant="ghost"
@@ -165,7 +185,7 @@ function EventForm({
   order: EquipmentOrder;
   kind: Kind;
   last?: Event;
-  cancel: () => void;
+  cancel?: () => void;
   done: () => Promise<void>;
 }) {
   const { user } = useAuth();
@@ -173,7 +193,12 @@ function EventForm({
   const [requestId] = useState(() => crypto.randomUUID());
   const [fields, setFields] = useState<Fields>({
     company: order.client_name,
-    address: last?.fields.address || order.service_address || order.site || "",
+    address:
+      last?.fields.address ||
+      order.service_address ||
+      (order.site?.trim().toLowerCase() !== "sua área operacional" ? order.site : "") ||
+      order.registered_address ||
+      "",
     equipment: last?.fields.replacement || last?.fields.equipment || order.equipment || "",
     replacement: "",
     day: todayIso(),
@@ -284,9 +309,11 @@ function EventForm({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button disabled={kind === "troca" && amount === null}>Concluir {kind}</Button>
-          <Button type="button" variant="outline" onClick={cancel}>
-            Voltar
-          </Button>
+          {cancel && (
+            <Button type="button" variant="outline" onClick={cancel}>
+              Voltar
+            </Button>
+          )}
         </div>
       </fieldset>
     </form>
