@@ -1,6 +1,13 @@
 import { wasteScopeSections } from "./waste-proposal-scope";
 import template from "./residual-contract-template.txt?raw";
-import logo from "@/assets/residual-logo-transparent.png?inline";
+import {
+  BRAND_GREEN,
+  LETTERHEAD,
+  brandFlags,
+  drawBrandLine,
+  finishLetterheadPages,
+  splitBrandAware,
+} from "./letterhead";
 import { freightLast } from "./proposal-billing";
 import {
   isWaste,
@@ -94,7 +101,7 @@ export async function contractPdf(number: string, body: string) {
   const left = 21,
     right = 189,
     width = right - left,
-    bottom = 274;
+    bottom = LETTERHEAD.contentBottom;
   const green = "#204C38",
     ink = "#222E29",
     muted = "#56655C",
@@ -110,16 +117,9 @@ export async function contractPdf(number: string, body: string) {
     pdf.setFontSize(size);
     pdf.setTextColor(color);
   }
+  // O timbrado (cabeçalho e rodapé) entra no fim, em todas as páginas.
   function header() {
-    pdf.addImage(logo, "PNG", left, 8, 21, (21 * 409) / 515, "residual");
-    style("helvetica", "bold", 10, green);
-    const idLines = pdf.splitTextToSize("Contrato nº " + number, 116) as string[];
-    pdf.text(idLines, right, 16, { align: "right" });
-    const edge = Math.max(30, 18 + idLines.length * 4);
-    pdf.setDrawColor(rule);
-    pdf.setLineWidth(0.3);
-    pdf.line(left, edge, right, edge);
-    y = edge + 10;
+    y = LETTERHEAD.contentTop + 4;
   }
   function ensure(height: number) {
     if (y + height > bottom) {
@@ -135,14 +135,18 @@ export async function contractPdf(number: string, body: string) {
           ? style("helvetica", "bold", 10, green)
           : style("times", "normal", 11.5);
     format();
-    const lines = pdf.splitTextToSize(value, width) as string[];
+    const lines =
+      kind === "body"
+        ? splitBrandAware(pdf, value, width)
+        : (pdf.splitTextToSize(value, width) as string[]);
+    const flags = kind === "body" ? brandFlags(lines) : [];
     const step = kind === "title" ? 8 : 5.15;
     ensure(step * Math.min(lines.length, 2) + (kind === "body" ? 0 : 10));
     format();
     for (let i = 0; i < lines.length; i++) {
       ensure(i === lines.length - 2 ? step * 2 : step);
       format();
-      pdf.text(lines[i], left, y);
+      drawBrandLine(pdf, lines[i], left, y, { flags: flags[i], width });
       y += step;
     }
     y += kind === "label" ? 0.5 : 2;
@@ -161,8 +165,14 @@ export async function contractPdf(number: string, body: string) {
   function signatures(date: string, names: string[]) {
     const gap = 12,
       col = (width - gap) / 2;
+    // O nome da Residual (contratada) sai em negrito verde, como no texto.
+    const nameStyle = (i: number) =>
+      i === 0 ? style("times", "bold", 11, BRAND_GREEN) : style("times", "normal", 11);
+    const labels = names.map((name, i) => {
+      nameStyle(i);
+      return pdf.splitTextToSize(name, col) as string[];
+    });
     style("times", "normal", 11);
-    const labels = names.map((name) => pdf.splitTextToSize(name, col) as string[]);
     const namesHeight = Math.max(...labels.map((lines) => lines.length)) * 4.8;
     const dateLine = date.replace(/, _+ de _+ de _+\.?$/, ", ____ / ____ / ______");
     const dateLines = pdf.splitTextToSize(dateLine, width) as string[];
@@ -177,7 +187,7 @@ export async function contractPdf(number: string, body: string) {
       const x = left + i * (col + gap);
       style("helvetica", "bold", 10, green);
       pdf.text(roles[i], x, y);
-      style("times", "normal", 11);
+      nameStyle(i);
       pdf.text(labels[i], x, y + 6, { lineHeightFactor: 1.24 });
       const lineY = y + namesHeight + 21;
       pdf.setDrawColor(muted);
@@ -252,13 +262,6 @@ export async function contractPdf(number: string, body: string) {
     }
     paragraph(text);
   }
-  for (let i = 1; i <= pdf.getNumberOfPages(); i++) {
-    pdf.setPage(i);
-    pdf.setDrawColor(rule);
-    pdf.line(left, 281, right, 281);
-    style("helvetica", "normal", 8, muted);
-    pdf.text("Residual Assessoria em Meio Ambiente", left, 287);
-    pdf.text("Página " + i + " de " + pdf.getNumberOfPages(), right, 287, { align: "right" });
-  }
+  finishLetterheadPages(pdf, "Contrato nº " + number, { left, right, color: muted });
   return pdf.output("blob");
 }

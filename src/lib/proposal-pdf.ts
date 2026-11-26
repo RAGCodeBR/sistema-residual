@@ -1,4 +1,4 @@
-import { wasteScopeIntro,wasteScopeSections } from "./waste-proposal-scope";
+import { wasteScopeIntro, wasteScopeSections } from "./waste-proposal-scope";
 import { freightLast } from "@/lib/proposal-billing";
 /**
  * PDF das propostas comerciais (A4). Desenhado direto com jsPDF para sair um
@@ -10,9 +10,9 @@ import { freightLast } from "@/lib/proposal-billing";
  *  - numeração de seções contínua e textos revisados;
  *  - campos vazios do cliente (ex.: CNPJ) não aparecem em branco;
  *  - bloco de aceite para o cliente assinar e devolver;
- *  - cabeçalho, rodapé e "Página x de y" em todas as páginas.
+ *  - papel timbrado da Residual e "Página x de y" em todas as páginas.
  */
-import residualLogo from "@/assets/residual-logo-transparent.png";
+import { LETTERHEAD, brandFlags, drawBrandLine, finishLetterheadPages } from "@/lib/letterhead";
 import {
   RESIDUAL,
   longDate,
@@ -40,39 +40,15 @@ const MUTED: RGB = [110, 117, 125];
 const PAGE_W = 210;
 const PAGE_H = 297;
 const M_LEFT = 20;
-const M_RIGHT = 24; // deixa espaço para a faixa verde lateral
+const M_RIGHT = 20;
 const CONTENT_W = PAGE_W - M_LEFT - M_RIGHT;
-const TOP_FIRST = 58;
-const TOP_NEXT = 34;
-const BOTTOM = PAGE_H - 22;
-
-let logoCache: Promise<string | null> | null = null;
-function loadLogo(): Promise<string | null> {
-  logoCache ??= new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return resolve(null);
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      } catch {
-        resolve(null);
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = residualLogo;
-  });
-  return logoCache;
-}
+const TOP_FIRST = LETTERHEAD.contentTop + 26;
+const TOP_NEXT = LETTERHEAD.contentTop + 4;
+const BOTTOM = LETTERHEAD.contentBottom;
 
 export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const logo = await loadLogo();
   const code = proposalCode(p);
   let y = TOP_FIRST;
   let section = 0;
@@ -97,22 +73,22 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   // O jsPDF trata uma linha isolada como a última do parágrafo. Distribuímos
   // os espaços somente nas linhas internas, mesmo quando há quebra de página.
-  const drawLine = (line: string, x: number, width: number, justify: boolean) => {
-    const words = line.trim().split(/\s+/);
-    if (!justify || words.length < 3) {
-      doc.text(line, x, y);
-      return;
-    }
-    const widths = words.map(word => doc.getTextWidth(word));
-    const space = (width - widths.reduce((sum, w) => sum + w, 0)) / (words.length - 1);
-    words.forEach((word, i) => {
-      doc.text(word, x, y);
-      x += widths[i] + space;
-    });
-  };
+  // O nome da Residual sai em negrito verde (ver drawBrandLine).
+  const drawLine = (line: string, x: number, width: number, justify: boolean, flags?: boolean[]) =>
+    drawBrandLine(doc, line, x, y, { flags, justify, width });
 
   /** Parágrafo justificado, com quebra de página linha a linha. */
-  const paragraph = (text: string, opts: { size?: number; style?: "normal" | "bold" | "italic"; c?: RGB; indent?: number; gap?: number; justify?: boolean } = {}) => {
+  const paragraph = (
+    text: string,
+    opts: {
+      size?: number;
+      style?: "normal" | "bold" | "italic";
+      c?: RGB;
+      indent?: number;
+      gap?: number;
+      justify?: boolean;
+    } = {},
+  ) => {
     const size = opts.size ?? 10;
     const indent = opts.indent ?? 0;
     const w = CONTENT_W - indent;
@@ -120,10 +96,11 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     const lh = lineH(size);
     for (const raw of text.split("\n")) {
       const lines: string[] = doc.splitTextToSize(raw, w);
+      const flags = brandFlags(lines);
       lines.forEach((line, i) => {
         ensure(lh);
         const last = i === lines.length - 1;
-        drawLine(line, M_LEFT + indent, w, opts.justify !== false && !last);
+        drawLine(line, M_LEFT + indent, w, opts.justify !== false && !last, flags[i]);
         y += lh;
       });
     }
@@ -159,12 +136,13 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     for (const text of items) {
       font("normal", size);
       const lines: string[] = doc.splitTextToSize(text, width);
+      const flags = brandFlags(lines);
       ensure(lineH(size) * Math.min(lines.length, 2));
       fill(GREEN);
       doc.circle(M_LEFT + 4, y - 1.2, 0.8, "F");
       lines.forEach((line, i) => {
         ensure(lineH(size));
-        drawLine(line, M_LEFT + textIndent, width, i < lines.length - 1);
+        drawLine(line, M_LEFT + textIndent, width, i < lines.length - 1, flags[i]);
         y += lineH(size);
       });
       y += 0.8;
@@ -173,7 +151,11 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   };
 
   /** Tabela simples com cabeçalho verde e linhas zebradas. */
-  const tableBlock = (cols: { label: string; w: number; align?: "left" | "right" }[], rows: string[][], opts: { title?: string } = {}) => {
+  const tableBlock = (
+    cols: { label: string; w: number; align?: "left" | "right" }[],
+    rows: string[][],
+    opts: { title?: string } = {},
+  ) => {
     const pad = 2.4;
     const size = 9.2;
     const lh = lineH(size);
@@ -184,7 +166,9 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       let x = M_LEFT;
       for (const c of cols) {
         const tx = c.align === "right" ? x + c.w - pad : x + pad;
-        doc.text(c.label.toUpperCase(), tx, y + 4.9, { align: c.align === "right" ? "right" : "left" });
+        doc.text(c.label.toUpperCase(), tx, y + 4.9, {
+          align: c.align === "right" ? "right" : "left",
+        });
         x += c.w;
       }
       y += 7.5;
@@ -194,7 +178,19 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     const estimate =
       (opts.title ? 7.5 : 0) +
       7.5 +
-      rows.reduce((sum, row) => sum + Math.max(...row.map((text, i) => (doc.splitTextToSize(text || "—", cols[i].w - pad * 2) as string[]).length)) * lh + pad * 1.6, 0);
+      rows.reduce(
+        (sum, row) =>
+          sum +
+          Math.max(
+            ...row.map(
+              (text, i) =>
+                (doc.splitTextToSize(text || "—", cols[i].w - pad * 2) as string[]).length,
+            ),
+          ) *
+            lh +
+          pad * 1.6,
+        0,
+      );
     if (estimate <= BOTTOM - TOP_NEXT) ensure(estimate);
     if (opts.title) {
       ensure(7.5 + 7.5 + 9);
@@ -207,7 +203,9 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     header();
     rows.forEach((row, r) => {
       font("normal", size);
-      const cells = row.map((text, i) => doc.splitTextToSize(text || "—", cols[i].w - pad * 2) as string[]);
+      const cells = row.map(
+        (text, i) => doc.splitTextToSize(text || "—", cols[i].w - pad * 2) as string[],
+      );
       const h = Math.max(...cells.map((c) => c.length)) * lh + pad * 1.6;
       if (y + h > BOTTOM) {
         newPage();
@@ -223,7 +221,9 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
         font(i === 1 ? "bold" : "normal", size, i === 0 || i === 1 ? INK : MUTED);
         lines.forEach((line, li) => {
           const ty = y + pad + lh * li + size * 0.3528 * 0.85;
-          doc.text(line, c.align === "right" ? x + c.w - pad : x + pad, ty, { align: c.align === "right" ? "right" : "left" });
+          doc.text(line, c.align === "right" ? x + c.w - pad : x + pad, ty, {
+            align: c.align === "right" ? "right" : "left",
+          });
         });
         x += c.w;
       });
@@ -258,19 +258,33 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     y += h + 6;
   };
 
-  /* Cabeçalho da 1ª página ------------------------------------------------- */
-  if (logo) doc.addImage(logo, "PNG", M_LEFT, 11, 40, 40 * (409 / 515));
+  /* Título da 1ª página, logo abaixo do cabeçalho do timbrado ------------ */
+  const titleTop = LETTERHEAD.contentTop;
   font("bold", 8, MUTED);
-  doc.text(p.template === "assessoria" ? "PROPOSTA TÉCNICA E COMERCIAL" : "PROPOSTA COMERCIAL", PAGE_W - M_RIGHT, 20, { align: "right" });
+  doc.text(
+    p.template === "assessoria" ? "PROPOSTA TÉCNICA E COMERCIAL" : "PROPOSTA COMERCIAL",
+    M_LEFT,
+    titleTop + 2,
+  );
   font("bold", 20, GREEN_DARK);
-  doc.text(code, PAGE_W - M_RIGHT, 29, { align: "right" });
+  doc.text(code, M_LEFT, titleTop + 11);
   font("normal", 9.5, INK);
-  doc.text([p.issue_city.trim(), longDate(p.issued_on)].filter(Boolean).join(", "), PAGE_W - M_RIGHT, 36, { align: "right" });
+  doc.text(
+    [p.issue_city.trim(), longDate(p.issued_on)].filter(Boolean).join(", "),
+    PAGE_W - M_RIGHT,
+    titleTop + 5,
+    { align: "right" },
+  );
   font("normal", 8.6, MUTED);
-  doc.text(`Válida até ${longDate(validUntil(p))} (${p.validity_days} dias)`, PAGE_W - M_RIGHT, 41.5, { align: "right" });
+  doc.text(
+    `Válida até ${longDate(validUntil(p))} (${p.validity_days} dias)`,
+    PAGE_W - M_RIGHT,
+    titleTop + 10.5,
+    { align: "right" },
+  );
   stroke(GREEN);
   doc.setLineWidth(0.8);
-  doc.line(M_LEFT, 48, PAGE_W - M_RIGHT, 48);
+  doc.line(M_LEFT, titleTop + 16, PAGE_W - M_RIGHT, titleTop + 16);
 
   /* Cliente e assunto ------------------------------------------------------ */
   if (p.template === "assessoria") heading("Identificação da contratante");
@@ -297,7 +311,10 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   /* Aceite e assinaturas --------------------------------------------------- */
   ensure(10 + 26 + 36); // agradecimento, assinaturas e aceite ficam juntos
-  paragraph("Agradecemos a oportunidade e nos colocamos à disposição para esclarecer eventuais dúvidas.", { gap: 4 });
+  paragraph(
+    "Agradecemos a oportunidade e nos colocamos à disposição para esclarecer eventuais dúvidas.",
+    { gap: 4 },
+  );
   font("normal", 10);
   doc.text("Atenciosamente,", M_LEFT, y);
   y += 14;
@@ -321,8 +338,15 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   font("bold", 9.5, GREEN_DARK);
   doc.text("ACEITE DO CLIENTE", M_LEFT + 5, y + 6.5);
   font("normal", 8.6, MUTED);
-  doc.text(`Declaramos estar de acordo com as condições da proposta ${code}.`, M_LEFT + 5, y + 11.5);
-  const fields = [["Nome", "Cargo"], ["Data", "Assinatura"]];
+  doc.text(
+    `Declaramos estar de acordo com as condições da proposta ${code}.`,
+    M_LEFT + 5,
+    y + 11.5,
+  );
+  const fields = [
+    ["Nome", "Cargo"],
+    ["Data", "Assinatura"],
+  ];
   fields.forEach((pair, row) => {
     pair.forEach((label, col) => {
       const fx = M_LEFT + 5 + col * ((CONTENT_W - 10) / 2 + 2);
@@ -336,34 +360,12 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   });
   y += 36;
 
-  /* Cabeçalho das páginas seguintes, faixa lateral e rodapé ---------------- */
-  const total = doc.getNumberOfPages();
-  for (let page = 1; page <= total; page++) {
-    doc.setPage(page);
-    fill(GREEN);
-    doc.rect(PAGE_W - 7, 0, 7, PAGE_H, "F");
-    fill([129, 199, 132]);
-    doc.rect(PAGE_W - 9, 0, 2, PAGE_H, "F");
-    if (page > 1) {
-      if (logo) doc.addImage(logo, "PNG", M_LEFT, 7, 22, 22 * (409 / 515));
-      font("bold", 11, GREEN_DARK);
-      doc.text(code, PAGE_W - M_RIGHT, 17, { align: "right" });
-      font("normal", 8, MUTED);
-      doc.text(p.client_name, PAGE_W - M_RIGHT, 22, { align: "right" });
-      stroke(GREEN_LINE);
-      doc.setLineWidth(0.4);
-      doc.line(M_LEFT, 27, PAGE_W - M_RIGHT, 27);
-    }
-    stroke(GREEN_LINE);
-    doc.setLineWidth(0.3);
-    doc.line(M_LEFT, PAGE_H - 15, PAGE_W - M_RIGHT, PAGE_H - 15);
-    font("bold", 7.4, GREEN_DARK);
-    doc.text(`${RESIDUAL.legalName.toUpperCase()}  ·  CNPJ ${RESIDUAL.cnpj}`, M_LEFT, PAGE_H - 10.5);
-    font("normal", 7, MUTED);
-    doc.text(RESIDUAL.address, M_LEFT, PAGE_H - 7.2);
-    doc.text([RESIDUAL.phone, RESIDUAL.email, RESIDUAL.site].filter(Boolean).join("  ·  "), M_LEFT, PAGE_H - 4.2);
-    doc.text(`Página ${page} de ${total}`, PAGE_W - M_RIGHT, PAGE_H - 10.5, { align: "right" });
-  }
+  /* Timbrado e paginação em todas as páginas ------------------------------ */
+  finishLetterheadPages(doc, `Proposta ${code} · ${p.client_name}`, {
+    left: M_LEFT,
+    right: PAGE_W - M_RIGHT,
+    color: "#6E757D",
+  });
 
   return doc.output("blob");
 
@@ -386,11 +388,18 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       { label: "Faturamento mínimo", w: CONTENT_W * 0.24 },
     ];
     for (const g of c.groups) {
-      const items = freightLast(g.items).filter(i => i.description.trim() || i.minimum.trim() || i.price != null);
+      const items = freightLast(g.items).filter(
+        (i) => i.description.trim() || i.minimum.trim() || i.price != null,
+      );
       if (!items.length) continue;
       tableBlock(
         cols,
-        items.map((i) => [i.description, i.price == null ? "A combinar" : money(i.price), i.price == null ? "" : `por ${i.unit}`, i.minimum]),
+        items.map((i) => [
+          i.description,
+          i.price == null ? "A combinar" : money(i.price),
+          i.price == null ? "" : `por ${i.unit}`,
+          i.minimum,
+        ]),
         { title: g.title },
       );
     }
@@ -398,7 +407,10 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     const feeClause = idleFeeClause(c.idle_fee);
     if (c.rental_days) notes.push(`O período de locação da caçamba é de ${c.rental_days} dias.`);
     if (feeClause) notes.push(feeClause);
-    if (c.separate_wastes) notes.push("Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.");
+    if (c.separate_wastes)
+      notes.push(
+        "Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.",
+      );
     if (notes.length) bullets(notes);
 
     const payment = paymentTerms(c).trim();
@@ -408,16 +420,18 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     }
 
     heading("Validade");
-    paragraph(`Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}.`);
+    paragraph(
+      `Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}.`,
+    );
   }
 
   function renderWasteScope(c: WasteContent) {
     const n = heading("Escopo dos serviços");
     paragraph(wasteScopeIntro);
-    wasteScopeSections.forEach((section,index)=>{
-      subheading(`${n}.${index+1}  ${section.title}`);
-      if(section.bullets) bullets(section.lines);
-      else section.lines.forEach(line=>paragraph(line));
+    wasteScopeSections.forEach((section, index) => {
+      subheading(`${n}.${index + 1}  ${section.title}`);
+      if (section.bullets) bullets(section.lines);
+      else section.lines.forEach((line) => paragraph(line));
     });
 
     heading("Equipamentos e recursos operacionais");
@@ -435,15 +449,25 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     ]);
 
     heading("Condições para execução dos serviços");
-    paragraph("As coletas serão realizadas mediante agendamento prévio, respeitando a antecedência mínima de 24 horas e a disponibilidade operacional.");
-    paragraph("No momento da coleta, os resíduos deverão estar acompanhados da documentação ambiental obrigatória, especialmente o MTR-e, emitido antecipadamente pelo contratante no sistema SIGOR, módulo MTR da CETESB, quando aplicável, além de declaração de transporte ou nota fiscal de simples remessa, conforme o caso.");
-    paragraph("Os serviços contemplam exclusivamente os resíduos descritos nesta proposta, conforme a classificação informada pelo contratante. Materiais com características diferentes das declaradas, inclusive contaminação ou mistura não prevista, dependerão de avaliação técnica e comercial específica.");
-    paragraph("A destinação será comprovada mediante emissão do respectivo Certificado de Destinação Final (CDF), após a confirmação do recebimento pela unidade receptora.");
+    paragraph(
+      "As coletas serão realizadas mediante agendamento prévio, respeitando a antecedência mínima de 24 horas e a disponibilidade operacional.",
+    );
+    paragraph(
+      "No momento da coleta, os resíduos deverão estar acompanhados da documentação ambiental obrigatória, especialmente o MTR-e, emitido antecipadamente pelo contratante no sistema SIGOR, módulo MTR da CETESB, quando aplicável, além de declaração de transporte ou nota fiscal de simples remessa, conforme o caso.",
+    );
+    paragraph(
+      "Os serviços contemplam exclusivamente os resíduos descritos nesta proposta, conforme a classificação informada pelo contratante. Materiais com características diferentes das declaradas, inclusive contaminação ou mistura não prevista, dependerão de avaliação técnica e comercial específica.",
+    );
+    paragraph(
+      "A destinação será comprovada mediante emissão do respectivo Certificado de Destinação Final (CDF), após a confirmação do recebimento pela unidade receptora.",
+    );
   }
 
   function renderConsulting(c: ConsultingContent) {
     heading("Apresentação");
-    paragraph("Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta de Assessoria Ambiental.");
+    paragraph(
+      "Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta de Assessoria Ambiental.",
+    );
     paragraph(
       "A Assessoria Ambiental tem a finalidade de apoiar a empresa no acompanhamento e na gestão dos aspectos mais relevantes relacionados ao meio ambiente e à sustentabilidade, adequando o modelo à atividade e à cultura de cada cliente. O serviço envolve visitas periódicas para identificar melhorias, com relatórios e indicadores que permitem reduzir riscos e impactos ambientais.",
     );
@@ -511,7 +535,10 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     doc.text(c.monthly_price == null ? "A combinar" : money(c.monthly_price), M_LEFT + 5, y + 13.5);
     if (c.monthly_price != null) {
       font("italic", 9, MUTED);
-      doc.text(`(${moneyInWords(c.monthly_price)})`, PAGE_W - M_RIGHT - 5, y + 13.5, { align: "right", maxWidth: CONTENT_W * 0.55 });
+      doc.text(`(${moneyInWords(c.monthly_price)})`, PAGE_W - M_RIGHT - 5, y + 13.5, {
+        align: "right",
+        maxWidth: CONTENT_W * 0.55,
+      });
     }
     y += 24;
     bullets([
@@ -531,6 +558,8 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     }
 
     heading("Validade");
-    paragraph(`Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}. Após esse prazo, os valores poderão ser revisados.`);
+    paragraph(
+      `Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}. Após esse prazo, os valores poderão ser revisados.`,
+    );
   }
 }
