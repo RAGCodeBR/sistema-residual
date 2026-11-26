@@ -18,6 +18,7 @@ import {
   moneyInWords,
   proposalCode,
   paymentTerms,
+  idleFeeClause,
   validUntil,
   type ConsultingContent,
   type ProposalFields,
@@ -385,11 +386,13 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       );
     }
     const notes: string[] = [];
-    if (c.rental_days)
-      notes.push(
-        `O período de locação da caçamba é de ${c.rental_days} dias.${c.idle_fee != null ? ` Caso não haja movimentação no mês, será cobrado o valor de uma movimentação (${money(c.idle_fee)} por caçamba).` : ""}`,
-      );
-    else if (c.idle_fee != null) notes.push(`Caso não haja movimentação no mês, será cobrado o valor de uma movimentação (${money(c.idle_fee)} por caçamba).`);
+    const feeClause = idleFeeClause(c.idle_fee);
+    const feeInPayment = p.template === "residuos_cacamba";
+    const rentalNote = [
+      c.rental_days ? `O período de locação da caçamba é de ${c.rental_days} dias.` : "",
+      feeInPayment ? "" : feeClause,
+    ].filter(Boolean).join(" ");
+    if (rentalNote) notes.push(rentalNote);
     if (c.separate_wastes) notes.push("Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.");
     if (notes.length) bullets(notes);
 
@@ -398,7 +401,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       "No momento da coleta, os resíduos deverão obrigatoriamente estar acompanhados do MTR-e (Manifesto de Transporte de Resíduos), emitido eletronicamente e de forma antecipada pelo cliente no sistema SIGOR, módulo MTR, da CETESB, e da declaração de transporte ou nota fiscal de simples remessa, quando for o caso.",
     );
 
-    const payment = paymentTerms(c).trim();
+    const payment = [paymentTerms(c).trim(), feeInPayment ? feeClause : ""].filter(Boolean).join("\n");
     if (payment) {
       heading("Condições de pagamento");
       paragraph(payment);

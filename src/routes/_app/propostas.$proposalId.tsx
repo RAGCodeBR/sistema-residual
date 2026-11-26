@@ -18,6 +18,7 @@ import {
   defaultContent,
   defaultSubject,
   paymentTerms,
+  idleFeeClause,
   displayStatus,
   isUniqueViolation,
   isWaste,
@@ -318,7 +319,7 @@ function ProposalEditorPage() {
                 <PriceGroupsEditor groups={waste.groups} onChange={(groups) => setWaste({ groups })} disabled={locked} />
               </Card>
 
-              <Card title="Locação e pagamento">
+              <Card title={form.template === "residuos_cacamba" ? "Locação" : "Locação e pagamento"}>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Período de locação da caçamba">
                     <div className="flex items-center gap-1.5">
@@ -326,14 +327,10 @@ function ProposalEditorPage() {
                       <span className="text-sm text-muted-foreground">dias</span>
                     </div>
                   </Field>
+                  {form.template !== "residuos_cacamba" && <>
                   <Field label="Mês sem movimentação" hint="Valor cobrado por caçamba parada (em branco = não cobra)">
                     <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
                   </Field>
-                  {form.template === "residuos_cacamba" ? (
-                    <Field label="Condições de pagamento" className="sm:col-span-2">
-                      <Textarea rows={3} value={paymentTerms(waste)} onChange={(e) => setWaste({ payment_terms: e.target.value })} />
-                    </Field>
-                  ) : <>
                   <Field label="Faturamento">
                     <Select value={waste.billing} onValueChange={(v) => setWaste({ billing: v as WasteContent["billing"] })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -356,6 +353,18 @@ function ProposalEditorPage() {
                   </label>
                 </div>
               </Card>
+              {form.template === "residuos_cacamba" && (
+                <Card title="Condições de pagamento">
+                  <div className="space-y-3">
+                    <Field label="Texto de pagamento">
+                      <Textarea rows={3} value={paymentTerms(waste)} onChange={(e) => setWaste({ payment_terms: e.target.value })} />
+                    </Field>
+                    <Field label="Cobrança por caçamba no mês sem movimentação" hint={idleFeeClause(waste.idle_fee) || "Em branco, a cobrança é omitida do PDF."}>
+                      <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
+                    </Field>
+                  </div>
+                </Card>
+              )}
             </>
           )}
 

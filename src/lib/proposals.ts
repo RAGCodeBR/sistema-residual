@@ -144,6 +144,10 @@ export const DEFAULT_DELIVERABLES = [
   "DMRs e declarações aplicáveis",
 ];
 
+export function idleFeeClause(fee: number | null) {
+  return fee == null ? "" : `Caso não haja movimentação no mês, será cobrado o valor de uma movimentação (${money(fee)} por caçamba).`;
+}
+
 export function paymentTerms(content: WasteContent) {
   return content.payment_terms ?? `Faturamento ${content.billing === "mensal" ? "mensal" : "por serviço"}, com emissão de nota fiscal e boleto bancário com vencimento em ${content.due_days} dias após a execução do serviço.`;
 }
@@ -172,7 +176,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
         },
       ],
       rental_days: null,
-      idle_fee: null,
+      idle_fee: 650,
       separate_wastes: false,
       billing: "mensal",
       due_days: 10,
