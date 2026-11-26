@@ -1,4 +1,4 @@
-import { copyFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
@@ -12,6 +12,9 @@ if (!existsSync(path.join(pagesDir, "index.pages.html"))) {
 // makes direct URLs such as /auth or /tasks load the app and let the client router decide.
 await copyFile(path.join(pagesDir, "index.pages.html"), path.join(pagesDir, "index.html"));
 await copyFile(path.join(pagesDir, "index.pages.html"), path.join(pagesDir, "404.html"));
+// Invitations are opened directly from WhatsApp, including its in-app browser.
+await mkdir(path.join(pagesDir, "assinar"), { recursive: true });
+await copyFile(path.join(pagesDir, "index.html"), path.join(pagesDir, "assinar/index.html"));
 await writeFile(path.join(pagesDir, "index.pages.html"), "", "utf8");
 await writeFile(path.join(pagesDir, ".nojekyll"), "", "utf8");
 
