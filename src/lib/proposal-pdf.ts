@@ -368,7 +368,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   function renderWaste(c: WasteContent) {
     paragraph(
-      `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de ${wasteServiceDescription(c)}`,
+      `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de ${wasteServiceDescription(c, p.template)}`,
     );
 
     renderWasteScope(c);

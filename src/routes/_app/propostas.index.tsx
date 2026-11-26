@@ -163,7 +163,7 @@ function ProposalsPage() {
             <FileText className="h-8 w-8 text-muted-foreground/60" />
             <div>
               <p className="font-medium">{proposals.length ? "Nenhuma proposta com esses filtros" : "Nenhuma proposta ainda"}</p>
-              <p className="text-sm text-muted-foreground">{proposals.length ? "Tente outra situação ou limpe a busca." : "Use “Nova proposta” e escolha um dos três modelos."}</p>
+              <p className="text-sm text-muted-foreground">{proposals.length ? "Tente outra situação ou limpe a busca." : "Use “Nova proposta” e escolha o modelo."}</p>
             </div>
             {proposals.length > 0 && <Button variant="outline" size="sm" onClick={() => { setView("all"); setSearch(""); }}>Limpar filtros</Button>}
           </div>

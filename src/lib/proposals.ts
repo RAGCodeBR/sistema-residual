@@ -1,7 +1,8 @@
 /**
  * Propostas comerciais da Residual (RESD nnn/aa).
  *
- * Três modelos, montados a partir das propostas enviadas hoje:
+ * Modelos comerciais, montados a partir das propostas enviadas hoje:
+ *  - residuos_classe_i: coleta e destinação exclusiva de Classe I, com preço por peso.
  *  - residuos_peso: coleta e destinação com preço por kg/m³ (ex.: RESD 152/26 · T-GRÃO)
  *  - residuos_cacamba: coleta e destinação com preço fechado por caçamba (ex.: RESD 159/26 · MARFORTE)
  *  - assessoria: assessoria ambiental com mensalidade (ex.: RESD 160/26 · MARFORTE)
@@ -31,7 +32,7 @@ export const RESIDUAL = {
 
 /* Tipos --------------------------------------------------------------------- */
 
-export type Template = "residuos_peso" | "residuos_cacamba" | "assessoria";
+export type Template = "residuos_classe_i" | "residuos_peso" | "residuos_cacamba" | "assessoria";
 export type ProposalStatus = "rascunho" | "enviada" | "aprovada" | "recusada";
 
 export const UNITS = ["kg", "tonelada", "m³", "caçamba", "viagem", "unidade", "litro", "mês"] as const;
@@ -104,6 +105,11 @@ export const isWaste = (template: Template) => template !== "assessoria";
 /* Modelos ------------------------------------------------------------------- */
 
 export const TEMPLATES: Record<Template, { label: string; short: string; description: string }> = {
+  residuos_classe_i: {
+    label: "Resíduos Classe I",
+    short: "Classe I",
+    description: "Coleta, transporte e destinação de resíduos Classe I, com preço por peso e frete.",
+  },
   residuos_cacamba: {
     label: "Resíduos Classe II",
     short: "Classe II",
@@ -147,8 +153,8 @@ export const DEFAULT_DELIVERABLES = [
 
 export const defaultOperationalResources = "Serão disponibilizados os recursos operacionais necessários à realização das atividades contratadas.";
 
-export function wasteServiceDescription(c: WasteContent) {
-  const residue = c.waste_summary.trim() || "resíduos";
+export function wasteServiceDescription(c: WasteContent, template: Template) {
+  const residue = c.waste_summary.trim() || (template === "residuos_classe_i" ? "resíduos classe I" : "resíduos");
   const site = c.site.trim();
   return `coleta, transporte e destinação final de ${residue}${site ? `, armazenados em ${site}` : ""}.`;
 }
@@ -191,28 +197,29 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
       due_days: 10,
       extra_notes: "",
     };
+  const groups: PriceGroup[] = [{
+    id: uid(),
+    title: "Resíduo Classe I",
+    items: [item("Mix de sólidos diversos contaminados", null, "kg", "1 tonelada"), item("Frete", null, "viagem")],
+  }];
+  if (template === "residuos_peso") {
+    groups.push({
+      id: uid(),
+      title: "Resíduo Classe II",
+      items: [
+        item("Madeira", null, "m³", "Capacidade do equipamento"),
+        item("RCC (entulho)", null, "kg", "1 tonelada"),
+        item("Recicláveis", null, "kg", "1 tonelada"),
+        item("Orgânico", null, "kg", "1 tonelada"),
+        item("Frete caçamba 5 m³", null, "viagem"),
+      ],
+    });
+  }
   return {
     waste_summary: "",
     site: "sua área operacional",
     equipment: "",
-    groups: [
-      {
-        id: uid(),
-        title: "Resíduo Classe I",
-        items: [item("Mix de sólidos diversos contaminados", null, "kg", "1 tonelada"), item("Frete", null, "viagem")],
-      },
-      {
-        id: uid(),
-        title: "Resíduo Classe II",
-        items: [
-          item("Madeira", null, "m³", "Capacidade do equipamento"),
-          item("RCC (entulho)", null, "kg", "1 tonelada"),
-          item("Recicláveis", null, "kg", "1 tonelada"),
-          item("Orgânico", null, "kg", "1 tonelada"),
-          item("Frete caçamba 5 m³", null, "viagem"),
-        ],
-      },
-    ],
+    groups,
     rental_days: 15,
     idle_fee: null,
     separate_wastes: true,
@@ -223,7 +230,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
 }
 
 export const defaultSubject = (template: Template) =>
-  template === "assessoria" ? "Assessoria ambiental" : template === "residuos_cacamba" ? "Destinação final de resíduos classe II" : "Destinação final de resíduos classe I e II";
+  template === "assessoria" ? "Assessoria ambiental" : `Destinação final de resíduos ${TEMPLATES[template].short.replace("Classe", "classe")}`;
 
 /* Formatação ---------------------------------------------------------------- */
 

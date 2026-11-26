@@ -299,8 +299,8 @@ function ProposalEditorPage() {
             <>
               <Card title="Abertura da proposta">
                 <div className="space-y-3">
-                  <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste)}”`}>
-                    <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: resíduos sólidos classe II ou mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
+                  <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste, form.template)}”`}>
+                    <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
                   </Field>
                   <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
                 </div>
