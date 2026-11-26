@@ -1,3 +1,4 @@
+import { wasteScopeSections } from "./waste-proposal-scope";
 import template from "./residual-contract-template.txt?raw";
 import logo from "@/assets/residual-logo-transparent.png?inline";
 import { freightLast } from "./proposal-billing";
@@ -42,11 +43,27 @@ export function contractDraft(p: Proposal, address: string) {
     CNPJ: p.client_cnpj || "[preencher CNPJ]",
     PROPOSTA: proposalCode(p),
     ESCOPO: waste
-      ? [p.subject, waste.waste_summary].filter(Boolean).join(" — ")
-      : consulting!.scope
-          .filter((s) => s.enabled)
-          .map((s) => s.title + " — " + s.text)
-          .join("; "),
+      ? [
+          p.subject,
+          waste.waste_summary,
+          (p.service_address || waste.site) &&
+            "Local de atendimento: " + (p.service_address || waste.site),
+          ...wasteScopeSections.map((section) => section.title + "\n" + section.lines.join("\n")),
+          waste.equipment && "Equipamentos: " + waste.equipment,
+          waste.operational_resources,
+          waste.rental_days && "Período de locação: " + waste.rental_days + " dias.",
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+      : [
+          ...consulting!.scope
+            .filter((s) => s.enabled && s.title.trim())
+            .map((s) => [s.title, s.text].filter(Boolean).join("\n")),
+          consulting!.deliverables?.some((d) => d.trim()) &&
+            "Entregáveis\n" + consulting!.deliverables.filter((d) => d.trim()).join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
     PREÇOS: prices,
     PAGAMENTO: terms,
   };

@@ -16,11 +16,11 @@ export function ContractAction({ id }: { id: string }) {
     [body, setBody] = useState(""),
     [issued, setIssued] = useState(false);
   const { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
-  async function preview(n: string, text: string) {
+  async function preview(n: string, text: string, draft = false) {
     const blob = await contractPdf(n, text);
     openPdfPreview({
-      title: "Contrato " + n,
-      fileName: "Contrato " + n.replace(/\//g, "-") + ".pdf",
+      title: (draft ? "Prévia do contrato " : "Contrato ") + n,
+      fileName: (draft ? "Prévia do contrato " : "Contrato ") + n.replace(/\//g, "-") + ".pdf",
       url: URL.createObjectURL(blob),
       revokeOnClose: true,
     });
@@ -105,9 +105,28 @@ export function ContractAction({ id }: { id: string }) {
             Confira as partes, o escopo, os valores e o prazo. A emissão guarda esta versão para
             consulta e assinatura.
           </p>
-          <Button disabled={busy || !number.trim() || !body.trim()} onClick={() => void issue()}>
-            Gerar contrato em PDF
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || !body.trim()}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await preview(number, body, true);
+                } catch {
+                  toast.error("Não foi possível visualizar o PDF.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Visualizar PDF
+            </Button>
+            <Button disabled={busy || !number.trim() || !body.trim()} onClick={() => void issue()}>
+              Emitir contrato
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
       {pdfPreviewDialog}

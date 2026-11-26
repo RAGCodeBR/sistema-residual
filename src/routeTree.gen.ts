@@ -22,6 +22,7 @@ import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppClientsRouteImport } from './routes/_app/clients'
 import { Route as AppContasAPagarRouteImport } from './routes/_app/contas-a-pagar'
 import { Route as AppContasAReceberRouteImport } from './routes/_app/contas-a-receber'
+import { Route as AppContratosRouteImport } from './routes/_app/contratos'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDespesasRecorrentesRouteImport } from './routes/_app/despesas-recorrentes'
 import { Route as AppDocumentosRouteImport } from './routes/_app/documentos'
@@ -137,6 +138,11 @@ const AppContasAPagarRoute = AppContasAPagarRouteImport.update({
 const AppContasAReceberRoute = AppContasAReceberRouteImport.update({
   id: '/contas-a-receber',
   path: '/contas-a-receber',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppContratosRoute = AppContratosRouteImport.update({
+  id: '/contratos',
+  path: '/contratos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -410,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AppClientsRouteWithChildren
   '/contas-a-pagar': typeof AppContasAPagarRoute
   '/contas-a-receber': typeof AppContasAReceberRoute
+  '/contratos': typeof AppContratosRoute
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/documentos': typeof AppDocumentosRoute
@@ -474,6 +481,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AppClientesRoute
   '/contas-a-pagar': typeof AppContasAPagarRoute
   '/contas-a-receber': typeof AppContasAReceberRoute
+  '/contratos': typeof AppContratosRoute
   '/dashboard': typeof AppDashboardRoute
   '/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/documentos': typeof AppDocumentosRoute
@@ -540,6 +548,7 @@ export interface FileRoutesById {
   '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/contas-a-pagar': typeof AppContasAPagarRoute
   '/_app/contas-a-receber': typeof AppContasAReceberRoute
+  '/_app/contratos': typeof AppContratosRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/despesas-recorrentes': typeof AppDespesasRecorrentesRoute
   '/_app/documentos': typeof AppDocumentosRoute
@@ -607,6 +616,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/contas-a-pagar'
     | '/contas-a-receber'
+    | '/contratos'
     | '/dashboard'
     | '/despesas-recorrentes'
     | '/documentos'
@@ -671,6 +681,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/contas-a-pagar'
     | '/contas-a-receber'
+    | '/contratos'
     | '/dashboard'
     | '/despesas-recorrentes'
     | '/documentos'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/_app/clients'
     | '/_app/contas-a-pagar'
     | '/_app/contas-a-receber'
+    | '/_app/contratos'
     | '/_app/dashboard'
     | '/_app/despesas-recorrentes'
     | '/_app/documentos'
@@ -888,6 +900,13 @@ declare module '@tanstack/react-router' {
       path: '/contas-a-receber'
       fullPath: '/contas-a-receber'
       preLoaderRoute: typeof AppContasAReceberRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/contratos': {
+      id: '/_app/contratos'
+      path: '/contratos'
+      fullPath: '/contratos'
+      preLoaderRoute: typeof AppContratosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -1325,6 +1344,7 @@ interface AppRouteChildren {
   AppClientsRoute: typeof AppClientsRouteWithChildren
   AppContasAPagarRoute: typeof AppContasAPagarRoute
   AppContasAReceberRoute: typeof AppContasAReceberRoute
+  AppContratosRoute: typeof AppContratosRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDespesasRecorrentesRoute: typeof AppDespesasRecorrentesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
@@ -1368,6 +1388,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientsRoute: AppClientsRouteWithChildren,
   AppContasAPagarRoute: AppContasAPagarRoute,
   AppContasAReceberRoute: AppContasAReceberRoute,
+  AppContratosRoute: AppContratosRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDespesasRecorrentesRoute: AppDespesasRecorrentesRoute,
   AppDocumentosRoute: AppDocumentosRoute,

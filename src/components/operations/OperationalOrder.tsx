@@ -23,6 +23,7 @@ export type EquipmentOrder = Order & {
   client_contact?: string | null;
   client_phone?: string | null;
   delivered?: boolean;
+  delivery_day?: string|null; delivered_address?:string|null; delivered_equipment?:string|null;
   exchange_price: number | null;
 };
 type Kind = "entrega" | "troca" | "retirada";
@@ -133,6 +134,7 @@ export function OperationalOrder({
                 await Promise.all([
                   qc.invalidateQueries({ queryKey: ["equipment-events"] }),
                   qc.invalidateQueries({ queryKey: ["approved-billing"] }),
+                  qc.invalidateQueries({ queryKey: ["operational-queue"] }),
                 ]);
                 setAction(null);
               }}

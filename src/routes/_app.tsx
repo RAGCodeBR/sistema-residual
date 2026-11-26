@@ -53,7 +53,7 @@ function AppLayout() {
   if (!isClient && pathname === DUMPSTERS_PATH && !hasPermission("dumpsters")) {
     return <Navigate to={DOCUMENTS_PATH} replace />;
   }
-  if (!isClient && (pathname === PROPOSALS_PATH || pathname.startsWith(`${PROPOSALS_PATH}/`)) && !hasPermission("proposals")) {
+  if (!isClient && (pathname === "/contratos" || pathname === PROPOSALS_PATH || pathname.startsWith(`${PROPOSALS_PATH}/`)) && !hasPermission("proposals")) {
     return <Navigate to={DOCUMENTS_PATH} replace />;
   }
   // O cliente começa pela consulta operacional e navega somente nas áreas do portal.

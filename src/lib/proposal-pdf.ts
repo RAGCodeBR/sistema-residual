@@ -1,3 +1,4 @@
+import { wasteScopeIntro,wasteScopeSections } from "./waste-proposal-scope";
 import { freightLast } from "@/lib/proposal-billing";
 /**
  * PDF das propostas comerciais (A4). Desenhado direto com jsPDF para sair um
@@ -412,27 +413,12 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   function renderWasteScope(c: WasteContent) {
     const n = heading("Escopo dos serviços");
-    paragraph("A RESIDUAL – Assessoria em Meio Ambiente será responsável pela execução dos serviços de coleta, transporte e encaminhamento para destinação final ambientalmente adequada dos resíduos identificados acima, conforme as condições estabelecidas nesta proposta.");
-    subheading(`${n}.1  Coleta e remoção dos resíduos`);
-    bullets([
-      "Disponibilização dos equipamentos descritos nesta proposta para as operações de coleta e transporte.",
-      "Mobilização de veículo e equipe operacional devidamente identificada e capacitada para execução dos serviços.",
-      "Realização das coletas mediante programação previamente acordada entre as partes, com solicitação mínima de 24 horas de antecedência.",
-      "Remoção dos resíduos disponibilizados pelo contratante, desde que em condições adequadas para carregamento e transporte.",
-    ]);
-    subheading(`${n}.2  Transporte`);
-    bullets([
-      "Transporte dos resíduos coletados até unidade receptora devidamente licenciada e apta a receber o material, observadas as exigências ambientais aplicáveis.",
-      "Cumprimento dos procedimentos e requisitos documentais necessários à movimentação e ao transporte dos resíduos.",
-    ]);
-    subheading(`${n}.3  Destinação final`);
-    bullets([
-      "Encaminhamento dos resíduos para destinação final ambientalmente adequada, em instalação devidamente licenciada pelos órgãos ambientais competentes.",
-      "Fornecimento do respectivo Certificado de Destinação Final (CDF), após a confirmação do recebimento e da destinação dos resíduos pela unidade receptora.",
-      "Disponibilização dos comprovantes e documentos pertinentes à comprovação da destinação, conforme aplicabilidade.",
-    ]);
-    subheading(`${n}.4  Assessoria e documentação ambiental`);
-    paragraph("A RESIDUAL prestará suporte quanto aos procedimentos documentais relacionados à movimentação e à destinação dos resíduos, incluindo orientações para emissão e regularização dos documentos ambientais pertinentes, conforme legislação vigente.");
+    paragraph(wasteScopeIntro);
+    wasteScopeSections.forEach((section,index)=>{
+      subheading(`${n}.${index+1}  ${section.title}`);
+      if(section.bullets) bullets(section.lines);
+      else section.lines.forEach(line=>paragraph(line));
+    });
 
     heading("Equipamentos e recursos operacionais");
     if (c.equipment.trim()) paragraph(c.equipment.trim());
