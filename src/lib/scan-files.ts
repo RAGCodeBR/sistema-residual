@@ -56,6 +56,13 @@ async function drawToJpeg(file: File): Promise<Prepared> {
   return { blob, width: w, height: h, dataUrl };
 }
 
+export async function warehousePhoto(file: File): Promise<string> {
+  if (!isImageFile(file) || file.size > 25 * 1024 * 1024) throw new Error("Selecione uma imagem de até 25 MB.");
+  const { dataUrl } = await drawToJpeg(file);
+  if (dataUrl.length > 4_000_000) throw new Error("A foto ficou muito grande. Selecione uma imagem menor.");
+  return dataUrl;
+}
+
 /** Reduz uma foto para JPEG. Se não for possível processar, devolve o original. */
 export async function compressImage(file: File): Promise<File> {
   if (!isImageFile(file) || file.type === "image/gif" || file.type === "image/svg+xml") return file;

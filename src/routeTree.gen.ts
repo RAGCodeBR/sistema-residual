@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known.oauth-protected-resource'
+import { Route as AppArmazemRouteImport } from './routes/_app/armazem'
 import { Route as AppBancosRouteImport } from './routes/_app/bancos'
 import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
@@ -90,6 +91,11 @@ const DotwellKnownOauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AppArmazemRoute = AppArmazemRouteImport.update({
+  id: '/armazem',
+  path: '/armazem',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBancosRoute = AppBancosRouteImport.update({
   id: '/bancos',
   path: '/bancos',
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/armazem': typeof AppArmazemRoute
   '/bancos': typeof AppBancosRoute
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/armazem': typeof AppArmazemRoute
   '/bancos': typeof AppBancosRoute
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
@@ -499,6 +507,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/_app/armazem': typeof AppArmazemRoute
   '/_app/bancos': typeof AppBancosRoute
   '/_app/calendario': typeof AppCalendarioRoute
   '/_app/cartoes': typeof AppCartoesRoute
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/.well-known/oauth-protected-resource'
+    | '/armazem'
     | '/bancos'
     | '/calendario'
     | '/cartoes'
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/.well-known/oauth-protected-resource'
+    | '/armazem'
     | '/bancos'
     | '/calendario'
     | '/cartoes'
@@ -683,6 +694,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/.well-known/oauth-protected-resource'
+    | '/_app/armazem'
     | '/_app/bancos'
     | '/_app/calendario'
     | '/_app/cartoes'
@@ -778,6 +790,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/.well-known/oauth-protected-resource'
       preLoaderRoute: typeof DotwellKnownOauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/armazem': {
+      id: '/_app/armazem'
+      path: '/armazem'
+      fullPath: '/armazem'
+      preLoaderRoute: typeof AppArmazemRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/bancos': {
       id: '/_app/bancos'
@@ -1240,6 +1259,7 @@ const AppTasksRouteWithChildren = AppTasksRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppArmazemRoute: typeof AppArmazemRoute
   AppBancosRoute: typeof AppBancosRoute
   AppCalendarioRoute: typeof AppCalendarioRoute
   AppCartoesRoute: typeof AppCartoesRoute
@@ -1279,6 +1299,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppArmazemRoute: AppArmazemRoute,
   AppBancosRoute: AppBancosRoute,
   AppCalendarioRoute: AppCalendarioRoute,
   AppCartoesRoute: AppCartoesRoute,

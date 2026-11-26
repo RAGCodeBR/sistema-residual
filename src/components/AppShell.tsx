@@ -3,8 +3,8 @@
  * Não contém regras de uma tela específica; novas áreas devem ser adicionadas em `allNav`.
  */
 import { canManageChatGpt } from "@/lib/chatgpt-connection";
-import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH, PROPOSALS_PATH, DUMPSTERS_PATH } from "@/lib/app-mode";
-import { Bot, Container, FileSignature } from "lucide-react";
+import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, HOME_PATH, PROPOSALS_PATH, DUMPSTERS_PATH, WAREHOUSE_PATH } from "@/lib/app-mode";
+import { Bot, Container, FileSignature, Warehouse } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { usePayableAlerts } from "@/hooks/use-payable-alerts";
 import { seesPayableAlerts } from "@/lib/finance-access";
@@ -69,6 +69,7 @@ type NavItem = {
   chatGptOnly?: boolean;
   tab?: "faturamento2" | "configuracoes";
 };
+const warehouseNav = { to: WAREHOUSE_PATH, label: "Armazém", icon: Warehouse, permission: "warehouse" };
 const allNav: readonly NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" },
   { to: "/tasks", label: "Gestão de Projetos", icon: ListChecks, permission: "tasks" },
@@ -79,6 +80,7 @@ const allNav: readonly NavItem[] = [
     permission: "billing",
     tab: "faturamento2",
   },
+  warehouseNav,
   { to: "/clients", label: "Clientes", icon: Building2, permission: "clients" },
   { to: "/terceirizados", label: "Terceirizados", icon: Factory, permission: "outsourced" },
   { to: "/portal/documentos", label: "Documentos", icon: FileText, permission: "documents" },
@@ -114,6 +116,7 @@ export function AppShell({
         : (
             [
               { to: PROPOSALS_PATH, label: "Propostas", icon: FileSignature, permission: "proposals" },
+              warehouseNav,
               { to: DUMPSTERS_PATH, label: "Cadastro de Equipamentos", icon: Container, permission: "dumpsters" },
               { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
               ...(isAdmin ? [{ to: "/users", label: "Usuários", icon: Users, adminOnly: true }] : []),
