@@ -156,6 +156,15 @@ function ProposalEditorPage() {
   const setWaste = (patch: Partial<WasteContent>) => update({ content: { ...(form.content as WasteContent), ...patch } });
   const setConsulting = (patch: Partial<ConsultingContent>) => update({ content: { ...(form.content as ConsultingContent), ...patch } });
 
+  const rentalPeriodField = waste && (
+    <Field label="Período de locação da caçamba">
+      <div className="flex items-center gap-1.5">
+        <Input type="number" min={0} inputMode="numeric" value={waste.rental_days ?? ""} onChange={(e) => setWaste({ rental_days: e.target.value ? Number.parseInt(e.target.value, 10) : null })} className="tabular-nums" />
+        <span className="text-sm text-muted-foreground">dias</span>
+      </div>
+    </Field>
+  );
+
   const onClientName = (name: string) => {
     const match = clientSuggestions.get(name.trim().toLocaleLowerCase("pt-BR"));
     const emptyDetails = !form.client_cnpj && !form.client_city && !form.client_phone && !form.client_email && !form.client_contact;
@@ -317,16 +326,19 @@ function ProposalEditorPage() {
 
               <Card title="Preços" description="Cada grupo vira uma tabela no PDF. Deixe o valor em branco para sair “A combinar”.">
                 <PriceGroupsEditor groups={waste.groups} onChange={(groups) => setWaste({ groups })} disabled={locked} />
+                {form.template === "residuos_cacamba" && (
+                  <div className="mt-4 grid gap-3 border-t pt-4">
+                    {rentalPeriodField}
+                    <Field label="Cobrança por caçamba no mês sem movimentação" hint={idleFeeClause(waste.idle_fee) || "Em branco, a cobrança é omitida do PDF."}>
+                      <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
+                    </Field>
+                  </div>
+                )}
               </Card>
 
               <Card title={form.template === "residuos_cacamba" ? "Locação" : "Locação e pagamento"}>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Período de locação da caçamba">
-                    <div className="flex items-center gap-1.5">
-                      <Input type="number" min={0} inputMode="numeric" value={waste.rental_days ?? ""} onChange={(e) => setWaste({ rental_days: e.target.value ? Number.parseInt(e.target.value, 10) : null })} className="tabular-nums" />
-                      <span className="text-sm text-muted-foreground">dias</span>
-                    </div>
-                  </Field>
+                  {form.template !== "residuos_cacamba" && rentalPeriodField}
                   {form.template !== "residuos_cacamba" && <>
                   <Field label="Mês sem movimentação" hint="Valor cobrado por caçamba parada (em branco = não cobra)">
                     <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
@@ -358,9 +370,6 @@ function ProposalEditorPage() {
                   <div className="space-y-3">
                     <Field label="Texto de pagamento">
                       <Textarea rows={3} value={paymentTerms(waste)} onChange={(e) => setWaste({ payment_terms: e.target.value })} />
-                    </Field>
-                    <Field label="Cobrança por caçamba no mês sem movimentação" hint={idleFeeClause(waste.idle_fee) || "Em branco, a cobrança é omitida do PDF."}>
-                      <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
                     </Field>
                   </div>
                 </Card>
