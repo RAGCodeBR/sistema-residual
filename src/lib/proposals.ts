@@ -131,16 +131,46 @@ export const uid = () => (typeof crypto !== "undefined" && "randomUUID" in crypt
 const item = (description: string, price: number | null, unit: string, minimum = ""): PriceItem => ({ id: uid(), description, price, unit, minimum });
 
 export const DEFAULT_SCOPE: Omit<ScopeItem, "id" | "enabled">[] = [
-  { title: "Gestão de CADRIs", text: "Acompanhamento da situação dos CADRIs, controle de validade, quantidades aprovadas, movimentações e saldos, além de providenciar e acompanhar novos processos ou renovações quando aplicável, após aprovação dos orçamentos de destinação pela CONTRATANTE." },
-  { title: "Planilha mensal de gerenciamento", text: "Planilha com identificação dos resíduos, destino, CADRI, validade, quantidade aprovada, quantidade enviada, saldo, referência do MTR e do CDF." },
-  { title: "SIGOR / MTR", text: "Cadastro, atualização e gerenciamento das informações da CONTRATANTE no SIGOR MTR, incluindo emissão, correção, cancelamento e acompanhamento de MTRs, conferência do recebimento das cargas, acompanhamento de CDFs e elaboração/transmissão das DMRs aplicáveis." },
-  { title: "Caracterização e classificação", text: "Quando solicitado, obtenção de orçamentos de laboratórios acreditados conforme ABNT NBR ISO/IEC 17025 para ensaios e laudos de caracterização e classificação, observando a ABNT NBR 10004 e demais normas aplicáveis. Os custos laboratoriais serão submetidos à aprovação da CONTRATANTE." },
-  { title: "Remoções e programação", text: "Apoio à programação das remoções, conferência da documentação exigida para cada transporte e alinhamento com a CONTRATANTE." },
-  { title: "Procedimentos operacionais", text: "Elaboração de procedimentos para segregação, caracterização, movimentação e remoção dos resíduos das áreas de geração para baias ou acondicionamentos provisórios." },
-  { title: "CDF e fechamento de CADRI", text: "Solicitação, acompanhamento e encaminhamento dos CDFs, conferência documental e fechamento de cada processo de CADRI para arquivo da CONTRATANTE." },
-  { title: "Inspeções ambientais", text: "Visitas periódicas aos pontos de geração, baias, centrais e áreas de armazenamento temporário, verificando segregação, identificação, compatibilidade química, recipientes, cobertura, contenção, impermeabilização, drenagem, sinalização, acesso, prevenção de incêndios, capacidade e prazos internos." },
-  { title: "Homologação ambiental", text: "Homologação e atualização documental de transportadores, intermediários, armazenadores temporários, receptores e destinadores, com verificação, conforme aplicabilidade, de licenças, autorizações, CADRI, SIGOR, CNPJ, CNAE, Alvará, AVCB/CLCB, ANTT, veículos e demais documentos." },
-  { title: "Verificação dos destinadores", text: "Verificação da compatibilidade das licenças ambientais dos destinadores com os códigos/tipos de resíduos, recebimento, armazenamento, tratamento e tecnologias de destinação autorizadas." },
+  {
+    title: "Gestão e acompanhamento de CADRIs",
+    text: "Acompanhar a situação dos CADRIs relacionados aos resíduos gerados pela CONTRATANTE, incluindo controle de validade, quantidades autorizadas, movimentações realizadas e saldos disponíveis. Quando necessário, apoiar a preparação e o acompanhamento de novos processos ou de renovações, mediante disponibilização das informações necessárias e aprovação prévia dos custos envolvidos.",
+  },
+  {
+    title: "Planilha mensal de gerenciamento",
+    text: "Elaborar e manter planilha de controle mensal, contemplando, conforme as informações fornecidas e os documentos disponíveis: identificação e classificação dos resíduos, destinador, CADRI relacionado, validade, quantidade autorizada, quantidade destinada, saldo, número do MTR e respectivo CDF.",
+  },
+  {
+    title: "Gestão do SIGOR/MTR",
+    text: "Prestar suporte no cadastro, na atualização e no gerenciamento das informações da CONTRATANTE no sistema SIGOR/MTR, abrangendo, conforme aplicabilidade, emissão, correção e cancelamento de MTRs; acompanhamento das movimentações; conferência do recebimento das cargas; acompanhamento dos CDFs; e elaboração e transmissão das DMRs pertinentes.",
+  },
+  {
+    title: "Caracterização e classificação de resíduos",
+    text: "Quando houver necessidade técnica, apoiar a cotação de ensaios e laudos de caracterização e classificação junto a laboratórios acreditados conforme a ABNT NBR ISO/IEC 17025, observando a ABNT NBR 10004 e demais referências aplicáveis. A contratação dos ensaios e os respectivos custos dependerão de aprovação prévia da CONTRATANTE.",
+  },
+  {
+    title: "Programação e acompanhamento de remoções",
+    text: "Apoiar a programação das remoções de resíduos, orientar quanto à documentação necessária para cada transporte e alinhar as etapas operacionais com os responsáveis indicados pela CONTRATANTE.",
+  },
+  {
+    title: "Procedimentos operacionais",
+    text: "Orientar e, conforme as necessidades identificadas, elaborar procedimentos relacionados à segregação, identificação, acondicionamento, caracterização, movimentação interna e remoção dos resíduos desde os pontos de geração até as baias ou áreas de armazenamento temporário.",
+  },
+  {
+    title: "CDFs e encerramento documental de CADRIs",
+    text: "Solicitar e acompanhar a disponibilização dos Certificados de Destinação Final (CDFs), conferir as informações documentais e apoiar o encerramento e o arquivamento dos registros vinculados a cada processo de CADRI.",
+  },
+  {
+    title: "Inspeções ambientais",
+    text: "Realizar visitas técnicas periódicas aos pontos de geração, baias, centrais e áreas de armazenamento temporário de resíduos, verificando, conforme aplicabilidade, segregação, identificação, compatibilidade química, condições dos recipientes, cobertura, contenção, impermeabilização, drenagem, sinalização, controle de acesso, prevenção de incêndios, capacidade de armazenamento e cumprimento dos prazos internos. As oportunidades de melhoria e eventuais não conformidades identificadas serão comunicadas à CONTRATANTE.",
+  },
+  {
+    title: "Homologação ambiental de prestadores",
+    text: "Apoiar a homologação e a atualização cadastral de transportadores, intermediários, armazenadores temporários, receptores e destinadores de resíduos, verificando, conforme a atividade e a documentação aplicável, licenças e autorizações ambientais, CADRI, cadastro no SIGOR, CNPJ, CNAE, Alvará, AVCB/CLCB, documentação ANTT, documentos dos veículos e demais registros pertinentes.",
+  },
+  {
+    title: "Verificação da regularidade dos destinadores",
+    text: "Verificar a compatibilidade entre as autorizações e licenças ambientais dos destinadores e os resíduos encaminhados, considerando os tipos ou códigos de resíduos, as atividades autorizadas de recebimento e armazenamento, os tratamentos permitidos e as tecnologias de destinação ambientalmente licenciadas.",
+  },
 ];
 
 export const DEFAULT_DELIVERABLES = [

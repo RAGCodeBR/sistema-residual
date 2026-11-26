@@ -271,6 +271,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   doc.line(M_LEFT, 48, PAGE_W - M_RIGHT, 48);
 
   /* Cliente e assunto ------------------------------------------------------ */
+  if (p.template === "assessoria") heading("Identificação da contratante");
   keyValueBox([
     ["Cliente", p.client_name],
     ["CNPJ", p.client_cnpj ?? ""],
@@ -472,7 +473,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     c.scope
       .filter((s) => s.enabled && s.title.trim())
       .forEach((s, i) => {
-        subheading(`${n}.${i + 1}  ${s.title.trim()}`);
+        subheading(`${n}.${i + 1}. ${s.title.trim()}`);
         if (s.text.trim()) paragraph(s.text.trim());
       });
 
