@@ -352,19 +352,24 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de coleta, transporte e destinação final de ${c.waste_summary.trim() || "resíduos"}${c.site.trim() ? `, armazenados em ${c.site.trim()}` : ""}.`,
     );
 
-    heading("Proposta técnica");
-    paragraph("A RESIDUAL disponibilizará o veículo e os equipamentos necessários à execução dos serviços de coleta propostos, que serão realizados por funcionários devidamente identificados e treinados.");
-    paragraph("A RESIDUAL prestará assessoria na emissão de certificados junto aos órgãos ambientais e demais documentos necessários, conforme a legislação vigente.");
+    const revisedScope = p.template === "residuos_peso";
+    if (revisedScope) {
+      renderClassOneAndTwoScope(c);
+    } else {
+      heading("Proposta técnica");
+      paragraph("A RESIDUAL disponibilizará o veículo e os equipamentos necessários à execução dos serviços de coleta propostos, que serão realizados por funcionários devidamente identificados e treinados.");
+      paragraph("A RESIDUAL prestará assessoria na emissão de certificados junto aos órgãos ambientais e demais documentos necessários, conforme a legislação vigente.");
 
-    heading("Serviços");
-    bullets([
-      "Coleta e transporte dos resíduos descritos nesta proposta, com destinação para empresas devidamente licenciadas.",
-      "Emissão do Certificado de Destinação Final (CDF).",
-    ]);
+      heading("Serviços");
+      bullets([
+        "Coleta e transporte dos resíduos descritos nesta proposta, com destinação para empresas devidamente licenciadas.",
+        "Emissão do Certificado de Destinação Final (CDF).",
+      ]);
 
-    if (c.equipment.trim()) {
-      heading("Equipamento");
-      paragraph(`${c.equipment.trim()}.`.replace(/\.\.$/, "."));
+      if (c.equipment.trim()) {
+        heading("Equipamento");
+        paragraph(`${c.equipment.trim()}.`.replace(/\.\.$/, "."));
+      }
     }
 
     heading("Condições comerciais");
@@ -392,10 +397,12 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     if (c.separate_wastes) notes.push("Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.");
     if (notes.length) bullets(notes);
 
-    heading("Condições de serviço");
-    paragraph(
-      "No momento da coleta, os resíduos deverão obrigatoriamente estar acompanhados do MTR-e (Manifesto de Transporte de Resíduos), emitido eletronicamente e de forma antecipada pelo cliente no sistema SIGOR, módulo MTR, da CETESB, e da declaração de transporte ou nota fiscal de simples remessa, quando for o caso.",
-    );
+    if (!revisedScope) {
+      heading("Condições de serviço");
+      paragraph(
+        "No momento da coleta, os resíduos deverão obrigatoriamente estar acompanhados do MTR-e (Manifesto de Transporte de Resíduos), emitido eletronicamente e de forma antecipada pelo cliente no sistema SIGOR, módulo MTR, da CETESB, e da declaração de transporte ou nota fiscal de simples remessa, quando for o caso.",
+      );
+    }
 
     const payment = paymentTerms(c).trim();
     if (payment) {
@@ -405,6 +412,52 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
     heading("Validade");
     paragraph(`Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}.`);
+  }
+
+  function renderClassOneAndTwoScope(c: WasteContent) {
+    const n = heading("Escopo dos serviços");
+    paragraph("A RESIDUAL – Assessoria em Meio Ambiente será responsável pela execução dos serviços de coleta, transporte e encaminhamento para destinação final ambientalmente adequada dos resíduos identificados acima, conforme as condições estabelecidas nesta proposta.");
+    subheading(`${n}.1  Coleta e remoção dos resíduos`);
+    bullets([
+      "Disponibilização dos equipamentos descritos nesta proposta para as operações de coleta e transporte.",
+      "Mobilização de veículo e equipe operacional devidamente identificada e capacitada para execução dos serviços.",
+      "Realização das coletas mediante programação previamente acordada entre as partes, com solicitação mínima de 24 horas de antecedência.",
+      "Remoção dos resíduos disponibilizados pelo contratante, desde que em condições adequadas para carregamento e transporte.",
+    ]);
+    subheading(`${n}.2  Transporte`);
+    bullets([
+      "Transporte dos resíduos coletados até unidade receptora devidamente licenciada e apta a receber o material, observadas as exigências ambientais aplicáveis.",
+      "Cumprimento dos procedimentos e requisitos documentais necessários à movimentação e ao transporte dos resíduos.",
+    ]);
+    subheading(`${n}.3  Destinação final`);
+    bullets([
+      "Encaminhamento dos resíduos para destinação final ambientalmente adequada, em instalação devidamente licenciada pelos órgãos ambientais competentes.",
+      "Fornecimento do respectivo Certificado de Destinação Final (CDF), após a confirmação do recebimento e da destinação dos resíduos pela unidade receptora.",
+      "Disponibilização dos comprovantes e documentos pertinentes à comprovação da destinação, conforme aplicabilidade.",
+    ]);
+    subheading(`${n}.4  Assessoria e documentação ambiental`);
+    paragraph("A RESIDUAL prestará suporte quanto aos procedimentos documentais relacionados à movimentação e à destinação dos resíduos, incluindo orientações para emissão e regularização dos documentos ambientais pertinentes, conforme legislação vigente.");
+
+    heading("Equipamentos e recursos operacionais");
+    if (c.equipment.trim()) paragraph(c.equipment.trim());
+    paragraph("Serão disponibilizados os recursos operacionais necessários à realização das atividades contratadas.");
+
+    heading("Responsabilidades do contratante");
+    bullets([
+      "Disponibilizar os resíduos devidamente segregados e em condições adequadas para coleta e transporte.",
+      "Garantir que o material corresponda à classificação e às características informadas nesta proposta.",
+      "Fornecer, quando solicitado, informações e documentos relativos à origem, caracterização e classificação dos resíduos.",
+      "Emitir previamente o Manifesto de Transporte de Resíduos (MTR-e), por meio do SIGOR – Módulo MTR, da CETESB, quando aplicável.",
+      "Disponibilizar a documentação fiscal ou declaração de transporte necessária, quando exigível.",
+      "Garantir condições adequadas de acesso, circulação e operação dos veículos nas dependências da unidade.",
+      "Comunicar previamente qualquer alteração nas características, quantidade ou condições de armazenamento dos resíduos.",
+    ]);
+
+    heading("Condições para execução dos serviços");
+    paragraph("As coletas serão realizadas mediante agendamento prévio, respeitando a antecedência mínima de 24 horas e a disponibilidade operacional.");
+    paragraph("No momento da coleta, os resíduos deverão estar acompanhados da documentação ambiental obrigatória, especialmente o MTR-e, emitido antecipadamente pelo contratante no sistema SIGOR, módulo MTR da CETESB, quando aplicável, além de declaração de transporte ou nota fiscal de simples remessa, conforme o caso.");
+    paragraph("Os serviços contemplam exclusivamente os resíduos descritos nesta proposta, conforme a classificação informada pelo contratante. Materiais com características diferentes das declaradas, inclusive contaminação ou mistura não prevista, dependerão de avaliação técnica e comercial específica.");
+    paragraph("A destinação será comprovada mediante emissão do respectivo Certificado de Destinação Final (CDF), após a confirmação do recebimento pela unidade receptora.");
   }
 
   function renderConsulting(c: ConsultingContent) {
