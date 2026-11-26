@@ -90,48 +90,182 @@ export function contractDraft(p: Proposal, address: string) {
 }
 export async function contractPdf(number: string, body: string) {
   const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF();
+  const pdf = new jsPDF({ compress: true });
+  const left = 21,
+    right = 189,
+    width = right - left,
+    bottom = 274;
+  const green = "#204C38",
+    ink = "#222E29",
+    muted = "#56655C",
+    rule = "#C4D3CA";
   let y = 0;
-  function header() {
-    pdf.addImage(logo, "PNG", 17, 6, 23, 18, "residual");
-    pdf.setTextColor(26, 77, 44);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13);
-    pdf.text("Contrato nº " + number, 193, 18, { align: "right" });
-    pdf.setDrawColor(160, 188, 167);
-    pdf.line(17, 28, 193, 28);
-    y = 38;
+  function style(
+    font: "times" | "helvetica",
+    weight: "normal" | "bold",
+    size: number,
+    color = ink,
+  ) {
+    pdf.setFont(font, weight);
+    pdf.setFontSize(size);
+    pdf.setTextColor(color);
   }
-  header();
-  for (const paragraph of body.split(/\n\s*\n/)) {
-    const heading = /^[IVX]+\s*[-–]/.test(paragraph);
-    if (y + (paragraph.startsWith("Praia Grande, ______") ? 96 : heading ? 17 : 8) > 275) {
+  function header() {
+    pdf.addImage(logo, "PNG", left, 8, 21, (21 * 409) / 515, "residual");
+    style("helvetica", "bold", 10, green);
+    const idLines = pdf.splitTextToSize("Contrato nº " + number, 116) as string[];
+    pdf.text(idLines, right, 16, { align: "right" });
+    const edge = Math.max(30, 18 + idLines.length * 4);
+    pdf.setDrawColor(rule);
+    pdf.setLineWidth(0.3);
+    pdf.line(left, edge, right, edge);
+    y = edge + 10;
+  }
+  function ensure(height: number) {
+    if (y + height > bottom) {
       pdf.addPage();
       header();
     }
-    if (paragraph.startsWith("____") || /^[12]\. ___/.test(paragraph)) y += 5;
-    pdf.setFont("helvetica", heading ? "bold" : "normal");
-    pdf.setFontSize(heading ? 12 : 10.5);
-    const lines = pdf.splitTextToSize(paragraph, 176) as string[];
-    for (const line of lines) {
-      if (y > 275) {
-        pdf.addPage();
-        header();
-        pdf.setFont("helvetica", heading ? "bold" : "normal");
-        pdf.setFontSize(heading ? 12 : 10.5);
-      }
-      pdf.setTextColor(34);
-      pdf.text(line, 17, y);
-      y += 5;
+  }
+  function paragraph(value: string, kind: "body" | "label" | "title" = "body") {
+    const format = () =>
+      kind === "title"
+        ? style("times", "bold", 19, green)
+        : kind === "label"
+          ? style("helvetica", "bold", 10, green)
+          : style("times", "normal", 11.5);
+    format();
+    const lines = pdf.splitTextToSize(value, width) as string[];
+    const step = kind === "title" ? 8 : 5.15;
+    ensure(step * Math.min(lines.length, 2) + (kind === "body" ? 0 : 10));
+    format();
+    for (let i = 0; i < lines.length; i++) {
+      ensure(i === lines.length - 2 ? step * 2 : step);
+      format();
+      pdf.text(lines[i], left, y);
+      y += step;
     }
-    y += 3;
+    y += kind === "label" ? 0.5 : 2;
+  }
+  function section(title: string) {
+    ensure(24);
+    y += 2;
+    pdf.setFillColor("#EEF4EF");
+    pdf.rect(left, y - 4.7, width, 9, "F");
+    pdf.setFillColor(green);
+    pdf.rect(left, y - 4.7, 1, 9, "F");
+    style("helvetica", "bold", 11, green);
+    pdf.text(title, left + 4, y + 1, { maxWidth: width - 8 });
+    y += 12;
+  }
+  function signatures(date: string, names: string[]) {
+    const gap = 12,
+      col = (width - gap) / 2;
+    style("times", "normal", 11);
+    const labels = names.map((name) => pdf.splitTextToSize(name, col) as string[]);
+    const namesHeight = Math.max(...labels.map((lines) => lines.length)) * 4.8;
+    ensure(136 + namesHeight);
+    section("Assinaturas");
+    const blankDate = date.match(/^(.{1,45}), _+ de _+ de _+\.?$/);
+    if (blankDate) {
+      style("times", "normal", 11.5);
+      pdf.text(blankDate[1], left, y + 3);
+      const cols = [
+        [left + 73, 17, "Dia"],
+        [left + 96, 42, "Mês"],
+        [left + 145, 23, "Ano"],
+      ] as const;
+      for (const [x, w, label] of cols) {
+        pdf.setDrawColor(muted);
+        pdf.line(x, y + 3, x + w, y + 3);
+        style("helvetica", "normal", 8, muted);
+        pdf.text(label, x, y + 8);
+      }
+      y += 16;
+    } else paragraph(date);
+    y += 4;
+    const roles = ["Contratada", "Contratante"];
+    for (let i = 0; i < 2; i++) {
+      const x = left + i * (col + gap);
+      style("helvetica", "bold", 9, green);
+      pdf.text(roles[i].toUpperCase(), x, y);
+      pdf.setDrawColor(muted);
+      pdf.line(x, y + 23, x + col, y + 23);
+      style("times", "normal", 11);
+      pdf.text(labels[i], x, y + 29, { lineHeightFactor: 1.24 });
+    }
+    y += 37 + namesHeight;
+    section("Testemunhas");
+    for (let i = 0; i < 2; i++) {
+      const x = left + i * (col + gap);
+      style("helvetica", "bold", 9, green);
+      pdf.text("Testemunha " + (i + 1), x, y);
+      pdf.setDrawColor(muted);
+      pdf.line(x, y + 18, x + col, y + 18);
+      style("helvetica", "normal", 8, muted);
+      pdf.text("Assinatura", x, y + 22);
+      for (const [label, offset] of [
+        ["Nome", 32],
+        ["CPF", 42],
+      ] as const) {
+        pdf.text(label, x, y + offset);
+        pdf.line(x + 11, y + offset, x + col, y + offset);
+      }
+    }
+    y += 52;
+  }
+  header();
+  const parts = body
+    .replace(/\r\n?/g, "\n")
+    .split(/\n\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (let i = 0; i < parts.length; i++) {
+    const text = parts[i];
+    const partyA = parts[i + 1]?.match(/^_{4,}\n([^\n]+) · CONTRATADA$/);
+    const partyB = parts[i + 2]?.match(/^_{4,}\n([^\n]+) · CONTRATANTE$/);
+    if (
+      text.length < 150 &&
+      !text.includes("\n") &&
+      partyA &&
+      partyB &&
+      parts[i + 3] === "Testemunhas:" &&
+      /^1\. _+\s+Nome \/ CPF: _+$/.test(parts[i + 4] ?? "") &&
+      /^2\. _+\s+Nome \/ CPF: _+$/.test(parts[i + 5] ?? "")
+    ) {
+      signatures(text, [partyA[1], partyB[1]]);
+      i += 5;
+      continue;
+    }
+    if (i === 0 && /^CONTRATO\b/.test(text)) {
+      paragraph(text, "title");
+      continue;
+    }
+    if (/^[IVX]+\s*[-–]/.test(text) && text.length < 85 && !text.includes("\n")) {
+      section(text);
+      continue;
+    }
+    const clause = text.match(/^(CLÁUSULA [A-ZÀ-Ü ]+?)\s*[-–]\s*([\s\S]+)$/);
+    if (clause) {
+      paragraph(clause[1], "label");
+      paragraph(clause[2]);
+      continue;
+    }
+    const [first, ...rest] = text.split("\n");
+    if (rest.length && first.length < 65 && !first.includes("_")) {
+      paragraph(first, "label");
+      paragraph(rest.join("\n"));
+      continue;
+    }
+    paragraph(text);
   }
   for (let i = 1; i <= pdf.getNumberOfPages(); i++) {
     pdf.setPage(i);
-    pdf.setFontSize(8);
-    pdf.setTextColor(90);
-    pdf.text("Residual Assessoria em Meio Ambiente", 17, 287);
-    pdf.text(i + " / " + pdf.getNumberOfPages(), 193, 287, { align: "right" });
+    pdf.setDrawColor(rule);
+    pdf.line(left, 281, right, 281);
+    style("helvetica", "normal", 8, muted);
+    pdf.text("Residual Assessoria em Meio Ambiente", left, 287);
+    pdf.text("Página " + i + " de " + pdf.getNumberOfPages(), right, 287, { align: "right" });
   }
   return pdf.output("blob");
 }
