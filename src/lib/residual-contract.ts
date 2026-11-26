@@ -95,7 +95,15 @@ export function contractDraft(p: Proposal, address: string) {
     " · CONTRATANTE\n\nTestemunhas:\n\n1. ____________________________  Nome / CPF: ______________________\n\n2. ____________________________  Nome / CPF: ______________________"
   );
 }
-export async function contractPdf(number: string, body: string) {
+export type SignatureReceipt = {
+  signer: string;
+  at: string;
+  hash: string;
+  consent: string;
+  id: string;
+  method: string;
+};
+export async function contractPdf(number: string, body: string, receipt?: SignatureReceipt | null) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ compress: true });
   const left = 21,
@@ -261,6 +269,19 @@ export async function contractPdf(number: string, body: string) {
       continue;
     }
     paragraph(text);
+  }
+  if (receipt) {
+    ensure(80);
+    section("Comprovante de assinatura eletrônica do cliente");
+    paragraph(receipt.signer);
+    paragraph(
+      new Date(receipt.at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) +
+        " (horário de Brasília)",
+    );
+    paragraph(receipt.consent);
+    paragraph("Identificação: " + receipt.method);
+    paragraph("Registro: " + receipt.id);
+    paragraph("SHA-256 do número e do texto: " + receipt.hash);
   }
   finishLetterheadPages(pdf, "Contrato nº " + number, { left, right, color: muted });
   return pdf.output("blob");

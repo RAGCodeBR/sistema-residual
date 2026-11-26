@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Check, ExternalLink, FileText, Undo2 } from "lucide-react";
 import { table } from "@/lib/company";
 import { commercialRpc } from "@/lib/commercial-clients";
-import { contractPdf } from "@/lib/residual-contract";
+import { contractPdf, type SignatureReceipt } from "@/lib/residual-contract";
 import { proposalCode, shortDate } from "@/lib/proposals";
 import { usePdfPreview } from "@/components/PdfPreviewDialog";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,13 @@ import {
   type ContractRecord,
 } from "./contract-status";
 
-export function StatusBadge({ status }: { status: keyof typeof statusTone }) {
+export function StatusBadge({
+  status,
+  row,
+}: {
+  status: keyof typeof statusTone;
+  row?: ContractRecord;
+}) {
   const tone = statusTone[status];
   return (
     <span
@@ -33,7 +39,13 @@ export function StatusBadge({ status }: { status: keyof typeof statusTone }) {
       )}
     >
       <span className={cn("size-1.5 rounded-full", tone.dot)} aria-hidden />
-      {status === "propostas" ? "Aguardando contrato" : statuses[status]}
+      {status === "assinatura" && row?.customer_signer
+        ? "Aguardando assinatura da Residual"
+        : status === "assinatura" && row?.residual_signer
+          ? "Aguardando assinatura do cliente"
+          : status === "propostas"
+            ? "Aguardando contrato"
+            : statuses[status]}
     </span>
   );
 }
@@ -49,6 +61,7 @@ export function ContractSheet({
   const row = useQuery({
     queryKey: ["contract-register", "one", id],
     enabled: !!id,
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await table("contract_register")
         .select("*")
@@ -161,7 +174,12 @@ function ContractDetails({ row: r, onRemoved }: { row: ContractRecord; onRemoved
         .eq("proposal_id", r.proposal_id)
         .single();
       if (error) throw error;
-      const blob = await contractPdf(r.number, data.body);
+      const receipt = r.customer_signer
+        ? await commercialRpc<SignatureReceipt | null>("contract_signature_receipt", {
+            target: r.proposal_id,
+          })
+        : null;
+      const blob = await contractPdf(r.number, data.body, receipt);
       openPdfPreview({
         title: "Contrato " + r.number,
         subtitle: r.client_name,
@@ -205,7 +223,7 @@ function ContractDetails({ row: r, onRemoved }: { row: ContractRecord; onRemoved
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-xs text-muted-foreground">Contrato {r.number}</span>
-            <StatusBadge status={r.status} />
+            <StatusBadge status={r.status} row={r} />
           </div>
           <SheetTitle className="text-xl leading-tight">{r.client_name}</SheetTitle>
           <SheetDescription>{r.subject}</SheetDescription>

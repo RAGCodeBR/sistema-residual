@@ -62,7 +62,7 @@ function Contracts() {
 
   const counts = useQuery({
     queryKey: ["contract-register", user?.id, "counts"],
-    refetchInterval: 60000,
+    refetchInterval: 15000,
     queryFn: async () => {
       const [register, queue] = await Promise.all([
         table("contract_register").select("status"),
@@ -101,7 +101,7 @@ function Contracts() {
     queryKey: ["contract-register", user?.id, "list", filter, page, term],
     enabled: filter !== "propostas",
     refetchOnMount: "always",
-    refetchInterval: 60000,
+    refetchInterval: 15000,
     queryFn: async () => {
       let q = table("contract_register").select("*");
       if (filter !== "todos") q = q.eq("status", filter);
@@ -384,7 +384,7 @@ function ContractListItem({ row: r, onOpen }: { row: ContractRecord; onOpen: () 
         <p className="truncate text-sm text-muted-foreground">{r.subject}</p>
       </div>
       <div className="flex flex-col items-end gap-1 sm:items-start">
-        <StatusBadge status={r.status} />
+        <StatusBadge status={r.status} row={r} />
         {r.status === "assinatura" && (
           <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
             <span className="flex gap-0.5" aria-hidden>

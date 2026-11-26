@@ -1,3 +1,4 @@
+import { ClientSignatureInvite } from "./ClientSignatureInvite";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -96,6 +97,7 @@ export function SignatureControl({ row }: { row: ContractRecord }) {
           );
         })}
       </ul>
+      {!row.customer_signer && <ClientSignatureInvite key={row.proposal_id} id={row.proposal_id} />}
       {party && (
         <form
           className="grid gap-3 rounded-lg border bg-background p-3 sm:grid-cols-2"

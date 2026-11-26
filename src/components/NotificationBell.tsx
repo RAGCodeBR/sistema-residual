@@ -78,6 +78,7 @@ export function NotificationBell() {
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload: any) => {
           const type = payload.new?.type ?? payload.old?.type;
+          if (type === "contract_signed") void qc.invalidateQueries({queryKey:["contract-register"]});
           if (type === "assignment" || type === "subtask_assignment" || type === "collaborator_assignment") refreshAssignedWork();
           void load();
         },
@@ -115,6 +116,11 @@ export function NotificationBell() {
   const openNotification = async (n: Notification) => {
     if (!n.is_read) await markRead(n.id);
     setOpen(false);
+    if (n.type === "contract_signed") {
+      await qc.invalidateQueries({ queryKey: ["contract-register"] });
+      navigate({ to: "/contratos" });
+      return;
+    }
     if (n.type === "document_expiry") {
       navigate({ to: "/portal/documentos" });
       return;
