@@ -9,6 +9,7 @@
  *
  * Tabela criada em supabase/migrations/20261120120000_create_proposals.sql.
  */
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { isMissingTable, table } from "@/lib/company";
 
@@ -458,7 +459,7 @@ export const proposalsDb = {
   },
   async remove(id: string): Promise<void> {
     if (!localMode) {
-      const { error } = await table("proposals").delete().eq("id", id);
+      const { error } = await (supabase.rpc as any)("remove_initial_proposal", { target: id });
       if (!error) return;
       if (!fallBackToLocal(error)) throw error;
     }

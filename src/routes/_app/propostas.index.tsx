@@ -81,7 +81,7 @@ function ProposalsPage() {
     if (!confirm(`Excluir a proposta ${proposalCode(p)} · ${p.client_name}? Essa ação não pode ser desfeita.`)) return;
     try {
       await proposalsDb.remove(p.id);
-      await qc.invalidateQueries({ queryKey: ["proposals"] });
+      await Promise.all([["proposals"], ["proposal", p.id], ["contract-register"], ["operational-queue"], ["approved-billing"]].map(queryKey => qc.invalidateQueries({ queryKey })));
       toast.success("Proposta excluída.");
     } catch (error) {
       toast.error((error as { message?: string })?.message || "Não foi possível excluir.");

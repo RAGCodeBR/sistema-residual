@@ -135,7 +135,40 @@ export function ContractRow({ row: r, remaining }: { row: ContractRecord; remain
         </details>
       )}
       {!r.customer_signer && !r.residual_signer && (
-        <ContractAction id={r.proposal_id} edit showIssued={openPdfPreview} />
+        <>
+          <ContractAction id={r.proposal_id} edit showIssued={openPdfPreview} />
+          {!r.starts_on && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    `Desfazer a emissão do contrato ${r.number}? O texto desta emissão será descartado. A proposta poderá ser usada novamente.`,
+                  )
+                )
+                  return;
+                setBusy(true);
+                try {
+                  await commercialRpc("undo_unsigned_contract", {
+                    target: r.proposal_id,
+                    issued_at: r.created_at,
+                    expected_number: r.number,
+                  });
+                  await qc.invalidateQueries({ queryKey: ["contract-register"] });
+                  toast.success("Emissão desfeita.");
+                } catch (error) {
+                  toast.error((error as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Desfazer emissão
+            </Button>
+          )}
+        </>
       )}
       <SignatureControl row={r} />
       {r.status === "aguardando" && !r.starts_on && !edit && (
