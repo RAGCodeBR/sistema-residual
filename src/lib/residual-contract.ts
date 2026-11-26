@@ -164,37 +164,28 @@ export async function contractPdf(number: string, body: string) {
     style("times", "normal", 11);
     const labels = names.map((name) => pdf.splitTextToSize(name, col) as string[]);
     const namesHeight = Math.max(...labels.map((lines) => lines.length)) * 4.8;
-    ensure(136 + namesHeight);
-    section("Assinaturas");
-    const blankDate = date.match(/^(.{1,45}), _+ de _+ de _+\.?$/);
-    if (blankDate) {
-      style("times", "normal", 11.5);
-      pdf.text(blankDate[1], left, y + 3);
-      const cols = [
-        [left + 73, 17, "Dia"],
-        [left + 96, 42, "Mês"],
-        [left + 145, 23, "Ano"],
-      ] as const;
-      for (const [x, w, label] of cols) {
-        pdf.setDrawColor(muted);
-        pdf.line(x, y + 3, x + w, y + 3);
-        style("helvetica", "normal", 8, muted);
-        pdf.text(label, x, y + 8);
-      }
-      y += 16;
-    } else paragraph(date);
+    const dateLine = date.replace(/, _+ de _+ de _+\.?$/, ", ____ / ____ / ______");
+    const dateLines = pdf.splitTextToSize(dateLine, width) as string[];
+    ensure(125 + namesHeight + dateLines.length * 5);
+    paragraph("Local e data", "label");
+    paragraph(dateLine);
     y += 4;
-    const roles = ["Contratada", "Contratante"];
-    for (let i = 0; i < 2; i++) {
+
+    section("Assinaturas das partes");
+    const roles = ["Contratada · Residual", "Contratante · Cliente"];
+    for (let i = 0; i < roles.length; i++) {
       const x = left + i * (col + gap);
-      style("helvetica", "bold", 9, green);
-      pdf.text(roles[i].toUpperCase(), x, y);
-      pdf.setDrawColor(muted);
-      pdf.line(x, y + 23, x + col, y + 23);
+      style("helvetica", "bold", 10, green);
+      pdf.text(roles[i], x, y);
       style("times", "normal", 11);
-      pdf.text(labels[i], x, y + 29, { lineHeightFactor: 1.24 });
+      pdf.text(labels[i], x, y + 6, { lineHeightFactor: 1.24 });
+      const lineY = y + namesHeight + 21;
+      pdf.setDrawColor(muted);
+      pdf.line(x, lineY, x + col, lineY);
+      style("helvetica", "normal", 8, muted);
+      pdf.text("Assinatura do representante", x, lineY + 5);
     }
-    y += 37 + namesHeight;
+    y += 36 + namesHeight;
     section("Testemunhas");
     for (let i = 0; i < 2; i++) {
       const x = left + i * (col + gap);
