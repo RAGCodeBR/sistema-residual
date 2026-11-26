@@ -352,26 +352,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de coleta, transporte e destinação final de ${c.waste_summary.trim() || "resíduos"}${c.site.trim() ? `, armazenados em ${c.site.trim()}` : ""}.`,
     );
 
-    // O escopo revisado da RESD 158/26 também se aplica ao cadastro original por caçamba.
-    const revisedScope = p.template === "residuos_peso" || code === "RESD 158/26";
-    if (revisedScope) {
-      renderClassOneAndTwoScope(c);
-    } else {
-      heading("Proposta técnica");
-      paragraph("A RESIDUAL disponibilizará o veículo e os equipamentos necessários à execução dos serviços de coleta propostos, que serão realizados por funcionários devidamente identificados e treinados.");
-      paragraph("A RESIDUAL prestará assessoria na emissão de certificados junto aos órgãos ambientais e demais documentos necessários, conforme a legislação vigente.");
-
-      heading("Serviços");
-      bullets([
-        "Coleta e transporte dos resíduos descritos nesta proposta, com destinação para empresas devidamente licenciadas.",
-        "Emissão do Certificado de Destinação Final (CDF).",
-      ]);
-
-      if (c.equipment.trim()) {
-        heading("Equipamento");
-        paragraph(`${c.equipment.trim()}.`.replace(/\.\.$/, "."));
-      }
-    }
+    renderWasteScope(c);
 
     heading("Condições comerciais");
     font("normal", 8.6, MUTED);
@@ -398,13 +379,6 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     if (c.separate_wastes) notes.push("Os resíduos não podem ser misturados: deve haver uma caçamba para cada tipo de resíduo.");
     if (notes.length) bullets(notes);
 
-    if (!revisedScope) {
-      heading("Condições de serviço");
-      paragraph(
-        "No momento da coleta, os resíduos deverão obrigatoriamente estar acompanhados do MTR-e (Manifesto de Transporte de Resíduos), emitido eletronicamente e de forma antecipada pelo cliente no sistema SIGOR, módulo MTR, da CETESB, e da declaração de transporte ou nota fiscal de simples remessa, quando for o caso.",
-      );
-    }
-
     const payment = paymentTerms(c).trim();
     if (payment) {
       heading("Condições de pagamento");
@@ -415,7 +389,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     paragraph(`Esta proposta é válida por ${p.validity_days} dias, até ${longDate(validUntil(p))}.`);
   }
 
-  function renderClassOneAndTwoScope(c: WasteContent) {
+  function renderWasteScope(c: WasteContent) {
     const n = heading("Escopo dos serviços");
     paragraph("A RESIDUAL – Assessoria em Meio Ambiente será responsável pela execução dos serviços de coleta, transporte e encaminhamento para destinação final ambientalmente adequada dos resíduos identificados acima, conforme as condições estabelecidas nesta proposta.");
     subheading(`${n}.1  Coleta e remoção dos resíduos`);
