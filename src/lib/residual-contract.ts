@@ -271,7 +271,7 @@ export async function contractPdf(number: string, body: string, receipt?: Signat
     paragraph(text);
   }
   if (receipt) {
-    ensure(80);
+    ensure(100);
     section("Comprovante de assinatura eletrônica do cliente");
     paragraph(receipt.signer);
     paragraph(
@@ -282,6 +282,9 @@ export async function contractPdf(number: string, body: string, receipt?: Signat
     paragraph("Identificação: " + receipt.method);
     paragraph("Registro: " + receipt.id);
     paragraph("SHA-256 do número e do texto: " + receipt.hash);
+    paragraph(
+      "A assinatura eletrônica pode produzir os mesmos efeitos jurídicos da assinatura manuscrita quando as partes aceitam o meio utilizado para comprovar a autoria e a integridade do documento (art. 10, § 2º, da MP nº 2.200-2/2001).",
+    );
   }
   finishLetterheadPages(pdf, "Contrato nº " + number, { left, right, color: muted });
   return pdf.output("blob");
