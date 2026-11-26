@@ -50,6 +50,7 @@ const previewPermissions = [
   "proposals",
   "dumpsters",
   "warehouse",
+  "operations",
   "portal",
   "portal_units",
   "portal_reports",

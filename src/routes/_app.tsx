@@ -6,7 +6,7 @@ import { ClientImpersonationBanner } from "@/components/ClientImpersonationBanne
 import { useQuery } from "@tanstack/react-query";
 import { getClientIsoWorkspaceId, isoRemoteEnabled } from "@/lib/iso-remote";
 import { IsoShell } from "@/components/iso/IsoShell";
-import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, PROPOSALS_PATH, DUMPSTERS_PATH, WAREHOUSE_PATH, isAllowedInternalPath } from "@/lib/app-mode";
+import { CLIENT_DOCUMENTS_PATH, DOCUMENTS_ONLY, DOCUMENTS_PATH, PROPOSALS_PATH, DUMPSTERS_PATH, WAREHOUSE_PATH, OPERATIONS_PATH, isAllowedInternalPath } from "@/lib/app-mode";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -46,6 +46,7 @@ function AppLayout() {
     if (isClient ? pathname !== CLIENT_DOCUMENTS_PATH : !isAllowedInternalPath(pathname) && !(isAdmin && pathname === "/users"))
       return <Navigate to={isClient ? CLIENT_DOCUMENTS_PATH : DOCUMENTS_PATH} replace />;
   }
+  if (pathname === OPERATIONS_PATH && (isClient || !hasPermission("operations"))) return <Navigate to={DOCUMENTS_PATH} replace />;
   if (pathname === WAREHOUSE_PATH && (isClient || !hasPermission("warehouse"))) return <Navigate to={DOCUMENTS_PATH} replace />;
   if (!isClient && pathname === DUMPSTERS_PATH && !hasPermission("dumpsters")) {
     return <Navigate to={DOCUMENTS_PATH} replace />;

@@ -30,6 +30,7 @@ import { Route as AppImportAtaRouteImport } from './routes/_app/import-ata'
 import { Route as AppIntegracoesChatgptRouteImport } from './routes/_app/integracoes-chatgpt'
 import { Route as AppIsoRouteImport } from './routes/_app/iso'
 import { Route as AppNotesRouteImport } from './routes/_app/notes'
+import { Route as AppOperacionalRouteImport } from './routes/_app/operacional'
 import { Route as AppRelatoriosFinanceirosRouteImport } from './routes/_app/relatorios-financeiros'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppResiduosRouteImport } from './routes/_app/residuos'
@@ -174,6 +175,11 @@ const AppIsoRoute = AppIsoRouteImport.update({
 const AppNotesRoute = AppNotesRouteImport.update({
   id: '/notes',
   path: '/notes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOperacionalRoute = AppOperacionalRouteImport.update({
+  id: '/operacional',
+  path: '/operacional',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRelatoriosFinanceirosRoute =
@@ -400,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/iso': typeof AppIsoRouteWithChildren
   '/notes': typeof AppNotesRoute
+  '/operacional': typeof AppOperacionalRoute
   '/relatorios-financeiros': typeof AppRelatoriosFinanceirosRoute
   '/reports': typeof AppReportsRoute
   '/residuos': typeof AppResiduosRoute
@@ -461,6 +468,7 @@ export interface FileRoutesByTo {
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/iso': typeof AppIsoRouteWithChildren
   '/notes': typeof AppNotesRoute
+  '/operacional': typeof AppOperacionalRoute
   '/relatorios-financeiros': typeof AppRelatoriosFinanceirosRoute
   '/reports': typeof AppReportsRoute
   '/residuos': typeof AppResiduosRoute
@@ -524,6 +532,7 @@ export interface FileRoutesById {
   '/_app/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/_app/iso': typeof AppIsoRouteWithChildren
   '/_app/notes': typeof AppNotesRoute
+  '/_app/operacional': typeof AppOperacionalRoute
   '/_app/relatorios-financeiros': typeof AppRelatoriosFinanceirosRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/residuos': typeof AppResiduosRoute
@@ -588,6 +597,7 @@ export interface FileRouteTypes {
     | '/integracoes-chatgpt'
     | '/iso'
     | '/notes'
+    | '/operacional'
     | '/relatorios-financeiros'
     | '/reports'
     | '/residuos'
@@ -649,6 +659,7 @@ export interface FileRouteTypes {
     | '/integracoes-chatgpt'
     | '/iso'
     | '/notes'
+    | '/operacional'
     | '/relatorios-financeiros'
     | '/reports'
     | '/residuos'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/_app/integracoes-chatgpt'
     | '/_app/iso'
     | '/_app/notes'
+    | '/_app/operacional'
     | '/_app/relatorios-financeiros'
     | '/_app/reports'
     | '/_app/residuos'
@@ -908,6 +920,13 @@ declare module '@tanstack/react-router' {
       path: '/notes'
       fullPath: '/notes'
       preLoaderRoute: typeof AppNotesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/operacional': {
+      id: '/_app/operacional'
+      path: '/operacional'
+      fullPath: '/operacional'
+      preLoaderRoute: typeof AppOperacionalRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/relatorios-financeiros': {
@@ -1276,6 +1295,7 @@ interface AppRouteChildren {
   AppIntegracoesChatgptRoute: typeof AppIntegracoesChatgptRoute
   AppIsoRoute: typeof AppIsoRouteWithChildren
   AppNotesRoute: typeof AppNotesRoute
+  AppOperacionalRoute: typeof AppOperacionalRoute
   AppRelatoriosFinanceirosRoute: typeof AppRelatoriosFinanceirosRoute
   AppReportsRoute: typeof AppReportsRoute
   AppResiduosRoute: typeof AppResiduosRoute
@@ -1316,6 +1336,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIntegracoesChatgptRoute: AppIntegracoesChatgptRoute,
   AppIsoRoute: AppIsoRouteWithChildren,
   AppNotesRoute: AppNotesRoute,
+  AppOperacionalRoute: AppOperacionalRoute,
   AppRelatoriosFinanceirosRoute: AppRelatoriosFinanceirosRoute,
   AppReportsRoute: AppReportsRoute,
   AppResiduosRoute: AppResiduosRoute,

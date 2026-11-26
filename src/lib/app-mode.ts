@@ -16,10 +16,12 @@ export const CLIENT_DOCUMENTS_PATH = "/portal/documentos" as const;
 export const PROPOSALS_PATH = "/propostas" as const;
 /** Cadastro de Equipamentos: caçambas, veículos e catálogo de tipos (equipe interna). */
 export const DUMPSTERS_PATH = "/equipamentos" as const;
+export const OPERATIONS_PATH = "/operacional" as const;
 export const WAREHOUSE_PATH = "/armazem" as const;
 /** Áreas internas abertas enquanto DOCUMENTS_ONLY estiver ativo. */
 export const isAllowedInternalPath = (pathname: string) =>
   pathname === DOCUMENTS_PATH ||
+  pathname === OPERATIONS_PATH ||
   pathname === WAREHOUSE_PATH ||
   pathname === DUMPSTERS_PATH ||
   pathname === PROPOSALS_PATH ||

@@ -28,6 +28,7 @@ const ACCESS_OPTIONS = [
   ["reports", "Relatórios"],
   ["documents", "Documentos"],
   ["proposals", "Propostas"],
+  ["operations", "Operacional"],
   ["warehouse", "Armazém"],
   ["dumpsters", "Cadastro de Equipamentos"],
   ["portal_units", "Portal do Cliente · Unidades e pátios"],
