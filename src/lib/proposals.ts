@@ -37,7 +37,7 @@ export type ProposalStatus = "rascunho" | "enviada" | "aprovada" | "recusada";
 
 export const UNITS = ["kg", "tonelada", "m³", "caçamba", "viagem", "unidade", "litro", "mês"] as const;
 
-export type PriceItem = { id: string; description: string; price: number | null; unit: string; minimum: string };
+export type PriceItem = { freight?: boolean; id: string; description: string; price: number | null; unit: string; minimum: string };
 export type PriceGroup = { id: string; title: string; items: PriceItem[] };
 
 export type WasteContent = {
@@ -73,6 +73,8 @@ export type ConsultingContent = {
 export type HistoryEntry = { at: string; status: ProposalStatus | "criada" | "editada"; note?: string | null; by?: string | null };
 
 export type ProposalFields = {
+  client_id?: string | null;
+  service_address?: string | null;
   year: number;
   number: number;
   template: Template;
@@ -389,7 +391,7 @@ export const proposalFileName = (p: Pick<ProposalFields, "number" | "year" | "cl
 /* Dados --------------------------------------------------------------------- */
 
 export const PROPOSAL_COLUMNS =
-  "id,year,number,template,status,issued_on,issue_city,validity_days,subject,client_name,client_cnpj,client_city,client_phone,client_email,client_contact,content,sent_on,decided_on,decision_note,history,created_at,updated_at";
+  "id,client_id,service_address,year,number,template,status,issued_on,issue_city,validity_days,subject,client_name,client_cnpj,client_city,client_phone,client_email,client_contact,content,sent_on,decided_on,decision_note,history,created_at,updated_at";
 
 /**
  * Acesso aos dados. Em desenvolvimento (npm run dev), se a tabela ainda não

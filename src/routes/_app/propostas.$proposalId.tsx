@@ -42,6 +42,7 @@ import {
   type WasteContent,
 } from "@/lib/proposals";
 import { useEquipmentTypes } from "@/lib/dumpsters";
+import { ProposalCustomer } from "@/components/proposals/ProposalCustomer";
 import { CnpjInput, MoneyInput, PriceGroupsEditor, ScopeEditor } from "@/components/proposals/ProposalFields";
 import { MissingTable, StatusDialog, useProposalPdf } from "@/components/proposals/ProposalActions";
 import { Button } from "@/components/ui/button";
@@ -172,7 +173,7 @@ function ProposalEditorPage() {
     const emptyDetails = !form.client_cnpj && !form.client_city && !form.client_phone && !form.client_email && !form.client_contact;
     if (match && emptyDetails)
       update({ client_name: match.client_name, client_cnpj: match.client_cnpj, client_city: match.client_city, client_phone: match.client_phone, client_email: match.client_email, client_contact: match.client_contact });
-    else update({ client_name: name });
+    else update({ client_name: name, client_id: null });
   };
 
   const validate = () => {
@@ -278,12 +279,13 @@ function ProposalEditorPage() {
           </Card>
 
           <Card title="Cliente">
+            <ProposalCustomer form={form} update={update} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Razão social *" className="sm:col-span-2">
                 <Input list="proposal-clients" value={form.client_name} onChange={(e) => onClientName(e.target.value)} placeholder="Ex.: T-GRÃO Terminais de Granéis S/A" />
                 <datalist id="proposal-clients">{[...clientSuggestions.values()].map((p) => <option key={p.id} value={p.client_name} />)}</datalist>
               </Field>
-              <Field label="CNPJ"><CnpjInput value={form.client_cnpj ?? ""} onChange={(client_cnpj) => update({ client_cnpj })} /></Field>
+              <Field label="CNPJ"><CnpjInput value={form.client_cnpj ?? ""} onChange={(client_cnpj) => update({ client_cnpj, client_id: null })} /></Field>
               <Field label="Cidade"><Input value={form.client_city ?? ""} onChange={(e) => update({ client_city: e.target.value })} placeholder="Ex.: Santos/SP" /></Field>
               <Field label="Contato"><Input value={form.client_contact ?? ""} onChange={(e) => update({ client_contact: e.target.value })} placeholder="Nome de quem pediu" /></Field>
               <Field label="Telefone"><Input value={form.client_phone ?? ""} onChange={(e) => update({ client_phone: e.target.value })} inputMode="tel" /></Field>
@@ -302,7 +304,7 @@ function ProposalEditorPage() {
                   <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste, form.template)}”`}>
                     <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
                   </Field>
-                  <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
+                  <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => update({ service_address: e.target.value, content: { ...waste, site: e.target.value } })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
                 </div>
               </Card>
 

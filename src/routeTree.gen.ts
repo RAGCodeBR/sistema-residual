@@ -18,6 +18,7 @@ import { Route as AppBancosRouteImport } from './routes/_app/bancos'
 import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
 import { Route as AppCentrosDeCustoRouteImport } from './routes/_app/centros-de-custo'
+import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppClientsRouteImport } from './routes/_app/clients'
 import { Route as AppContasAPagarRouteImport } from './routes/_app/contas-a-pagar'
 import { Route as AppContasAReceberRouteImport } from './routes/_app/contas-a-receber'
@@ -26,6 +27,7 @@ import { Route as AppDespesasRecorrentesRouteImport } from './routes/_app/despes
 import { Route as AppDocumentosRouteImport } from './routes/_app/documentos'
 import { Route as AppEquipamentosRouteImport } from './routes/_app/equipamentos'
 import { Route as AppFinanceiroRouteImport } from './routes/_app/financeiro'
+import { Route as AppFinanceiroPropostasRouteImport } from './routes/_app/financeiro-propostas'
 import { Route as AppImportAtaRouteImport } from './routes/_app/import-ata'
 import { Route as AppIntegracoesChatgptRouteImport } from './routes/_app/integracoes-chatgpt'
 import { Route as AppIsoRouteImport } from './routes/_app/iso'
@@ -117,6 +119,11 @@ const AppCentrosDeCustoRoute = AppCentrosDeCustoRouteImport.update({
   path: '/centros-de-custo',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClientesRoute = AppClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClientsRoute = AppClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -155,6 +162,11 @@ const AppEquipamentosRoute = AppEquipamentosRouteImport.update({
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFinanceiroPropostasRoute = AppFinanceiroPropostasRouteImport.update({
+  id: '/financeiro-propostas',
+  path: '/financeiro-propostas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportAtaRoute = AppImportAtaRouteImport.update({
@@ -394,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
   '/centros-de-custo': typeof AppCentrosDeCustoRoute
+  '/clientes': typeof AppClientesRoute
   '/clients': typeof AppClientsRouteWithChildren
   '/contas-a-pagar': typeof AppContasAPagarRoute
   '/contas-a-receber': typeof AppContasAReceberRoute
@@ -402,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/documentos': typeof AppDocumentosRoute
   '/equipamentos': typeof AppEquipamentosRoute
   '/financeiro': typeof AppFinanceiroRoute
+  '/financeiro-propostas': typeof AppFinanceiroPropostasRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/iso': typeof AppIsoRouteWithChildren
@@ -457,6 +471,7 @@ export interface FileRoutesByTo {
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
   '/centros-de-custo': typeof AppCentrosDeCustoRoute
+  '/clientes': typeof AppClientesRoute
   '/contas-a-pagar': typeof AppContasAPagarRoute
   '/contas-a-receber': typeof AppContasAReceberRoute
   '/dashboard': typeof AppDashboardRoute
@@ -464,6 +479,7 @@ export interface FileRoutesByTo {
   '/documentos': typeof AppDocumentosRoute
   '/equipamentos': typeof AppEquipamentosRoute
   '/financeiro': typeof AppFinanceiroRoute
+  '/financeiro-propostas': typeof AppFinanceiroPropostasRoute
   '/import-ata': typeof AppImportAtaRoute
   '/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/iso': typeof AppIsoRouteWithChildren
@@ -520,6 +536,7 @@ export interface FileRoutesById {
   '/_app/calendario': typeof AppCalendarioRoute
   '/_app/cartoes': typeof AppCartoesRoute
   '/_app/centros-de-custo': typeof AppCentrosDeCustoRoute
+  '/_app/clientes': typeof AppClientesRoute
   '/_app/clients': typeof AppClientsRouteWithChildren
   '/_app/contas-a-pagar': typeof AppContasAPagarRoute
   '/_app/contas-a-receber': typeof AppContasAReceberRoute
@@ -528,6 +545,7 @@ export interface FileRoutesById {
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/equipamentos': typeof AppEquipamentosRoute
   '/_app/financeiro': typeof AppFinanceiroRoute
+  '/_app/financeiro-propostas': typeof AppFinanceiroPropostasRoute
   '/_app/import-ata': typeof AppImportAtaRoute
   '/_app/integracoes-chatgpt': typeof AppIntegracoesChatgptRoute
   '/_app/iso': typeof AppIsoRouteWithChildren
@@ -585,6 +603,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/cartoes'
     | '/centros-de-custo'
+    | '/clientes'
     | '/clients'
     | '/contas-a-pagar'
     | '/contas-a-receber'
@@ -593,6 +612,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/equipamentos'
     | '/financeiro'
+    | '/financeiro-propostas'
     | '/import-ata'
     | '/integracoes-chatgpt'
     | '/iso'
@@ -648,6 +668,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/cartoes'
     | '/centros-de-custo'
+    | '/clientes'
     | '/contas-a-pagar'
     | '/contas-a-receber'
     | '/dashboard'
@@ -655,6 +676,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/equipamentos'
     | '/financeiro'
+    | '/financeiro-propostas'
     | '/import-ata'
     | '/integracoes-chatgpt'
     | '/iso'
@@ -710,6 +732,7 @@ export interface FileRouteTypes {
     | '/_app/calendario'
     | '/_app/cartoes'
     | '/_app/centros-de-custo'
+    | '/_app/clientes'
     | '/_app/clients'
     | '/_app/contas-a-pagar'
     | '/_app/contas-a-receber'
@@ -718,6 +741,7 @@ export interface FileRouteTypes {
     | '/_app/documentos'
     | '/_app/equipamentos'
     | '/_app/financeiro'
+    | '/_app/financeiro-propostas'
     | '/_app/import-ata'
     | '/_app/integracoes-chatgpt'
     | '/_app/iso'
@@ -838,6 +862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCentrosDeCustoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/clientes': {
+      id: '/_app/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/clients': {
       id: '/_app/clients'
       path: '/clients'
@@ -892,6 +923,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AppFinanceiroRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/financeiro-propostas': {
+      id: '/_app/financeiro-propostas'
+      path: '/financeiro-propostas'
+      fullPath: '/financeiro-propostas'
+      preLoaderRoute: typeof AppFinanceiroPropostasRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/import-ata': {
@@ -1283,6 +1321,7 @@ interface AppRouteChildren {
   AppCalendarioRoute: typeof AppCalendarioRoute
   AppCartoesRoute: typeof AppCartoesRoute
   AppCentrosDeCustoRoute: typeof AppCentrosDeCustoRoute
+  AppClientesRoute: typeof AppClientesRoute
   AppClientsRoute: typeof AppClientsRouteWithChildren
   AppContasAPagarRoute: typeof AppContasAPagarRoute
   AppContasAReceberRoute: typeof AppContasAReceberRoute
@@ -1291,6 +1330,7 @@ interface AppRouteChildren {
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppEquipamentosRoute: typeof AppEquipamentosRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
+  AppFinanceiroPropostasRoute: typeof AppFinanceiroPropostasRoute
   AppImportAtaRoute: typeof AppImportAtaRoute
   AppIntegracoesChatgptRoute: typeof AppIntegracoesChatgptRoute
   AppIsoRoute: typeof AppIsoRouteWithChildren
@@ -1324,6 +1364,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCalendarioRoute: AppCalendarioRoute,
   AppCartoesRoute: AppCartoesRoute,
   AppCentrosDeCustoRoute: AppCentrosDeCustoRoute,
+  AppClientesRoute: AppClientesRoute,
   AppClientsRoute: AppClientsRouteWithChildren,
   AppContasAPagarRoute: AppContasAPagarRoute,
   AppContasAReceberRoute: AppContasAReceberRoute,
@@ -1332,6 +1373,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentosRoute: AppDocumentosRoute,
   AppEquipamentosRoute: AppEquipamentosRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
+  AppFinanceiroPropostasRoute: AppFinanceiroPropostasRoute,
   AppImportAtaRoute: AppImportAtaRoute,
   AppIntegracoesChatgptRoute: AppIntegracoesChatgptRoute,
   AppIsoRoute: AppIsoRouteWithChildren,

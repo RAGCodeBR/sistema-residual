@@ -46,6 +46,8 @@ function AppLayout() {
     if (isClient ? pathname !== CLIENT_DOCUMENTS_PATH : !isAllowedInternalPath(pathname) && !(isAdmin && pathname === "/users"))
       return <Navigate to={isClient ? CLIENT_DOCUMENTS_PATH : DOCUMENTS_PATH} replace />;
   }
+  if (pathname === "/clientes" && (isClient || !hasPermission("clients"))) return <Navigate to={DOCUMENTS_PATH} replace />;
+  if (pathname === "/financeiro-propostas" && (isClient || !hasPermission("finance"))) return <Navigate to={DOCUMENTS_PATH} replace />;
   if (pathname === OPERATIONS_PATH && (isClient || !hasPermission("operations"))) return <Navigate to={DOCUMENTS_PATH} replace />;
   if (pathname === WAREHOUSE_PATH && (isClient || !hasPermission("warehouse"))) return <Navigate to={DOCUMENTS_PATH} replace />;
   if (!isClient && pathname === DUMPSTERS_PATH && !hasPermission("dumpsters")) {

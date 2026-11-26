@@ -20,6 +20,7 @@ export const OPERATIONS_PATH = "/operacional" as const;
 export const WAREHOUSE_PATH = "/armazem" as const;
 /** Áreas internas abertas enquanto DOCUMENTS_ONLY estiver ativo. */
 export const isAllowedInternalPath = (pathname: string) =>
+  pathname === "/clientes" || pathname === "/financeiro-propostas" ||
   pathname === DOCUMENTS_PATH ||
   pathname === OPERATIONS_PATH ||
   pathname === WAREHOUSE_PATH ||

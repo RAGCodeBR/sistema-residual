@@ -1,3 +1,4 @@
+import { isFreight } from "@/lib/proposal-billing";
 /**
  * Campos do editor de propostas: preço em reais, tabela de preços (resíduos)
  * e escopo da assessoria.
@@ -95,7 +96,7 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
           <ul className="divide-y xl:divide-y-0">
             {g.items.map((it, index) => (
               <li key={it.id} className="grid grid-cols-2 gap-2 p-3 xl:grid-cols-[1fr_8.5rem_7.5rem_10rem_2.5rem] xl:items-center xl:py-1.5">
-                <Input className="col-span-2 xl:col-span-1" value={it.description} disabled={disabled} onChange={(e) => setItem(g, it.id, { description: e.target.value })} placeholder="Ex.: Madeira, Frete, Destinação" aria-label="Item" />
+                <div className="col-span-2 space-y-1 xl:col-span-1"><Input value={it.description} disabled={disabled} onChange={(e) => setItem(g, it.id, { description: e.target.value })} placeholder="Ex.: Madeira, Frete, Destinação" aria-label="Item" /><label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={isFreight(it)} disabled={disabled} onChange={(e)=>setItem(g,it.id,{freight:e.target.checked})}/>Frete</label></div>
                 <MoneyInput value={it.price} onChange={(price) => setItem(g, it.id, { price })} placeholder="A combinar" ariaLabel="Valor" />
                 <Select value={it.unit} disabled={disabled} onValueChange={(unit) => setItem(g, it.id, { unit })}>
                   <SelectTrigger aria-label="Unidade"><SelectValue /></SelectTrigger>
@@ -114,7 +115,7 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
             <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "", price: null, unit: "kg", minimum: "" }] })}>
               <Plus className="h-4 w-4" />Item
             </Button>
-            <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "Frete", price: null, unit: "viagem", minimum: "" }] })}>
+            <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "Frete", freight: true, price: null, unit: "viagem", minimum: "" }] })}>
               <Plus className="h-4 w-4" />Frete
             </Button>
           </div>

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { commercialRpc } from "@/lib/commercial-clients";
+import { CommercialAddress } from "@/components/CommercialAddress";
 import { DeliveryPhotos } from "@/components/operations/DeliveryPhotos";
 import { SignatureField } from "@/components/operations/SignatureField";
 import { usePdfPreview } from "@/components/PdfPreviewDialog";
@@ -66,6 +68,8 @@ function Operations() {
 
 function SlipEditor({ order, initial }: { order: Order; initial: Saved }) {
   const qc = useQueryClient();
+  const {user}=useAuth();
+  const locations=useQuery({queryKey:["operational-addresses",user?.id,order.id],queryFn:()=>commercialRpc<{customer:string;address:string|null}[]>("operational_addresses",{proposal:order.id})});
   const { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
   const [fields, setFields] = useState<Slip>({ ...emptySlip, ...initial.fields });
   const [revision, setRevision] = useState(initial.revision);
@@ -99,6 +103,7 @@ function SlipEditor({ order, initial }: { order: Order; initial: Saved }) {
     <fieldset disabled={busy} className="space-y-4">
       {slipSections.map(section => <section key={section.title} className="space-y-3 rounded-xl border bg-card p-4">
         <h2 className="font-semibold">{section.title}</h2>
+        {editing && section.fields.some(([key])=>key==="address") && <><CommercialAddress customer={locations.data?.[0]?.customer} proposal={order.id} value={fields.address} addresses={(locations.data??[]).flatMap(a=>a.address?[a.address]:[])} onChange={a=>set("address",a)}/>{locations.isError && <p role="alert">{locations.error.message}</p>}</>}
         <div className="grid gap-3 sm:grid-cols-2">{section.fields.map(([key,label]) => {
           const multiline = ["address","equipment","notes"].includes(key);
           const date = ["day","delivery","pickup"].includes(key);
