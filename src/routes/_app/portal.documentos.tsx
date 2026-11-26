@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useClients } from "@/hooks/use-data";
 import { supabase } from "@/integrations/supabase/client";
-import { canPreviewInline, usePdfPreview } from "@/components/PdfPreviewDialog";
+import { usePdfPreview } from "@/components/PdfPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ type Doc = { id: string; client_id: string; branch_id: string | null; title: str
 type Status = "overdue" | "due_soon" | "ok" | "none";
 type View = "all" | Status;
 
+const previewTypes = new Map([["pdf", "application/pdf"], ["png", "image/png"], ["jpg", "image/jpeg"], ["jpeg", "image/jpeg"], ["gif", "image/gif"], ["webp", "image/webp"]]);
 const day = 86_400_000;
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const daysUntil = (date: string) => Math.round((Date.parse(`${date}T00:00:00`) - Date.parse(`${todayIso()}T00:00:00`)) / day);
@@ -67,7 +68,7 @@ const DOC_COLUMNS = "id,client_id,branch_id,title,description,file_name,storage_
 
 function ClientDocumentsPortal() {
   const { data: clients = [] } = useClients();
-  const { isClient, hasPermission } = useAuth();
+  const { user, clientId, isClient, hasPermission } = useAuth();
   const qc = useQueryClient();
   const { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -83,8 +84,8 @@ function ClientDocumentsPortal() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   // Uma única consulta traz tudo que o usuário pode ver; para clientes, o RLS limita à própria empresa e filiais.
-  const { data: documents = [], isLoading } = useQuery({ queryKey: ["portal-client-documents"], queryFn: async () => { const { data, error } = await (supabase.from("client_documents") as any).select(DOC_COLUMNS).eq("active", true); if (error) throw error; return (data ?? []) as Doc[]; } });
-  const { data: branches = [] } = useQuery({ queryKey: ["document-branches"], queryFn: async () => { const { data, error } = await (supabase.from("client_branches") as any).select("id,client_id,name,cnpj").eq("is_active", true).order("name"); if (error) throw error; return (data ?? []) as Branch[]; } });
+  const { data: documents = [], isLoading } = useQuery({ queryKey: ["portal-client-documents", user?.id, clientId, isClient], enabled: !!user, queryFn: async () => { const { data, error } = await (supabase.from("client_documents") as any).select(DOC_COLUMNS).eq("active", true); if (error) throw error; return (data ?? []) as Doc[]; } });
+  const { data: branches = [] } = useQuery({ queryKey: ["document-branches", user?.id, clientId, isClient], enabled: !!user, queryFn: async () => { const { data, error } = await (supabase.from("client_branches") as any).select("id,client_id,name,cnpj").eq("is_active", true).order("name"); if (error) throw error; return (data ?? []) as Branch[]; } });
 
   const clientById = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
   const branchById = useMemo(() => new Map(branches.map((b) => [b.id, b])), [branches]);
@@ -126,26 +127,37 @@ function ClientDocumentsPortal() {
     return { visibleCount: visible.length, groups: list };
   }, [scoped, view, search, clientById, branchById]);
 
-  const signedUrl = async (doc: Doc, download?: boolean) => {
-    const { data, error } = await supabase.storage.from("client-documents").createSignedUrl(doc.storage_path, 600, download ? { download: doc.file_name } : undefined);
-    if (error || !data?.signedUrl) throw new Error(error?.message || "Não foi possível acessar o documento.");
-    return data.signedUrl;
+  const readDocument = async (doc: Doc) => {
+    const { data, error } = await supabase.storage.from("client-documents").download(doc.storage_path, {}, { cache: "no-store" });
+    if (error || !data) throw new Error("Não foi possível acessar o documento.");
+    return data;
+  };
+  const saveFile = (doc: Doc, file: Blob) => {
+    const url = URL.createObjectURL(file.slice(0, file.size, "application/octet-stream"));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = doc.file_name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
   };
   const download = async (doc: Doc) => {
-    try {
-      const link = document.createElement("a");
-      link.href = await signedUrl(doc, true);
-      link.rel = "noopener";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível baixar o documento."); }
+    try { saveFile(doc, await readDocument(doc)); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível baixar o documento."); }
   };
   const previewDocument = async (doc: Doc) => {
-    if (!canPreviewInline(doc.file_name)) { toast.info("Esse tipo de arquivo não abre no navegador. Baixando…"); return download(doc); }
     setBusyId(doc.id);
     try {
-      openPdfPreview({ title: doc.title, subtitle: `${clientName(doc.client_id)} · ${unitLabel(doc.branch_id)} · ${doc.file_name}`, fileName: doc.file_name, url: await signedUrl(doc) });
+      const file = await readDocument(doc);
+      const ext = doc.file_name.split(".").pop()?.toLowerCase() ?? "";
+      const mime = previewTypes.get(ext);
+      if (!mime || file.type.split(";")[0] !== mime) {
+        toast.info("Esse formato será baixado para abrir no seu dispositivo.");
+        saveFile(doc, file);
+        return;
+      }
+      openPdfPreview({ title: doc.title, subtitle: `${clientName(doc.client_id)} · ${unitLabel(doc.branch_id)} · ${doc.file_name}`, fileName: doc.file_name, url: URL.createObjectURL(file.slice(0, file.size, mime)), revokeOnClose: true });
     } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível visualizar o documento."); } finally { setBusyId(null); }
   };
 
