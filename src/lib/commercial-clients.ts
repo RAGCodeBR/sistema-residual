@@ -15,7 +15,12 @@ export const companyLabels = {
   email: "E-mail",
 };
 export type CompanyDetails = Partial<Record<keyof typeof companyLabels, string | null>>;
-export type Customer = CompanyDetails & { id: string; name: string; addresses: string[] };
+export type Customer = CompanyDetails & {
+  id: string;
+  name: string;
+  addresses: string[];
+  has_registration_file: boolean;
+};
 export const addressesOf = (customer?: Customer) => [
   ...new Set([customer?.address, ...(customer?.addresses ?? [])].filter((a): a is string => !!a)),
 ];

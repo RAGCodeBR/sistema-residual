@@ -5,6 +5,12 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CnpjInput } from "@/components/proposals/ProposalFields";
+import {
+  ClientRegistrationFile,
+  acceptedFiles,
+  uploadRegistration,
+  validateFile,
+} from "@/components/ClientRegistrationFile";
 import { CommercialAddress } from "@/components/CommercialAddress";
 import {
   addressesOf,
@@ -21,11 +27,13 @@ function Clients() {
     [search, setSearch] = useState(""),
     [id, setId] = useState<string | null>(null),
     [form, setForm] = useState<CompanyDetails | null>(null),
+    [pendingFile, setPendingFile] = useState<File | null>(null),
     [address, setAddress] = useState("");
   const start = (c?: Customer) => {
     setForm(c ? { ...c, legal_name: c.legal_name || c.name } : {});
     setId(c?.id ?? null);
     setAddress("");
+    setPendingFile(null);
   };
   const save = useMutation({
     mutationFn: () =>
@@ -37,6 +45,17 @@ function Clients() {
       }),
     onSuccess: async (saved) => {
       setId(saved);
+      if (pendingFile) {
+        try {
+          await uploadRegistration(saved, pendingFile);
+        } catch {
+          toast.error("Cliente salvo. Use Anexar ficha para tentar enviar o arquivo novamente.");
+          await qc.invalidateQueries({ queryKey: ["commercial-clients"] });
+          return;
+        } finally {
+          setPendingFile(null);
+        }
+      }
       await qc.invalidateQueries({ queryKey: ["commercial-clients"] });
       toast.success("Cadastro salvo.");
     },
@@ -46,7 +65,9 @@ function Clients() {
     <main className="mx-auto max-w-5xl space-y-5 p-4 md:p-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Clientes</h1>
-        <Button onClick={() => start()}>Novo cliente</Button>
+        <Button disabled={save.isPending} onClick={() => start()}>
+          Novo cliente
+        </Button>
       </header>
       {form && (
         <section className="space-y-4 rounded-xl border bg-card p-4">
@@ -78,9 +99,44 @@ function Clients() {
                 </label>
               ),
             )}
+            <div className="sm:col-span-2 space-y-1">
+              <p className="text-sm font-medium">Ficha cadastral</p>
+              {id ? (
+                <ClientRegistrationFile
+                  key={id}
+                  id={id}
+                  hasFile={!!list.data?.find((c) => c.id === id)?.has_registration_file}
+                  editing
+                />
+              ) : (
+                <Input
+                  key="new-file"
+                  aria-label="Anexar ficha cadastral"
+                  type="file"
+                  accept={acceptedFiles}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    try {
+                      if (f) validateFile(f);
+                      setPendingFile(f ?? null);
+                    } catch (err) {
+                      e.target.value = "";
+                      setPendingFile(null);
+                      toast.error((err as Error).message);
+                    }
+                  }}
+                />
+              )}
+              <p className="text-xs text-muted-foreground">PDF, JPG ou PNG · até 10 MB</p>
+            </div>
             <div className="flex gap-2">
               <Button disabled={save.isPending}>Salvar cadastro</Button>
-              <Button type="button" variant="outline" onClick={() => setForm(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={save.isPending}
+                onClick={() => setForm(null)}
+              >
                 Fechar
               </Button>
             </div>
@@ -125,16 +181,19 @@ function Clients() {
                 .includes(search.toLowerCase()),
             )
             .map((c) => (
-              <button
-                key={c.id}
-                className="block w-full p-4 text-left hover:bg-muted"
-                onClick={() => start(c)}
-              >
-                <strong>{c.legal_name || c.name}</strong>
-                <div className="text-sm text-muted-foreground">
-                  {[c.cnpj, c.commercial_city].filter(Boolean).join(" · ")}
-                </div>
-              </button>
+              <div key={c.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
+                <button
+                  className="min-w-40 flex-1 rounded py-2 text-left hover:bg-muted"
+                  disabled={save.isPending}
+                  onClick={() => start(c)}
+                >
+                  <strong>{c.legal_name || c.name}</strong>
+                  <div className="text-sm text-muted-foreground">
+                    {[c.cnpj, c.commercial_city].filter(Boolean).join(" · ")}
+                  </div>
+                </button>
+                <ClientRegistrationFile id={c.id} hasFile={c.has_registration_file} />
+              </div>
             ))}
           {!list.data?.length && <p className="p-4">Nenhum cliente cadastrado.</p>}
         </div>
