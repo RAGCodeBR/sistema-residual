@@ -125,7 +125,6 @@ export function AppShell({
               warehouseNav,
               { to: "/financeiro-propostas", label: "Financeiro", icon: Wallet, permission: "finance" },
               { to: "/clientes", label: "Clientes", icon: Building2, permission: "clients" },
-              { to:"/contratos-ativos",label:"Contratos ativos",icon:ClipboardList,permission:"proposals" },
               ...(isAdmin ? [{ to: "/users", label: "Usuários", icon: Users, adminOnly: true }] : []),
             ] as NavItem[]
           ).filter((item) => !item.permission || hasPermission(item.permission));
