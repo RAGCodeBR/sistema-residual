@@ -144,6 +144,12 @@ export const DEFAULT_DELIVERABLES = [
   "DMRs e declarações aplicáveis",
 ];
 
+export function wasteServiceDescription(c: WasteContent) {
+  const residue = c.waste_summary.trim() || "resíduos";
+  const site = c.site.trim();
+  return `coleta, transporte e destinação final de ${residue}${site ? `, armazenados em ${site}` : ""}.`;
+}
+
 export function idleFeeClause(fee: number | null) {
   return fee == null ? "" : `Caso não haja movimentação no mês, será cobrado o valor de uma movimentação (${money(fee)} por caçamba).`;
 }
@@ -183,7 +189,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
       extra_notes: "",
     };
   return {
-    waste_summary: "resíduos classe I (mix de sólidos diversos) e resíduos classe II (madeira, RCC, recicláveis e orgânico)",
+    waste_summary: "",
     site: "sua área operacional",
     equipment: "Caçamba estacionária com capacidade de 5 m³",
     groups: [

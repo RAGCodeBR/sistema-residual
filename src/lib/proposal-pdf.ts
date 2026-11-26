@@ -19,6 +19,7 @@ import {
   proposalCode,
   paymentTerms,
   idleFeeClause,
+  wasteServiceDescription,
   validUntil,
   type ConsultingContent,
   type ProposalFields,
@@ -349,7 +350,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   function renderWaste(c: WasteContent) {
     paragraph(
-      `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de coleta, transporte e destinação final de ${c.waste_summary.trim() || "resíduos"}${c.site.trim() ? `, armazenados em ${c.site.trim()}` : ""}.`,
+      `Atendendo à sua solicitação, temos a satisfação de submeter à sua apreciação nossa proposta para execução dos serviços de ${wasteServiceDescription(c)}`,
     );
 
     renderWasteScope(c);

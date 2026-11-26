@@ -19,6 +19,7 @@ import {
   defaultSubject,
   paymentTerms,
   idleFeeClause,
+  wasteServiceDescription,
   displayStatus,
   isUniqueViolation,
   isWaste,
@@ -295,10 +296,10 @@ function ProposalEditorPage() {
 
           {waste && (
             <>
-              <Card title="Resíduos e local">
+              <Card title="Abertura da proposta">
                 <div className="space-y-3">
-                  <Field label="Resíduos" hint="Completa a frase “…coleta, transporte e destinação final de ___”">
-                    <Textarea rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
+                  <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste)}”`}>
+                    <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: resíduos sólidos classe II ou mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
