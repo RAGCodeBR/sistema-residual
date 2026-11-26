@@ -45,6 +45,7 @@ export type WasteContent = {
   /** Onde os resíduos estão (ex.: "sua área operacional em Santos/SP"). */
   site: string;
   equipment: string;
+  operational_resources?: string;
   /** Tipo do catálogo de Caçambas (equipment_types). */
   equipment_type_id?: string | null;
   groups: PriceGroup[];
@@ -144,6 +145,8 @@ export const DEFAULT_DELIVERABLES = [
   "DMRs e declarações aplicáveis",
 ];
 
+export const defaultOperationalResources = "Serão disponibilizados os recursos operacionais necessários à realização das atividades contratadas.";
+
 export function wasteServiceDescription(c: WasteContent) {
   const residue = c.waste_summary.trim() || "resíduos";
   const site = c.site.trim();
@@ -173,7 +176,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
     return {
       waste_summary: "",
       site: "",
-      equipment: "Caçamba estacionária com capacidade de 5 m³",
+      equipment: "",
       groups: [
         {
           id: uid(),
@@ -191,7 +194,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
   return {
     waste_summary: "",
     site: "sua área operacional",
-    equipment: "Caçamba estacionária com capacidade de 5 m³",
+    equipment: "",
     groups: [
       {
         id: uid(),

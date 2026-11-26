@@ -20,6 +20,7 @@ import {
   paymentTerms,
   idleFeeClause,
   wasteServiceDescription,
+  defaultOperationalResources,
   validUntil,
   type ConsultingContent,
   type ProposalFields,
@@ -416,7 +417,8 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
     heading("Equipamentos e recursos operacionais");
     if (c.equipment.trim()) paragraph(c.equipment.trim());
-    paragraph("Serão disponibilizados os recursos operacionais necessários à realização das atividades contratadas.");
+    const resources = (c.operational_resources ?? defaultOperationalResources).trim();
+    if (resources) paragraph(resources);
 
     heading("Responsabilidades do contratante");
     bullets([

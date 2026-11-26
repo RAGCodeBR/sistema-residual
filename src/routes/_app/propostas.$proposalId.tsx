@@ -20,6 +20,7 @@ import {
   paymentTerms,
   idleFeeClause,
   wasteServiceDescription,
+  defaultOperationalResources,
   displayStatus,
   isUniqueViolation,
   isWaste,
@@ -301,27 +302,33 @@ function ProposalEditorPage() {
                   <Field label="Tipo de resíduo" hint={`No PDF: “…serviços de ${wasteServiceDescription(waste)}”`}>
                     <Textarea aria-label="Tipo de resíduo" placeholder="Ex.: resíduos sólidos classe II ou mix de sólidos diversos" rows={2} value={waste.waste_summary} onChange={(e) => setWaste({ waste_summary: e.target.value })} />
                   </Field>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
-                    <Field label="Equipamento" hint="Este texto aparece na proposta e pode ser editado.">
-                      {equipmentTypes.length > 0 && (
-                        <Select
-                          value={waste.equipment_type_id && equipmentTypes.some((t) => t.id === waste.equipment_type_id) ? waste.equipment_type_id : FREE_EQUIPMENT}
-                          onValueChange={(id) => {
-                            const t = equipmentTypes.find((x) => x.id === id);
-                            setWaste(t ? { equipment_type_id: t.id, equipment: t.proposal_text || t.name } : { equipment_type_id: null });
-                          }}
-                        >
-                          <SelectTrigger aria-label="Tipo de equipamento"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {equipmentTypes.filter((t) => t.active || t.id === waste.equipment_type_id).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                            <SelectItem value={FREE_EQUIPMENT}>Outro (texto livre)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                      <Textarea rows={2} value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value })} aria-label="Texto do equipamento na proposta" />
-                    </Field>
-                  </div>
+                  <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
+                </div>
+              </Card>
+
+              <Card title="Equipamentos e recursos operacionais">
+                <div className="space-y-3">
+                  {equipmentTypes.length > 0 && (
+                    <Select
+                      value={waste.equipment_type_id && equipmentTypes.some((t) => t.id === waste.equipment_type_id) ? waste.equipment_type_id : FREE_EQUIPMENT}
+                      onValueChange={(id) => {
+                        const t = equipmentTypes.find((x) => x.id === id);
+                        setWaste(t ? { equipment_type_id: t.id, equipment: t.proposal_text || t.name } : { equipment_type_id: null });
+                      }}
+                    >
+                      <SelectTrigger aria-label="Tipo de equipamento"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {equipmentTypes.filter((t) => t.active || t.id === waste.equipment_type_id).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                        <SelectItem value={FREE_EQUIPMENT}>Outro (texto livre)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Field label="Equipamentos utilizados" hint="Escreva um ou mais equipamentos, um por linha. O texto aparece na seção 2 do PDF.">
+                    <Textarea aria-label="Equipamentos utilizados" rows={3} placeholder="Ex.: caminhão basculante, pá carregadeira" value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value, equipment_type_id: null })} />
+                  </Field>
+                  <Field label="Recursos operacionais">
+                    <Textarea aria-label="Recursos operacionais" rows={2} value={waste.operational_resources ?? defaultOperationalResources} onChange={(e) => setWaste({ operational_resources: e.target.value })} />
+                  </Field>
                 </div>
               </Card>
 
