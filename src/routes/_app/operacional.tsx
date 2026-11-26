@@ -1,3 +1,4 @@
+import residualLogo from "@/assets/residual-logo-transparent.png";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
@@ -50,7 +51,7 @@ function Operations() {
   return <main className="mx-auto max-w-4xl space-y-5 p-4 pb-28 sm:p-6">
     {selected ? <>
       <Button variant="outline" onClick={() => setSelected(null)}>Voltar ao operacional</Button>
-      <header><h1 className="text-2xl font-bold">Romaneio de equipamentos</h1><p className="text-muted-foreground">{proposalCode(selected)} · {selected.client_name}</p></header>
+      <header className="flex items-center gap-4"><img src={residualLogo} alt="Residual Assessoria em Meio Ambiente" className="h-14 w-auto rounded bg-white p-1"/><div><h1 className="text-2xl font-bold">Romaneio de equipamentos</h1><p className="text-muted-foreground">{proposalCode(selected)} · {selected.client_name}</p></div></header>
       {slip.isError ? <p role="alert">{slip.error.message}</p> : slip.data ? <div key={selected.id} className="space-y-4"><DeliveryPhotos proposalId={selected.id} /><SlipEditor order={selected} initial={slip.data} /></div> : <p>Carregando ficha…</p>}
     </> : <>
       <header><h1 className="text-2xl font-bold">Operacional</h1><p className="text-muted-foreground">Romaneios das propostas aprovadas</p></header>

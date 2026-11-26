@@ -14,7 +14,7 @@ import { UNITS, moneyInput, parseMoney, uid, type PriceGroup, type PriceItem, ty
 
 const cnpjCharacters = (text: string) => text.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-function formatCnpj(text: string) {
+export function formatCnpj(text: string) {
   const chars = cnpjCharacters(text).slice(0, 14);
   return chars.slice(0, 2)
     + (chars.length > 2 ? "." + chars.slice(2, 5) : "")

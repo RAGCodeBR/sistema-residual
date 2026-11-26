@@ -1,3 +1,4 @@
+import logo from "@/assets/residual-logo-transparent.png?inline";
 import { proposalCode, shortDate } from "@/lib/proposals";
 
 export type Order = { id: string; year: number; number: number; client_name: string; subject: string; revision: number; issued: boolean };
@@ -16,16 +17,15 @@ export async function buildSlipPdf(order: Order, slip: Slip) {
   const code = proposalCode(order);
   let y = 0;
   function header() {
-    doc.setFillColor(28, 74, 47);
-    doc.rect(0, 0, 210, 33, "F");
-    doc.setTextColor(255);
+    doc.addImage(logo, "PNG", 16, 5, 30, 30 * 409 / 515, "residual");
+    doc.setTextColor(28, 74, 47);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("RESIDUAL", 16, 11);
     doc.setFontSize(18);
-    doc.text("Romaneio de equipamentos", 16, 24);
+    doc.text("Romaneio de equipamentos", 194, 16, {align:"right"});
     doc.setFontSize(10);
-    doc.text(code, 194, 11, { align: "right" });
+    doc.text(code, 194, 24, {align:"right"});
+    doc.setDrawColor(169,193,174);
+    doc.line(16,33,194,33);
     y = 45;
   }
   function fit(height: number) {
