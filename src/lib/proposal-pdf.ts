@@ -93,6 +93,22 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     if (y + h > BOTTOM) newPage();
   };
 
+  // O jsPDF trata uma linha isolada como a última do parágrafo. Distribuímos
+  // os espaços somente nas linhas internas, mesmo quando há quebra de página.
+  const drawLine = (line: string, x: number, width: number, justify: boolean) => {
+    const words = line.trim().split(/\s+/);
+    if (!justify || words.length < 3) {
+      doc.text(line, x, y);
+      return;
+    }
+    const widths = words.map(word => doc.getTextWidth(word));
+    const space = (width - widths.reduce((sum, w) => sum + w, 0)) / (words.length - 1);
+    words.forEach((word, i) => {
+      doc.text(word, x, y);
+      x += widths[i] + space;
+    });
+  };
+
   /** Parágrafo justificado, com quebra de página linha a linha. */
   const paragraph = (text: string, opts: { size?: number; style?: "normal" | "bold" | "italic"; c?: RGB; indent?: number; gap?: number; justify?: boolean } = {}) => {
     const size = opts.size ?? 10;
@@ -105,8 +121,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       lines.forEach((line, i) => {
         ensure(lh);
         const last = i === lines.length - 1;
-        if (opts.justify !== false && !last) doc.text(line, M_LEFT + indent, y, { align: "justify", maxWidth: w });
-        else doc.text(line, M_LEFT + indent, y);
+        drawLine(line, M_LEFT + indent, w, opts.justify !== false && !last);
         y += lh;
       });
     }
@@ -137,15 +152,17 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   };
 
   const bullets = (items: string[], size = 10) => {
+    const textIndent = 7;
+    const width = CONTENT_W - textIndent;
     for (const text of items) {
       font("normal", size);
-      const lines: string[] = doc.splitTextToSize(text, CONTENT_W - 6);
+      const lines: string[] = doc.splitTextToSize(text, width);
       ensure(lineH(size) * Math.min(lines.length, 2));
       fill(GREEN);
-      doc.circle(M_LEFT + 1.6, y - 1.2, 0.8, "F");
-      lines.forEach((line) => {
+      doc.circle(M_LEFT + 4, y - 1.2, 0.8, "F");
+      lines.forEach((line, i) => {
         ensure(lineH(size));
-        doc.text(line, M_LEFT + 6, y);
+        drawLine(line, M_LEFT + textIndent, width, i < lines.length - 1);
         y += lineH(size);
       });
       y += 0.8;
@@ -424,9 +441,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
     bullets([
       "Disponibilizar os resíduos devidamente segregados e em condições adequadas para coleta e transporte.",
       "Garantir que o material corresponda à classificação e às características informadas nesta proposta.",
-      "Fornecer, quando solicitado, informações e documentos relativos à origem, caracterização e classificação dos resíduos.",
       "Emitir previamente o Manifesto de Transporte de Resíduos (MTR-e), por meio do SIGOR – Módulo MTR, da CETESB, quando aplicável.",
-      "Disponibilizar a documentação fiscal ou declaração de transporte necessária, quando exigível.",
       "Garantir condições adequadas de acesso, circulação e operação dos veículos nas dependências da unidade.",
       "Comunicar previamente qualquer alteração nas características, quantidade ou condições de armazenamento dos resíduos.",
     ]);
