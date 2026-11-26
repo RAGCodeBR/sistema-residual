@@ -9,11 +9,9 @@ export const getRouter = (basepath?: string) => {
         staleTime: 30_000,
         gcTime: 5 * 60_000,
         refetchOnWindowFocus: false,
-        // Ao alternar de app, usar a ferramenta de captura ou voltar para uma
-        // tela já aberta, mantemos o conteúdo em cache. As mutações continuam
-        // invalidando a consulta correspondente assim que o usuário salva.
-        refetchOnMount: false,
-        refetchOnReconnect: false,
+        // Uma alteração pode invalidar outra tela enquanto ela está fechada.
+        refetchOnMount: query => query.state.isInvalidated,
+        refetchOnReconnect: query => query.state.isInvalidated,
         retry: 1,
       },
     },

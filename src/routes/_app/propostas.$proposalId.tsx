@@ -86,7 +86,7 @@ function ProposalEditorPage() {
   const isNew = proposalId === "nova";
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { profile } = useAuth();
+  const { profile, hasPermission } = useAuth();
   const list = useProposals();
   const existing = useProposal(isNew ? search.de ?? null : proposalId);
   const { previewPdf, sharePdf, pdfBusy, pdfDialog } = useProposalPdf();
@@ -441,7 +441,7 @@ function ProposalEditorPage() {
                 )}
                 {saved.status !== "rascunho" && !locked && <Button variant="ghost" size="sm" onClick={() => setStatusTarget("rascunho")}><RotateCcw className="h-4 w-4" />Voltar para rascunho</Button>}
               </div>
-              {saved.status === "aprovada" && <p className="mt-3 rounded-lg border border-dashed p-2 text-xs text-muted-foreground">Próxima etapa: gerar o contrato a partir desta proposta (em construção).</p>}
+              {saved.status === "aprovada" && hasPermission("operations") && <Button asChild className="mt-3"><Link to="/operacional">Abrir Operacional</Link></Button>}
             </section>
           ) : (
             <section className="rounded-xl border border-dashed bg-card p-4 text-sm text-muted-foreground">

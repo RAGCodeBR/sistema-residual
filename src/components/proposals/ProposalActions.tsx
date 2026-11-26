@@ -77,7 +77,7 @@ const COPY: Record<ProposalStatus, { title: string; description: string; dateLab
   },
   aprovada: {
     title: "Registrar aprovação",
-    description: "Registre quando o cliente aprovou. A proposta fica disponível para a próxima etapa (contrato).",
+    description: "Registre quando o cliente aprovou. A proposta aprovada entra no Operacional para o preenchimento do romaneio.",
     dateLabel: "Data da aprovação",
     noteLabel: "Observação",
     notePlaceholder: "Ex.: aprovada por e-mail, com início em 01/12",
@@ -126,6 +126,7 @@ export function StatusDialog({ proposal, status, onClose }: { proposal: Proposal
     setSaving(true);
     try {
       await changeStatus(proposal, status, { date, note: note.trim(), by: profile?.full_name ?? null });
+      qc.removeQueries({ queryKey: ["operational-queue"], type: "inactive" });
       await Promise.all([qc.invalidateQueries({ queryKey: ["operational-queue"] }), qc.invalidateQueries({ queryKey: ["proposals"] }), qc.invalidateQueries({ queryKey: ["proposal", proposal.id] })]);
       toast.success(copy.success);
       onClose();

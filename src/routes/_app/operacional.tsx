@@ -23,6 +23,13 @@ function Operations() {
   const [selected, setSelected] = useState<Order | null>(null);
   const queue = useQuery({
     queryKey: ["operational-queue", user?.id, page],
+    enabled: !selected,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 15_000,
+
     queryFn: async () => {
       const { data, error } = await table("operational_queue").select("*").order("year", { ascending: false }).order("number", { ascending: false }).range(page*pageSize,(page+1)*pageSize);
       if (error) throw error;

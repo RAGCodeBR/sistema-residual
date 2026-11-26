@@ -446,7 +446,7 @@ export const proposalsDb = {
   },
   async update(id: string, patch: Partial<Proposal>): Promise<void> {
     if (!localMode) {
-      const { error } = await table("proposals").update(patch).eq("id", id);
+      const { error } = await table("proposals").update(patch).eq("id", id).select("id").single();
       if (!error) return;
       if (!fallBackToLocal(error)) throw error;
     }
