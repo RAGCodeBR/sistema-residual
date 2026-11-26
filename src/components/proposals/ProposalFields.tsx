@@ -11,6 +11,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { UNITS, moneyInput, parseMoney, uid, type PriceGroup, type PriceItem, type ScopeItem } from "@/lib/proposals";
 
+const cnpjCharacters = (text: string) => text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+function formatCnpj(text: string) {
+  const chars = cnpjCharacters(text).slice(0, 14);
+  return chars.slice(0, 2)
+    + (chars.length > 2 ? "." + chars.slice(2, 5) : "")
+    + (chars.length > 5 ? "." + chars.slice(5, 8) : "")
+    + (chars.length > 8 ? "/" + chars.slice(8, 12) : "")
+    + (chars.length > 12 ? "-" + chars.slice(12) : "");
+}
+
+export function CnpjInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <Input aria-label="CNPJ" placeholder="00.000.000/0000-00" value={formatCnpj(value)} autoCapitalize="characters" spellCheck={false}
+      onChange={(event) => {
+        const input = event.currentTarget;
+        const raw = input.value;
+        const count = cnpjCharacters(raw.slice(0, input.selectionStart ?? raw.length)).length;
+        const formatted = formatCnpj(raw);
+        let caret = formatCnpj(cnpjCharacters(raw).slice(0, count)).length;
+        if ((event.nativeEvent as InputEvent).inputType === "deleteContentForward" && /[./-]/.test(formatted.charAt(caret))) caret++;
+        input.value = formatted;
+        input.setSelectionRange(caret, caret);
+        onChange(formatted);
+      }}
+    />
+  );
+}
+
 export function MoneyInput({ value, onChange, placeholder = "0,00", className = "", ariaLabel }: { value: number | null; onChange: (v: number | null) => void; placeholder?: string; className?: string; ariaLabel?: string }) {
   const [text, setText] = useState(moneyInput(value));
   const focused = useRef(false);

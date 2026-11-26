@@ -42,7 +42,7 @@ import {
   type WasteContent,
 } from "@/lib/proposals";
 import { useEquipmentTypes } from "@/lib/dumpsters";
-import { MoneyInput, PriceGroupsEditor, ScopeEditor } from "@/components/proposals/ProposalFields";
+import { CnpjInput, MoneyInput, PriceGroupsEditor, ScopeEditor } from "@/components/proposals/ProposalFields";
 import { MissingTable, StatusDialog, useProposalPdf } from "@/components/proposals/ProposalActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -283,7 +283,7 @@ function ProposalEditorPage() {
                 <Input list="proposal-clients" value={form.client_name} onChange={(e) => onClientName(e.target.value)} placeholder="Ex.: T-GRÃO Terminais de Granéis S/A" />
                 <datalist id="proposal-clients">{[...clientSuggestions.values()].map((p) => <option key={p.id} value={p.client_name} />)}</datalist>
               </Field>
-              <Field label="CNPJ"><Input value={form.client_cnpj ?? ""} onChange={(e) => update({ client_cnpj: e.target.value })} inputMode="numeric" placeholder="Opcional" /></Field>
+              <Field label="CNPJ"><CnpjInput value={form.client_cnpj ?? ""} onChange={(client_cnpj) => update({ client_cnpj })} /></Field>
               <Field label="Cidade"><Input value={form.client_city ?? ""} onChange={(e) => update({ client_city: e.target.value })} placeholder="Ex.: Santos/SP" /></Field>
               <Field label="Contato"><Input value={form.client_contact ?? ""} onChange={(e) => update({ client_contact: e.target.value })} placeholder="Nome de quem pediu" /></Field>
               <Field label="Telefone"><Input value={form.client_phone ?? ""} onChange={(e) => update({ client_phone: e.target.value })} inputMode="tel" /></Field>
