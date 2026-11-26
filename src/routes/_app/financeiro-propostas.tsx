@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { table } from "@/lib/company";
@@ -61,7 +62,11 @@ function Finance() {
           ) : !list.data?.length ? (
             "Nenhuma proposta aprovada nesta página."
           ) : (
-            list.data.slice(0, 25).map((p) => <BillingCard key={p.id} p={p} />)
+            <div className="overflow-hidden rounded-xl border bg-card divide-y">
+              {list.data.slice(0, 25).map((p) => (
+                <BillingRow key={p.id} p={p} />
+              ))}
+            </div>
           )}
           <div className="flex gap-2">
             {page > 0 && (
@@ -80,7 +85,7 @@ function Finance() {
     </main>
   );
 }
-function BillingCard({ p }: { p: Bill }) {
+function BillingRow({ p }: { p: Bill }) {
   const qc = useQueryClient();
   const waste = isWaste(p.template) ? (p.content as WasteContent) : null;
   const days = waste ? executionDays(waste) : (p.content as ConsultingContent).due_days;
@@ -94,78 +99,119 @@ function BillingCard({ p }: { p: Bill }) {
     },
     onError: (e) => toast.error(e.message),
   });
+  const totals =
+    waste?.groups?.flatMap((group) => billingLines(group).map((line) => line.total)) ?? [];
+  const value = !waste
+    ? money((p.content as ConsultingContent).monthly_price)
+    : totals.length === 1 && totals[0] !== null
+      ? money(totals[0])
+      : totals.length > 1
+        ? "Por material"
+        : "Conferir valor";
+  const due =
+    days == null
+      ? "Conferir prazo"
+      : p.base_date
+        ? shortDate(addDays(p.base_date, days))
+        : waste
+          ? "Aguardando execução"
+          : "Aguardando nota";
+  const contact = [
+    ["CNPJ", p.client_cnpj],
+    ["Contato", p.client_contact],
+    ["Telefone", p.client_phone],
+    ["E-mail", p.client_email],
+    ["Cidade", p.client_city],
+    ["Endereço", p.service_address || p.registered_address],
+    ["Inscrição estadual", p.state_registration],
+    ["Inscrição municipal", p.municipal_registration],
+  ].filter(([, v]) => v);
   return (
-    <article className="space-y-4 rounded-xl border bg-card p-4">
-      <header>
-        <span className="text-xs font-semibold text-primary">{proposalCode(p)}</span>
-        <h3 className="text-lg font-semibold">{p.client_name}</h3>
-        <p>{p.subject}</p>
-      </header>
-      <p className="break-words text-sm text-muted-foreground">
-        {[
-          p.client_cnpj,
-          p.client_contact,
-          p.client_phone,
-          p.client_email,
-          p.client_city,
-          p.service_address || p.registered_address,
-          p.state_registration && "IE " + p.state_registration,
-          p.municipal_registration && "IM " + p.municipal_registration,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
-      {waste ? (
-        (waste.groups || []).map((g) => (
-          <section key={g.id} className="space-y-1">
-            <h4 className="font-medium">{g.title || "Condições comerciais"}</h4>
-            {g.items.map((i) => (
-              <p key={i.id} className="text-sm">
-                {i.description || "Item"} · {money(i.price)} / {i.unit}
-                {i.minimum && " · mínimo: " + i.minimum}
-              </p>
-            ))}
-            {billingLines(g).map((l) => (
-              <p key={l.item.id} className="rounded bg-muted px-3 py-2 text-sm">
-                <strong>{l.item.description || "Item"}</strong> · {l.units ?? "?"} {l.item.unit} ={" "}
-                {money(l.base)} + frete {money(l.shipping)} ·{" "}
-                <strong>{l.total === null ? "Conferir valores" : money(l.total)}</strong>
-              </p>
-            ))}
-          </section>
-        ))
-      ) : (
-        <p>Mensalidade · {money((p.content as ConsultingContent).monthly_price)}</p>
-      )}
-      <p className="text-sm">
-        {waste ? paymentTerms(waste) : "Prazo de " + days + " dias após emissão da nota fiscal."}
-      </p>
-      <div className="flex flex-wrap items-end gap-2">
-        <label className="grid gap-1 text-sm">
-          {waste ? "Data de execução" : "Data de emissão da nota fiscal"}
-          <Input
-            type="date"
-            value={edited ?? p.base_date ?? ""}
-            onChange={(e) => setEdited(e.target.value)}
-          />
-        </label>
-        <Button
-          variant="outline"
-          disabled={edited === null || save.isPending}
-          onClick={() => save.mutate()}
-        >
-          Salvar data
-        </Button>
+    <details className="group">
+      <summary className="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_1rem] items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-muted/40 focus-visible:outline-offset-[-3px] sm:grid-cols-[minmax(0,1fr)_8rem_10rem_1rem] sm:px-5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="block text-xs font-medium text-muted-foreground">{proposalCode(p)}</span>
+          <span className="block truncate text-sm font-semibold" title={p.client_name}>
+            {p.client_name}
+          </span>
+        </span>
+        <span className="text-right">
+          <span className="block text-xs text-muted-foreground">
+            {waste ? "Mínimo + frete" : "Mensalidade"}
+          </span>
+          <strong className="text-sm tabular-nums text-primary">{value}</strong>
+        </span>
+        <span className="col-span-2 row-start-2 text-xs text-muted-foreground sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:text-right">
+          <span className="sm:block">Vencimento </span>
+          <span className="font-medium text-foreground">{due}</span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="col-start-3 row-start-1 h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180 sm:col-start-4"
+        />
+      </summary>
+      <div className="grid gap-5 border-t bg-muted/15 p-4 sm:p-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0 space-y-3">
+          <h3 className="text-sm font-semibold">{p.subject}</h3>
+          {waste ? (
+            (waste.groups || []).map((g) => (
+              <section key={g.id} className="space-y-1">
+                <h4 className="font-medium">{g.title || "Condições comerciais"}</h4>
+                {g.items.map((i) => (
+                  <p key={i.id} className="text-sm">
+                    {i.description || "Item"} · {money(i.price)} / {i.unit}
+                    {i.minimum && " · mínimo: " + i.minimum}
+                  </p>
+                ))}
+                {billingLines(g).map((l) => (
+                  <p key={l.item.id} className="rounded bg-muted px-3 py-2 text-sm">
+                    <strong>{l.item.description || "Item"}</strong> · {l.units ?? "?"} {l.item.unit}{" "}
+                    = {money(l.base)} + frete {money(l.shipping)} ·{" "}
+                    <strong>{l.total === null ? "Conferir valores" : money(l.total)}</strong>
+                  </p>
+                ))}
+              </section>
+            ))
+          ) : (
+            <p>Mensalidade · {money((p.content as ConsultingContent).monthly_price)}</p>
+          )}
+        </div>
+        <div className="min-w-0 space-y-3 lg:border-l lg:pl-5">
+          <h4 className="text-sm font-semibold">Pagamento</h4>
+          <p className="text-sm text-muted-foreground">
+            {waste
+              ? paymentTerms(waste)
+              : "Prazo de " + days + " dias após emissão da nota fiscal."}
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="grid gap-1 text-sm">
+              {waste ? "Data de execução" : "Data de emissão da nota fiscal"}
+              <Input
+                type="date"
+                value={edited ?? p.base_date ?? ""}
+                onChange={(e) => setEdited(e.target.value)}
+              />
+            </label>
+            <Button
+              variant="outline"
+              disabled={edited === null || save.isPending}
+              onClick={() => save.mutate()}
+            >
+              Salvar data
+            </Button>
+          </div>
+          {contact.length > 0 && (
+            <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 border-t pt-3 text-xs">
+              {contact.map(([label, v]) => (
+                <div key={label} className="contents">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="break-words">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
       </div>
-      <p className="text-sm font-semibold">
-        {days == null
-          ? "Conferir vencimento nas condições da proposta"
-          : p.base_date
-            ? "Vencimento em " + shortDate(addDays(p.base_date, days))
-            : waste
-              ? "Aguardando execução"
-              : "Aguardando emissão da nota"}
-      </p>
-    </article>
+    </details>
   );
 }
