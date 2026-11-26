@@ -52,6 +52,7 @@ export type WasteContent = {
   idle_fee: number | null;
   separate_wastes: boolean;
   billing: "por_servico" | "mensal";
+  payment_terms?: string;
   due_days: number;
   extra_notes: string;
 };
@@ -143,6 +144,10 @@ export const DEFAULT_DELIVERABLES = [
   "DMRs e declarações aplicáveis",
 ];
 
+export function paymentTerms(content: WasteContent) {
+  return content.payment_terms ?? `Faturamento ${content.billing === "mensal" ? "mensal" : "por serviço"}, com emissão de nota fiscal e boleto bancário com vencimento em ${content.due_days} dias após a execução do serviço.`;
+}
+
 export function defaultContent(template: Template): WasteContent | ConsultingContent {
   if (template === "assessoria")
     return {
@@ -156,17 +161,17 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
     };
   if (template === "residuos_cacamba")
     return {
-      waste_summary: "resíduos classe II",
-      site: "sua área operacional",
+      waste_summary: "",
+      site: "",
       equipment: "Caçamba estacionária com capacidade de 5 m³",
       groups: [
         {
           id: uid(),
-          title: "Resíduo Classe II",
-          items: [item("Destinação", null, "caçamba"), item("Frete", null, "caçamba")],
+          title: "",
+          items: [item("", null, "caçamba"), item("", null, "caçamba")],
         },
       ],
-      rental_days: 15,
+      rental_days: null,
       idle_fee: null,
       separate_wastes: false,
       billing: "mensal",

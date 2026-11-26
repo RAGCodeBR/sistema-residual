@@ -17,6 +17,7 @@ import {
   money,
   moneyInWords,
   proposalCode,
+  paymentTerms,
   validUntil,
   type ConsultingContent,
   type ProposalFields,
@@ -242,7 +243,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
   font("bold", 20, GREEN_DARK);
   doc.text(code, PAGE_W - M_RIGHT, 29, { align: "right" });
   font("normal", 9.5, INK);
-  doc.text(`${p.issue_city}, ${longDate(p.issued_on)}`, PAGE_W - M_RIGHT, 36, { align: "right" });
+  doc.text([p.issue_city.trim(), longDate(p.issued_on)].filter(Boolean).join(", "), PAGE_W - M_RIGHT, 36, { align: "right" });
   font("normal", 8.6, MUTED);
   doc.text(`Válida até ${longDate(validUntil(p))} (${p.validity_days} dias)`, PAGE_W - M_RIGHT, 41.5, { align: "right" });
   stroke(GREEN);
@@ -266,6 +267,10 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
 
   if (p.template === "assessoria") renderConsulting(p.content as ConsultingContent);
   else renderWaste(p.content as WasteContent);
+  if (p.template !== "assessoria" && p.content.extra_notes?.trim()) {
+    heading("Observações");
+    paragraph(p.content.extra_notes.trim());
+  }
 
   /* Aceite e assinaturas --------------------------------------------------- */
   ensure(10 + 26 + 36); // agradecimento, assinaturas e aceite ficam juntos
@@ -371,10 +376,11 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       { label: "Faturamento mínimo", w: CONTENT_W * 0.24 },
     ];
     for (const g of c.groups) {
-      if (!g.items.length) continue;
+      const items = g.items.filter(i => i.description.trim() || i.minimum.trim() || i.price != null);
+      if (!items.length) continue;
       tableBlock(
         cols,
-        g.items.map((i) => [i.description, i.price == null ? "A combinar" : money(i.price), i.price == null ? "" : `por ${i.unit}`, i.minimum]),
+        items.map((i) => [i.description, i.price == null ? "A combinar" : money(i.price), i.price == null ? "" : `por ${i.unit}`, i.minimum]),
         { title: g.title },
       );
     }
@@ -392,16 +398,10 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       "No momento da coleta, os resíduos deverão obrigatoriamente estar acompanhados do MTR-e (Manifesto de Transporte de Resíduos), emitido eletronicamente e de forma antecipada pelo cliente no sistema SIGOR, módulo MTR, da CETESB, e da declaração de transporte ou nota fiscal de simples remessa, quando for o caso.",
     );
 
-    heading("Condições de pagamento");
-    paragraph(
-      c.billing === "mensal"
-        ? `Faturamento mensal, com emissão de nota fiscal e boleto bancário com vencimento em ${c.due_days} dias após a execução do serviço.`
-        : `Faturamento por serviço, com emissão de nota fiscal e boleto bancário com vencimento em ${c.due_days} dias após a execução do serviço.`,
-    );
-
-    if (c.extra_notes.trim()) {
-      heading("Observações");
-      paragraph(c.extra_notes.trim());
+    const payment = paymentTerms(c).trim();
+    if (payment) {
+      heading("Condições de pagamento");
+      paragraph(payment);
     }
 
     heading("Validade");

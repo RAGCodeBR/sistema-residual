@@ -17,6 +17,7 @@ import {
   HISTORY_LABEL,
   defaultContent,
   defaultSubject,
+  paymentTerms,
   displayStatus,
   isUniqueViolation,
   isWaste,
@@ -64,9 +65,9 @@ const blank = (template: Template, year: number, number: number): ProposalFields
   number,
   template,
   issued_on: todayIso(),
-  issue_city: "Cubatão",
+  issue_city: template === "residuos_cacamba" ? "" : "Cubatão",
   validity_days: 30,
-  subject: defaultSubject(template),
+  subject: template === "residuos_cacamba" ? "" : defaultSubject(template),
   client_name: "",
   client_cnpj: "",
   client_city: "",
@@ -279,7 +280,7 @@ function ProposalEditorPage() {
           </Card>
 
           <Card title="Assunto">
-            <Input value={form.subject} onChange={(e) => update({ subject: e.target.value })} />
+            <Input placeholder={defaultSubject(form.template)} value={form.subject} onChange={(e) => update({ subject: e.target.value })} />
           </Card>
 
           {waste && (
@@ -291,7 +292,7 @@ function ProposalEditorPage() {
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Onde estão armazenados"><Input value={waste.site} onChange={(e) => setWaste({ site: e.target.value })} placeholder="Ex.: sua área operacional em Santos/SP" /></Field>
-                    <Field label="Equipamento" hint={equipmentTypes.length ? undefined : "Cadastre os tipos em Cadastro de Equipamentos → Tipos para escolher daqui."}>
+                    <Field label="Equipamento" hint="Este texto aparece na proposta e pode ser editado.">
                       {equipmentTypes.length > 0 && (
                         <Select
                           value={waste.equipment_type_id && equipmentTypes.some((t) => t.id === waste.equipment_type_id) ? waste.equipment_type_id : FREE_EQUIPMENT}
@@ -307,7 +308,7 @@ function ProposalEditorPage() {
                           </SelectContent>
                         </Select>
                       )}
-                      <Input value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value })} aria-label="Texto do equipamento na proposta" />
+                      <Textarea rows={2} value={waste.equipment} onChange={(e) => setWaste({ equipment: e.target.value })} aria-label="Texto do equipamento na proposta" />
                     </Field>
                   </div>
                 </div>
@@ -328,6 +329,11 @@ function ProposalEditorPage() {
                   <Field label="Mês sem movimentação" hint="Valor cobrado por caçamba parada (em branco = não cobra)">
                     <MoneyInput value={waste.idle_fee} onChange={(idle_fee) => setWaste({ idle_fee })} placeholder="Não cobrar" />
                   </Field>
+                  {form.template === "residuos_cacamba" ? (
+                    <Field label="Condições de pagamento" className="sm:col-span-2">
+                      <Textarea rows={3} value={paymentTerms(waste)} onChange={(e) => setWaste({ payment_terms: e.target.value })} />
+                    </Field>
+                  ) : <>
                   <Field label="Faturamento">
                     <Select value={waste.billing} onValueChange={(v) => setWaste({ billing: v as WasteContent["billing"] })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -343,6 +349,7 @@ function ProposalEditorPage() {
                       <span className="text-sm text-muted-foreground">dias após o serviço</span>
                     </div>
                   </Field>
+                  </>}
                   <label className="flex items-center gap-3 rounded-lg border p-3 sm:col-span-2">
                     <Switch checked={waste.separate_wastes} onCheckedChange={(v) => setWaste({ separate_wastes: v })} disabled={locked} />
                     <span className="text-sm">Exigir uma caçamba para cada tipo de resíduo (não misturar)</span>

@@ -91,7 +91,7 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
           </div>
         </div>
       ))}
-      <Button type="button" variant="outline" disabled={disabled} onClick={() => onChange([...groups, { id: uid(), title: groups.length ? "Resíduo Classe II" : "Resíduo Classe I", items: [{ id: uid(), description: "", price: null, unit: "kg", minimum: "" }] }])}>
+      <Button type="button" variant="outline" disabled={disabled} onClick={() => onChange([...groups, { id: uid(), title: "", items: [{ id: uid(), description: "", price: null, unit: "kg", minimum: "" }] }])}>
         <Plus className="h-4 w-4" />Grupo de resíduo
       </Button>
     </div>
