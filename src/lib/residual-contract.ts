@@ -231,9 +231,11 @@ export async function contractPdf(number: string, body: string) {
       partyB &&
       parts[i + 3] === "Testemunhas:" &&
       /^1\. _+\s+Nome \/ CPF: _+$/.test(parts[i + 4] ?? "") &&
-      /^2\. _+\s+Nome \/ CPF: _+$/.test(parts[i + 5] ?? "")
+      /^2\. _+\s+Nome \/ CPF: _+$/.test(parts[i + 5]?.split("\n", 1)[0] ?? "")
     ) {
       signatures(text, [partyA[1], partyB[1]]);
+      const afterWitnesses = parts[i + 5].split("\n").slice(1).join("\n").trim();
+      if (afterWitnesses) paragraph(afterWitnesses);
       i += 5;
       continue;
     }
