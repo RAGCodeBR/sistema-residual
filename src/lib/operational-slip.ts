@@ -11,7 +11,7 @@ export const slipSections = [
 ] as const;
 export const slipValue = (s: Slip, k: keyof Slip) => ["day", "delivery", "pickup"].includes(k) ? shortDate(s[k]) : s[k];
 
-export async function buildSlipPdf(order: Order, slip: Slip) {
+export async function buildSlipPdf(order: Order, slip: Slip, kind?: "entrega" | "troca" | "retirada", replacement?: string, exchangeAmount?: string) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const code = proposalCode(order);
@@ -21,7 +21,7 @@ export async function buildSlipPdf(order: Order, slip: Slip) {
     doc.setTextColor(28, 74, 47);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.text("Romaneio de equipamentos", 194, 16, {align:"right"});
+    doc.text(kind ? "Ficha de " + kind : "Romaneio de equipamentos", 194, 16, {align:"right"});
     doc.setFontSize(10);
     doc.text(code, 194, 24, {align:"right"});
     doc.setDrawColor(169,193,174);
@@ -60,10 +60,13 @@ export async function buildSlipPdf(order: Order, slip: Slip) {
   }
   header();
   for (const section of slipSections) {
-    heading(section.title);
+    if (kind && section.title === "Logística" && !slip.notes) continue;
+    heading(kind && section.title === "Logística" ? "Observações da operação" : section.title);
     for (const [k, label] of section.fields) {
+      if (kind && ["service","cover","delivery","pickup"].includes(k)) continue;
+      if (kind && k==="equipment" && replacement) { field("Equipamento retirado",slip.equipment); field("Equipamento entregue",replacement); if(exchangeAmount)field("Valor da troca",exchangeAmount);continue; }
       if (k === "notes" && !slip.notes) continue;
-      field(label, slipValue(slip, k));
+      field(kind && k==="day" ? "Data da "+kind : label, slipValue(slip, k));
     }
     y += 4;
   }

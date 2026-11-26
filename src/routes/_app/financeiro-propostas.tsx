@@ -23,6 +23,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 type Bill = Proposal & {
   base_date: string | null;
+  pickup_day: string;
+  exchanges: { id: string; day: string; amount: number }[];
   registered_address: string | null;
   legal_name: string | null;
   state_registration: string | null;
@@ -60,7 +62,7 @@ function Finance() {
           ) : list.isError ? (
             <p role="alert">{list.error.message}</p>
           ) : !list.data?.length ? (
-            "Nenhuma proposta aprovada nesta página."
+            "Nenhuma retirada para faturar nesta página."
           ) : (
             <div className="overflow-hidden rounded-xl border bg-card divide-y">
               {list.data.slice(0, 25).map((p) => (
@@ -99,12 +101,23 @@ function BillingRow({ p }: { p: Bill }) {
     },
     onError: (e) => toast.error(e.message),
   });
+  const withdrawalLines = (group: WasteContent["groups"][number]) =>
+    billingLines({
+      ...group,
+      items: group.items.filter((item) => !/\btroca\b/i.test(item.description)),
+    });
   const totals =
-    waste?.groups?.flatMap((group) => billingLines(group).map((line) => line.total)) ?? [];
+    waste?.groups?.flatMap((group) => withdrawalLines(group).map((line) => line.total)) ?? [];
+  const exchanges = p.exchanges ?? [];
+  const exchangeTotal = exchanges.reduce((sum, e) => sum + Number(e.amount), 0);
   const value = !waste
-    ? money((p.content as ConsultingContent).monthly_price)
+    ? money(
+        (p.content as ConsultingContent).monthly_price == null
+          ? null
+          : (p.content as ConsultingContent).monthly_price! + exchangeTotal,
+      )
     : totals.length === 1 && totals[0] !== null
-      ? money(totals[0])
+      ? money(totals[0] + exchangeTotal)
       : totals.length > 1
         ? "Por material"
         : "Conferir valor";
@@ -137,7 +150,7 @@ function BillingRow({ p }: { p: Bill }) {
         </span>
         <span className="text-right">
           <span className="block text-xs text-muted-foreground">
-            {waste ? "Mínimo + frete" : "Mensalidade"}
+            {exchanges.length ? "Com trocas" : waste ? "Mínimo + frete" : "Mensalidade"}
           </span>
           <strong className="text-sm tabular-nums text-primary">{value}</strong>
         </span>
@@ -163,11 +176,14 @@ function BillingRow({ p }: { p: Bill }) {
                     {i.minimum && " · mínimo: " + i.minimum}
                   </p>
                 ))}
-                {billingLines(g).map((l) => (
+                {withdrawalLines(g).map((l) => (
                   <p key={l.item.id} className="rounded bg-muted px-3 py-2 text-sm">
                     <strong>{l.item.description || "Item"}</strong> · {l.units ?? "?"} {l.item.unit}{" "}
                     = {money(l.base)} + frete {money(l.shipping)} ·{" "}
-                    <strong>{l.total === null ? "Conferir valores" : money(l.total)}</strong>
+                    {exchanges.length > 0 && <> + trocas {money(exchangeTotal)} · </>}
+                    <strong>
+                      {l.total === null ? "Conferir valores" : money(l.total + exchangeTotal)}
+                    </strong>
                   </p>
                 ))}
               </section>
@@ -177,29 +193,43 @@ function BillingRow({ p }: { p: Bill }) {
           )}
         </div>
         <div className="min-w-0 space-y-3 lg:border-l lg:pl-5">
+          <p className="text-sm">Retirada em {shortDate(p.pickup_day)}</p>
+          {exchanges.length > 0 && (
+            <section className="space-y-1 text-sm">
+              <h4 className="font-semibold">Trocas realizadas</h4>
+              {exchanges.map((e) => (
+                <p key={e.id}>
+                  {shortDate(e.day)} · {money(e.amount)}
+                </p>
+              ))}
+              <strong>Total das trocas · {money(exchangeTotal)}</strong>
+            </section>
+          )}
           <h4 className="text-sm font-semibold">Pagamento</h4>
           <p className="text-sm text-muted-foreground">
             {waste
               ? paymentTerms(waste)
               : "Prazo de " + days + " dias após emissão da nota fiscal."}
           </p>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="grid gap-1 text-sm">
-              {waste ? "Data de execução" : "Data de emissão da nota fiscal"}
-              <Input
-                type="date"
-                value={edited ?? p.base_date ?? ""}
-                onChange={(e) => setEdited(e.target.value)}
-              />
-            </label>
-            <Button
-              variant="outline"
-              disabled={edited === null || save.isPending}
-              onClick={() => save.mutate()}
-            >
-              Salvar data
-            </Button>
-          </div>
+          {!waste && (
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="grid gap-1 text-sm">
+                {waste ? "Data de execução" : "Data de emissão da nota fiscal"}
+                <Input
+                  type="date"
+                  value={edited ?? p.base_date ?? ""}
+                  onChange={(e) => setEdited(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="outline"
+                disabled={edited === null || save.isPending}
+                onClick={() => save.mutate()}
+              >
+                Salvar data
+              </Button>
+            </div>
+          )}
           {contact.length > 0 && (
             <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 border-t pt-3 text-xs">
               {contact.map(([label, v]) => (

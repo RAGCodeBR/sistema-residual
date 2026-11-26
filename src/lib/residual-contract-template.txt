@@ -1,0 +1,113 @@
+Pelo presente instrumento particular, na melhor forma de direito as partes abaixo qualificadas:
+
+RESIDUAL COMÉRCIO E ASSESSORIA AMBIENTAL LTDA, pessoa jurídica de direito privado, com sede à Av. Presidente Kennedy, 11263 – sala 02 – CAIÇARA – PRAIA GRANDE/SP, inscrita no CNPJ sob o nº 67.718.502/0002-04, neste ato representada na forma de seu contrato social, doravante denominada CONTRATADA.
+
+{{CLIENTE}}, pessoa jurídica de direito privado, com sede em {{ENDERECO}}, inscrita no CNPJ sob o nº {{CNPJ}}, neste ato representada na forma de seu contrato social, doravante denominada CONTRATANTE.
+
+Resolvem, de comum acordo, estabelecer o presente contrato de prestação de serviços, que mutuamente aceitam, outorgam e se obrigam, e que se regerá mediante as seguintes cláusulas e condições seguintes:
+
+I - DO OBJETO
+
+CLÁUSULA PRIMEIRA – O presente contrato tem por objeto a prestação de serviços de assessoria ambiental, compreendendo a coleta, armazenamento temporário, transporte e destinação final ambientalmente adequada de resíduos sólidos gerados pela CONTRATANTE.
+
+Os serviços contratados seguem a proposta {{PROPOSTA}}: {{ESCOPO}}.
+
+A classificação dos resíduos deverá observar os critérios estabelecidos na ABNT NBR 10004, bem como demais normas técnicas e legislação ambiental aplicável.
+
+Os resíduos permanecerão, inicialmente, acondicionados e armazenados em nossa unidade de armazenamento temporário regularizada, observando-se as normas técnicas e ambientais aplicáveis, incluindo requisitos de segurança, segregação e rastreabilidade.
+
+Posteriormente, os resíduos serão encaminhados para destinação final ambientalmente adequada, de acordo com sua classificação, podendo incluir, conforme o caso, reciclagem, coprocessamento, tratamento ou disposição final em instalações licenciadas.
+
+A CONTRATADA se responsabiliza por garantir a rastreabilidade de todo o processo, bem como pela emissão e disponibilização da documentação comprobatória da destinação final, quando aplicável.
+
+II - DO PRAZO E DA VIGÊNCIA
+
+CLÁUSULA SEGUNDA – O presente contrato terá vigência pelo prazo de 12 (doze) meses, contados a partir da data de sua assinatura, podendo ser prorrogado por iguais e sucessivos períodos, mediante acordo entre as Partes, formalizado por meio de termo aditivo.
+
+Parágrafo único – O presente contrato poderá ser rescindido por qualquer das Partes, a qualquer tempo, mediante notificação prévia e por escrito, com antecedência mínima de 30 (trinta) dias, sem prejuízo do cumprimento das obrigações assumidas até a data da efetiva rescisão.
+
+III - DO PREÇO E FATURAMENTO
+
+CLÁUSULA TERCEIRA - Pelos serviços objeto do presente contrato, a CONTRATANTE pagará à CONTRATADA os valores constantes da tabela abaixo, a qual passa a integrar o presente instrumento para todos os fins de direito.
+
+Parágrafo primeiro – Os valores estabelecidos contemplam os custos de destinação e transporte necessários à execução dos serviços.
+
+Parágrafo segundo – Os preços poderão ser revistos mediante acordo entre as Partes, especialmente em caso de alteração comprovada nos custos operacionais, variações de mercado, mudanças na legislação aplicável ou na classificação/destinação dos resíduos.
+
+Parágrafo terceiro – Na hipótese de inclusão de novos serviços não previstos na tabela, os valores correspondentes deverão ser previamente acordados entre as Partes, por meio de aditivo contratual.
+
+{{PREÇOS}}
+
+PARÁGRAFO PRIMEIRO: Os preços estabelecidos neste contrato serão reajustados anualmente, a cada período de 12 (doze) meses, contados da data de sua assinatura, com base na variação acumulada do índice IGP-M (Índice Geral de Preços – Mercado), divulgado pela Fundação Getulio Vargas, considerando-se os últimos 12 (doze) meses.
+
+CLÁUSULA QUARTA – Com a finalidade de preservar o equilíbrio econômico-financeiro do presente contrato, as Partes poderão, a qualquer tempo, revisar os valores contratados, mediante comprovação de alteração relevante nos custos operacionais, mudanças na legislação aplicável ou condições de mercado, formalizando-se tal ajuste por meio de termo aditivo devidamente assinado.
+
+CLÁUSULA QUINTA – Após o recebimento e a destinação ambientalmente adequada dos resíduos pela unidade destinatária, a CONTRATADA encaminhará à CONTRATANTE o respectivo Certificado de Destinação Final (CDF), ou documento equivalente, no prazo estimado de até 30 (trinta) dias, ressalvadas eventuais variações decorrentes de exigências operacionais ou legais.
+
+CLÁUSULA SEXTA – {{PAGAMENTO}}
+
+CLÁUSULA SÉTIMA- O não pagamento na data de vencimento implicará na incidência de encargos moratórios, compreendendo juros de 1% ao mês e multa de 2% sobre a parcela inadimplida.
+
+IV - DA RESPONSABILIDADE DA CONTRATANTE
+
+CLÁUSULA OITAVA – A CONTRATANTE deverá agendar com a CONTRATADA o agendamento da retirada de resíduos, conforme a necessidade, de no mínimo 24 horas de antecedência, informando a quantidade aproximada de resíduos a serem destinados.
+
+CLÁUSULA NONA – A CONTRATANTE deverá disponibilizar os resíduos para coleta no local, data e horário previamente agendados, garantindo acesso adequado às dependências e condições seguras para a execução dos serviços.
+
+CLÁUSULA DÉCIMA - A CONTRATANTE obriga-se a acondicionar corretamente os resíduos, em conformidade com a legislação ambiental vigente e normas técnicas aplicáveis, utilizando recipientes adequados, devidamente identificados e em condições seguras, tais como caçambas ou contentores com tampa.
+
+CLÁUSULA DÉCIMA PRIMEIRA – A CONTRATANTE é responsável pela correta classificação dos resíduos, conforme a ABNT NBR 10004, bem como pela veracidade das informações prestadas à CONTRATADA.
+
+A CONTRATADA deverá fornecer o Manifesto de Transporte de Resíduos (MTR SIGOR) de acordo com a norma NBR 13221, demais documentos necessários para o transporte
+
+CLÁUSULA DÉCIMA SEGUNDA – A CONTRATANTE deverá emitir a Nota Fiscal de Simples Remessa ou documento equivalente, bem como fornecer toda a documentação necessária ao transporte dos resíduos, entregando-a ao motorista responsável no momento da coleta.
+
+V - DA RESPONSABILIDADE DA CONTRATADA
+
+CLÁUSULA DÉCIMA TERCEIRA – A CONTRATADA assume integral responsabilidade pelos resíduos recebidos, nos termos deste contrato, comprometendo-se a assegurar sua destinação final ambientalmente adequada, em conformidade com a legislação vigente.
+
+A CONTRATADA deverá emitir e disponibilizar à CONTRATANTE o respectivo Certificado de Destinação Final (CDF), ou documento equivalente, hábil à comprovação dos serviços prestados perante os órgãos ambientais competentes.
+
+CLÁUSULA DÉCIMA QUARTA – A CONTRATADA é responsável pela adequada execução dos serviços contratados, devendo observar todas as normas técnicas, ambientais e de segurança do trabalho aplicáveis, assumindo integral responsabilidade pela integridade física de seus empregados, prepostos e terceiros envolvidos na prestação dos serviços.
+
+CLÁUSULA DÉCIMA QUINTA – O presente contrato possui natureza estritamente civil e comercial, não gerando qualquer vínculo empregatício entre a CONTRATANTE e os empregados, prepostos ou terceiros vinculados à CONTRATADA, cabendo exclusivamente a esta última todas as obrigações trabalhistas, previdenciárias, fiscais e correlatas.
+
+CLÁUSULA DÉCIMA SEXTA – A CONTRATADA compromete-se a manter, durante toda a vigência do contrato, sua regularidade junto aos órgãos competentes, obrigando-se a apresentar à CONTRATANTE, sempre que solicitado, os documentos comprobatórios de sua habilitação e idoneidade, incluindo, mas não se limitando à Licença Ambiental válida, autorizações, registros e demais documentos exigidos pela legislação aplicável.
+
+VI - DAS DISPOSIÇÕES GERAIS
+
+CLÁUSULA DÉCIMA SÉTIMA – As partes poderão firmar propostas técnico-comerciais específicas para objetos distintos do previsto neste Contrato, as quais serão previamente aprovadas pelas partes, fixando-se o valor da Prestação de Serviços em sua forma de cálculo
+
+CLÁUSULA DÉCIMA OITAVA – Este instrumento passa a reger a prestação dos serviços entre as partes, anulando-se qualquer outro entendimento previamente estabelecido. O presente instrumento não poderá ser modificado ou alterado, salvo por meio de instrumento escrito devidamente assinado por ambas as partes e por quem tenha poderes para fazê-lo.
+
+CLÁUSULA DÉCIMA NONA – O presente contrato não poderá ser cedido ou transferido, no todo ou em parte, sem a prévia e expressa anuência da outra Parte.
+
+Suas disposições obrigam as Partes e seus sucessores a qualquer título.
+
+CLÁUSULA VIGÉSIMA - A eventual tolerância de uma das Partes quanto ao descumprimento de qualquer obrigação contratual pela outra Parte será considerada mera liberalidade, não implicando novação, renúncia ou alteração das disposições contratuais, permanecendo íntegro o direito de exigir o fiel cumprimento das obrigações.
+
+CLÁUSULA VIGÉSIMA PRIMEIRA – As Partes obrigam-se a manter sigilo sobre todas as informações, dados, documentos e materiais a que tiverem acesso em razão deste contrato, comprometendo-se a não divulgá-los a terceiros sem prévia autorização, exceto quando exigido por lei ou por autoridade competente.
+
+CLÁUSULA VIGÉSIMA SEGUNDA – As Partes declaram que conhecem e cumprirão integralmente as disposições da Lei nº 12.846/2013 (Lei Anticorrupção), do Decreto-Lei nº 2.848/1940 (Código Penal Brasileiro) e da Lei nº 8.666/1993 (Lei de Licitações), bem como demais normas aplicáveis, comprometendo-se a não praticar quaisquer atos que configurem corrupção ou ilícitos contra a Administração Pública, nacional ou estrangeira.
+
+CLÁUSULA VIGÉSIMA TERCEIRA – As Partes, por si e por seus administradores, empregados, representantes, prepostos e terceiros contratados, comprometem-se a conduzir suas atividades de forma ética, íntegra e em conformidade com a legislação vigente, especialmente as normas anticorrupção aplicáveis.
+
+CLÁUSULA VIGÉSIMA QUARTA – É vedado às Partes oferecer, prometer, autorizar ou conceder, direta ou indiretamente, qualquer vantagem indevida, financeira ou não, a agente público ou a terceiros a ele relacionados, bem como aceitar tais vantagens, sob pena de rescisão imediata do contrato e aplicação das sanções legais cabíveis.
+
+CLÁUSULA VIGÉSIMA QUINTA – Caso qualquer das Partes tenha conhecimento de indícios de violação das normas anticorrupção pela outra Parte, poderá suspender a execução do contrato, mediante notificação formal, até a apuração dos fatos, sem que isso gere penalidades, sem prejuízo da eventual rescisão contratual.
+
+VII – DA RESPONSABILIDADE SOCIAL
+
+CLÁUSULA VIGÉSIMA SEXTA – As Partes comprometem-se a cumprir e fazer cumprir integralmente a legislação aplicável em matéria de responsabilidade social, direitos humanos e relações de trabalho, observando, inclusive, os princípios constitucionais e normas infraconstitucionais pertinentes.
+
+As Partes declaram que não adotam e não adotarão, em nenhuma hipótese, práticas discriminatórias ou restritivas no acesso ou manutenção de relações de trabalho, em razão de gênero, origem, raça, cor, condição física, religião, estado civil, situação familiar, idade ou qualquer outro fator vedado por lei.
+
+As Partes comprometem-se, ainda, a não empregar mão de obra infantil, salvo na condição de aprendiz, nos termos da legislação aplicável, bem como a não utilizar trabalho forçado, análogo ao escravo ou qualquer outra forma de trabalho ilegal, obrigando-se a adotar medidas de controle e fiscalização junto a seus empregados, prepostos, fornecedores e subcontratados.
+
+O descumprimento das obrigações previstas nesta cláusula poderá ensejar a rescisão imediata do contrato, sem prejuízo da aplicação das sanções legais cabíveis.
+
+VIII - DO FORO
+
+CLÁUSULA VIGÉSIMA SÉTIMA – As Partes elegem, de comum acordo, o foro da Comarca de São Paulo/SP como o competente para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia expressa a qualquer outro, por mais privilegiado que seja ou venha a ser.
+
+CLÁUSULA VIGÉSIMA OITAVA – E, por estarem assim justas e contratadas, firmam o presente instrumento em 2 (duas) vias de igual teor e forma, para um só efeito, na presença de 2 (duas) testemunhas, para que produza seus jurídicos e legais efeitos.
