@@ -1,7 +1,7 @@
 /** Documentos separados entre matriz e cada filial/pátio do cliente. */
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Paperclip, Pencil, Plus, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,8 +29,8 @@ const documentErrorMessage = (error: { message?: string } | null) =>
     : error?.message || "Não foi possível salvar o documento.";
 
 export function ClientDocumentsManager({ clientId }: { clientId: string }) {
-  const { hasPermission } = useAuth();
-  const canManage = hasPermission("documents");
+  const { isClient, hasPermission } = useAuth();
+  const canManage = !isClient && hasPermission("documents");
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -102,7 +102,7 @@ export function ClientDocumentsManager({ clientId }: { clientId: string }) {
         title: form.title.trim(), description: form.description.trim() || null,
         storage_path: storagePath, file_name: fileName, expires_at: form.expiresAt || null,
         notify_days_before: Math.max(0, Number.parseInt(form.notifyDays, 10) || 0),
-        notify_daily_until_resolved: form.notifyDaily, active: true,
+        notify_daily_until_resolved: form.notifyDaily, ...(editing ? {} : { active: true }),
       };
       const result = editing
         ? await (supabase.from("client_documents") as any).update(data).eq("id", editing.id)
@@ -126,12 +126,12 @@ export function ClientDocumentsManager({ clientId }: { clientId: string }) {
     }
   };
   const remove = async (doc: ClientDocument) => {
-    if (!confirm(`Excluir o documento “${doc.title}”?`)) return;
-    const { error } = await (supabase.from("client_documents") as any).delete().eq("id", doc.id);
+    if (!confirm(`Retirar do portal o documento “${doc.title}”?`)) return;
+    const { error } = await supabase.rpc("residual_withdraw_document", { document_id: doc.id });
     if (error) return toast.error(error.message);
-    await supabase.storage.from("client-documents").remove([doc.storage_path]);
     await qc.invalidateQueries({ queryKey: ["client-documents", clientId] });
-    toast.success("Documento excluído.");
+    await Promise.all(["portal-client-documents", "dashboard-client-documents", "document-alerts"].map(key => qc.invalidateQueries({ queryKey: [key] })));
+    toast.success("Documento retirado do portal.");
   };
   const today = new Date().toISOString().slice(0, 10);
 
@@ -160,7 +160,7 @@ export function ClientDocumentsManager({ clientId }: { clientId: string }) {
     </Card>}
     <div className="space-y-2">{shown.map((doc) => {
       const expired = !!doc.expires_at && doc.expires_at < today;
-      return <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-4"><FileText className={expired ? "text-destructive" : "text-primary"} /><div className="min-w-0 flex-1"><p className="font-medium">{doc.title}</p><p className="truncate text-sm text-muted-foreground">{unitName(doc.branch_id)} · {doc.file_name}{doc.expires_at ? ` · Vence em ${doc.expires_at}` : " · Sem vencimento"} · {doc.notify_daily_until_resolved !== false ? "Alerta diário" : "Alerta único"}</p></div><span className={`rounded-full px-2 py-1 text-xs font-medium ${expired ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{expired ? "Vencido" : "Vigente"}</span>{canManage && <><Button size="icon" variant="ghost" onClick={() => edit(doc)} title="Editar documento"><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => remove(doc)} title="Excluir documento"><Trash2 className="h-4 w-4 text-destructive" /></Button></>}</Card>;
+      return <Card key={doc.id} className="flex flex-wrap items-center gap-3 p-4"><FileText className={expired ? "text-destructive" : "text-primary"} /><div className="min-w-0 flex-1"><p className="font-medium">{doc.title}</p><p className="truncate text-sm text-muted-foreground">{unitName(doc.branch_id)} · {doc.file_name}{doc.expires_at ? ` · Vence em ${doc.expires_at}` : " · Sem vencimento"} · {doc.notify_daily_until_resolved !== false ? "Alerta diário" : "Alerta único"}</p></div><span className={`rounded-full px-2 py-1 text-xs font-medium ${expired ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{!doc.active ? "Retirado do portal" : expired ? "Vencido" : "Vigente"}</span>{canManage && doc.active && <><Button size="icon" variant="ghost" onClick={() => edit(doc)} title="Editar documento"><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => remove(doc)} title="Retirar do portal"><Archive className="h-4 w-4 text-destructive" /></Button></>}</Card>;
     })}{!shown.length && <Card className="border-dashed p-8 text-center text-sm text-muted-foreground">Nenhum documento cadastrado para esta unidade.</Card>}</div>
   </section>;
 }

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, MoreHorizontal, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Download, Eye, FileText, MoreHorizontal, Infinity as InfinityIcon, Loader2, MapPin, Paperclip, Pencil, Plus, Search, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useClients } from "@/hooks/use-data";
@@ -165,6 +165,7 @@ function ClientDocumentsPortal() {
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["portal-client-documents"] }),
       qc.invalidateQueries({ queryKey: ["document-alerts"] }),
+      qc.invalidateQueries({ queryKey: ["dashboard-client-documents"] }),
       qc.invalidateQueries({ queryKey: ["client-documents"] }),
     ]);
   };
@@ -212,12 +213,11 @@ function ClientDocumentsPortal() {
     }
   };
   const removeDoc = async (doc: Doc) => {
-    if (!confirm(`Excluir o documento "${doc.title}"?`)) return;
-    const { error } = await (supabase.from("client_documents") as any).delete().eq("id", doc.id);
+    if (!confirm(`Retirar do portal o documento "${doc.title}"?`)) return;
+    const { error } = await supabase.rpc("residual_withdraw_document", { document_id: doc.id });
     if (error) return toast.error(error.message);
-    await supabase.storage.from("client-documents").remove([doc.storage_path]);
     await invalidateDocs();
-    toast.success("Documento excluído.");
+    toast.success("Documento retirado do portal.");
   };
 
   const toggleView = (next: Status) => setView(view === next ? "all" : next);
@@ -349,7 +349,7 @@ function DocRow({ doc, busy, manage, onPreview, onDownload, onEdit, onRemove }: 
           <DropdownMenuItem onClick={onPreview} className="min-h-10"><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>
           <DropdownMenuItem onClick={onEdit} className="min-h-10"><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onRemove} className="min-h-10 text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
+          <DropdownMenuItem onClick={onRemove} className="min-h-10 text-destructive focus:text-destructive"><Archive className="mr-2 h-4 w-4" />Retirar do portal</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>}
     </div>
@@ -368,7 +368,7 @@ function DocRow({ doc, busy, manage, onPreview, onDownload, onEdit, onRemove }: 
       <Button size="sm" variant="outline" onClick={onDownload} title="Baixar"><Download className="h-4 w-4" /><span className="hidden md:inline">Baixar</span></Button>
       {manage && <>
         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onEdit} title="Editar documento" aria-label="Editar documento"><Pencil className="h-4 w-4" /></Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onRemove} title="Excluir documento" aria-label="Excluir documento"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onRemove} title="Retirar do portal" aria-label="Retirar do portal"><Archive className="h-4 w-4 text-destructive" /></Button>
       </>}
     </div>
     </div>
