@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DeliveryPhotos } from "@/components/operations/DeliveryPhotos";
 import { SignatureField } from "@/components/operations/SignatureField";
 import { usePdfPreview } from "@/components/PdfPreviewDialog";
 import { useAuth } from "@/hooks/use-auth";
@@ -48,7 +49,7 @@ function Operations() {
     {selected ? <>
       <Button variant="outline" onClick={() => setSelected(null)}>Voltar ao operacional</Button>
       <header><h1 className="text-2xl font-bold">Romaneio de equipamentos</h1><p className="text-muted-foreground">{proposalCode(selected)} · {selected.client_name}</p></header>
-      {slip.isError ? <p role="alert">{slip.error.message}</p> : slip.data ? <SlipEditor key={selected.id} order={selected} initial={slip.data} /> : <p>Carregando ficha…</p>}
+      {slip.isError ? <p role="alert">{slip.error.message}</p> : slip.data ? <div key={selected.id} className="space-y-4"><DeliveryPhotos proposalId={selected.id} /><SlipEditor order={selected} initial={slip.data} /></div> : <p>Carregando ficha…</p>}
     </> : <>
       <header><h1 className="text-2xl font-bold">Operacional</h1><p className="text-muted-foreground">Romaneios das propostas aprovadas</p></header>
       {queue.isError ? <p role="alert">Não foi possível carregar as propostas. <Button variant="outline" onClick={() => queue.refetch()}>Tentar novamente</Button></p> :
