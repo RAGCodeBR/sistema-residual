@@ -10,6 +10,8 @@ import { commercialRpc } from "@/lib/commercial-clients";
 import { table } from "@/lib/company";
 import { proposalsDb, proposalCode } from "@/lib/proposals";
 import { contractDraft, contractPdf } from "@/lib/residual-contract";
+import { applyContractFields, contractFields } from "@/lib/contract-fields";
+
 export function ContractAction({
   id,
   edit = false,
@@ -25,13 +27,24 @@ export function ContractAction({
     [body, setBody] = useState(""),
     [original, setOriginal] = useState<{ number: string; body: string } | null>(null),
     [values, setValues] = useState<Record<string, string>>({});
+  const [fields, setFields] = useState<ReturnType<typeof contractFields>>([]);
+  const [fullEditor, setFullEditor] = useState(false);
+  function prepare(text: string) {
+    setBody(text);
+    setFields(contractFields(text));
+    setFullEditor(false);
+  }
+  const documentText = fullEditor ? body : applyContractFields(body, fields);
   const qc = useQueryClient();
-  const missing = [...new Set(body.match(/\[preencher[^\]]*\]/gi) ?? [])];
+  const missing = [...new Set(documentText.match(/\[preencher[^\]]*\]/gi) ?? [])];
   const label = (key: string) =>
     key === "[preencher sede da contratante]"
       ? "Endereço da sede da contratante"
       : key.replace(/^\[preencher\s*|\]$/gi, "");
-  const finalText = body.replace(/\[preencher[^\]]*\]/gi, (key) => values[key]?.trim() || key);
+  const finalText = documentText.replace(
+    /\[preencher[^\]]*\]/gi,
+    (key) => values[key]?.trim() || key,
+  );
   const { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
   async function preview(n: string, text: string, draft = false) {
     const blob = await contractPdf(n, text);
@@ -56,7 +69,7 @@ export function ContractAction({
         if (edit) {
           setOriginal(data);
           setNumber(data.number);
-          setBody(data.body);
+          prepare(data.body);
           setOpen(true);
         } else await preview(data.number, data.body);
         return;
@@ -84,7 +97,7 @@ export function ContractAction({
         }
       }
       setNumber(proposalCode(p).replace("RESD ", ""));
-      setBody(
+      prepare(
         "CONTRATO DE PRESTAÇÃO DE SERVIÇO DE ASSESSORIA AMBIENTAL\n\n" +
           contractDraft({ ...p, client_cnpj: cnpj }, address),
       );
@@ -96,6 +109,15 @@ export function ContractAction({
     }
   }
   async function issue() {
+    const emptyField = !fullEditor && fields.find((field) => !field.value.trim());
+    if (emptyField) {
+      toast.error("Preencha o campo " + emptyField.label + ".");
+      return;
+    }
+    if (!fullEditor && fields.some((f) => f.months && !/^[1-9]\d{0,2}$/.test(f.value))) {
+      toast.error("Informe a vigência em meses, de 1 a 999.");
+      return;
+    }
     const pending = missing.filter((k) => !values[k]?.trim());
     if (pending.length) {
       toast.error("Preencha: " + pending.map(label).join(", ") + ".");
@@ -155,7 +177,7 @@ export function ContractAction({
                 size="sm"
                 variant="outline"
                 disabled={!missing.some((k) => values[k]?.trim())}
-                onClick={() => setBody(finalText)}
+                onClick={() => (fullEditor ? setBody(finalText) : prepare(finalText))}
               >
                 Aplicar ao texto
               </Button>
@@ -165,14 +187,56 @@ export function ContractAction({
             Número do contrato
             <Input maxLength={80} value={number} onChange={(e) => setNumber(e.target.value)} />
           </label>
-          <label className="grid gap-1 text-sm">
-            Texto para emissão
-            <Textarea
-              className="h-[45dvh]"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-            />
-          </label>
+          {!fullEditor &&
+            fields.map((field, index) => {
+              const update = (value: string) =>
+                setFields((current) =>
+                  current.map((item, i) => (i === index ? { ...item, value } : item)),
+                );
+              return (
+                <label key={field.label} className="grid gap-1 text-sm">
+                  {field.label}
+                  {field.label === "Cidade da assinatura" || field.months ? (
+                    <Input
+                      type={field.months ? "number" : "text"}
+                      min={field.months ? 1 : undefined}
+                      max={field.months ? 999 : undefined}
+                      value={field.value}
+                      onChange={(e) => update(e.target.value)}
+                    />
+                  ) : (
+                    <Textarea
+                      rows={field.label === "Escopo dos serviços" ? 6 : 3}
+                      value={field.value}
+                      onChange={(e) => update(e.target.value)}
+                    />
+                  )}
+                </label>
+              );
+            })}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (fullEditor) prepare(body);
+              else {
+                setBody(documentText);
+                setFullEditor(true);
+              }
+            }}
+          >
+            {fullEditor ? "Voltar aos campos" : "Editar texto completo"}
+          </Button>
+          {fullEditor && (
+            <label className="grid gap-1 text-sm">
+              Texto para emissão
+              <Textarea
+                className="h-[45dvh]"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+              />
+            </label>
+          )}
           <p className="text-xs text-muted-foreground">
             Confira as partes, o escopo, os valores e o prazo. A emissão guarda esta versão para
             consulta e assinatura.
