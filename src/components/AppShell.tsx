@@ -118,12 +118,12 @@ export function AppShell({
         : (
             [
               { to: PROPOSALS_PATH, label: "Propostas", icon: FileSignature, permission: "proposals" },
-              { to: "/clientes", label: "Clientes", icon: Building2, permission: "clients" },
-              { to: "/financeiro-propostas", label: "Financeiro", icon: Wallet, permission: "finance" },
               operationsNav,
-              warehouseNav,
               { to: DUMPSTERS_PATH, label: "Cadastro de Equipamentos", icon: Container, permission: "dumpsters" },
               { to: DOCUMENTS_PATH, label: "Documentos", icon: FileText, permission: "documents" },
+              warehouseNav,
+              { to: "/financeiro-propostas", label: "Financeiro", icon: Wallet, permission: "finance" },
+              { to: "/clientes", label: "Clientes", icon: Building2, permission: "clients" },
               ...(isAdmin ? [{ to: "/users", label: "Usuários", icon: Users, adminOnly: true }] : []),
             ] as NavItem[]
           ).filter((item) => !item.permission || hasPermission(item.permission));
