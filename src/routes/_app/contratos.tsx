@@ -346,12 +346,8 @@ function QueueSection({
 
 function nextStep(r: ContractRecord) {
   switch (r.status) {
-    case "assinatura": {
-      const missing = [!r.customer_signer && "contratante", !r.residual_signer && "Residual"]
-        .filter(Boolean)
-        .join(" e ");
-      return { text: "Falta assinatura: " + missing, strong: true };
-    }
+    case "assinatura":
+      return null;
     case "aguardando":
       return { text: "Registrar início da vigência", strong: true };
     case "agendado":
@@ -376,14 +372,14 @@ function ContractListItem({ row: r, onOpen }: { row: ContractRecord; onOpen: () 
     <button
       type="button"
       onClick={onOpen}
-      className="group grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 p-3 text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:grid-cols-[minmax(0,1fr)_11rem_minmax(0,14rem)_1rem] sm:p-4"
+      className="group grid w-full grid-cols-[minmax(0,1fr)_1rem] items-center gap-x-4 gap-y-2 p-3 text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:grid-cols-[minmax(0,1fr)_minmax(0,15rem)_1rem] sm:p-4"
     >
       <div className="min-w-0">
         <p className="font-mono text-xs text-muted-foreground">Contrato {r.number}</p>
         <p className="truncate font-medium">{r.client_name}</p>
         <p className="truncate text-sm text-muted-foreground">{r.subject}</p>
       </div>
-      <div className="flex flex-col items-end gap-1 sm:items-start">
+      <div className="col-start-1 row-start-2 flex min-w-0 flex-col items-start gap-1 sm:col-start-2 sm:row-start-1">
         <StatusBadge status={r.status} row={r} />
         {r.status === "assinatura" && (
           <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
@@ -401,17 +397,10 @@ function ContractListItem({ row: r, onOpen }: { row: ContractRecord; onOpen: () 
             {signed} de 2 assinaturas
           </span>
         )}
+        {step && <p className={cn("text-xs sm:text-sm", step.strong ? "font-medium text-amber-700 dark:text-amber-400" : "text-muted-foreground")}>{step.text}</p>}
       </div>
-      <p
-        className={cn(
-          "col-span-2 text-xs sm:col-span-1 sm:text-sm",
-          step.strong ? "font-medium text-amber-700 dark:text-amber-400" : "text-muted-foreground",
-        )}
-      >
-        {step.text}
-      </p>
       <ChevronRight
-        className="hidden size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 sm:block"
+        className="col-start-2 row-start-1 row-span-2 size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 sm:col-start-3 sm:row-span-1"
         aria-hidden
       />
     </button>

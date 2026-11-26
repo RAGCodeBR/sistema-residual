@@ -34,11 +34,11 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+        "inline-flex max-w-full items-center gap-1.5 whitespace-normal rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
         tone.badge,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", tone.dot)} aria-hidden />
+      <span className={cn("size-1.5 shrink-0 rounded-full", tone.dot)} aria-hidden />
       {status === "assinatura" && row?.customer_signer
         ? "Aguardando assinatura da Residual"
         : status === "assinatura" && row?.residual_signer
