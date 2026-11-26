@@ -29,7 +29,7 @@ export default defineConfig({
     outDir: ".gh-pages-dist",
     emptyOutDir: true,
     rollupOptions: {
-      input: "index.pages.html",
+      input: ["index.pages.html", "assinar/index.html"],
     },
   },
 });

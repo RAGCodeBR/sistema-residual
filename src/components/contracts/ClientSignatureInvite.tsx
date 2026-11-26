@@ -50,7 +50,7 @@ export function ClientSignatureInvite({ id }: { id: string }) {
         { target: id, revoke_only: false },
       );
       setInvite({
-        link: new URL(import.meta.env.BASE_URL + "assinar#" + fresh.token, location.origin).href,
+        link: new URL(import.meta.env.BASE_URL + "assinar/#" + fresh.token, location.origin).href,
         code: fresh.code,
       });
       setManual(true);
@@ -81,7 +81,7 @@ export function ClientSignatureInvite({ id }: { id: string }) {
           ? null
           : {
               code: data.code,
-              link: new URL(import.meta.env.BASE_URL + "assinar#" + data.token, location.origin)
+              link: new URL(import.meta.env.BASE_URL + "assinar/#" + data.token, location.origin)
                 .href,
             },
       );
