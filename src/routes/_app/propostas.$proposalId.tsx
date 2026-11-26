@@ -1,4 +1,3 @@
-import {ContractAction} from "@/components/proposals/ContractAction";
 /**
  * Criar ou editar uma proposta (RESD nnn/aa).
  * /propostas/nova?modelo=…  → nova proposta a partir de um dos três modelos
@@ -444,7 +443,6 @@ function ProposalEditorPage() {
                 )}
                 {saved.status !== "rascunho" && !locked && <Button variant="ghost" size="sm" onClick={() => setStatusTarget("rascunho")}><RotateCcw className="h-4 w-4" />Voltar para rascunho</Button>}
               </div>
-              {saved.status === "aprovada" && <ContractAction id={saved.id}/>}
               {saved.status === "aprovada" && hasPermission("operations") && <Button asChild className="mt-3"><Link to="/operacional">Abrir Operacional</Link></Button>}
             </section>
           ) : (

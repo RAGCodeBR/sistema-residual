@@ -5,12 +5,37 @@ import { table } from "@/lib/company";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { usePdfPreview } from "@/components/PdfPreviewDialog";
+import { ContractAction } from "@/components/contracts/ContractAction";
+import { proposalCode } from "@/lib/proposals";
 import { ContractRow, statuses, type ContractRecord } from "@/components/contracts/ContractRow";
 export const Route = createFileRoute("/_app/contratos")({ component: Contracts });
 function Contracts() {
   const { user } = useAuth();
   const [filter, setFilter] = useState("ativo"),
     [page, setPage] = useState(0);
+  const { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
+  const approvals = useQuery({
+    queryKey: ["contract-register", user?.id, "approved-queue", page],
+    enabled: filter === "propostas",
+    staleTime: 0,
+    refetchInterval: 15000,
+    queryFn: async () => {
+      const { data, error } = await table("contract_proposal_queue")
+        .select("*")
+        .order("year", { ascending: false })
+        .order("number", { ascending: false })
+        .range(page * 25, page * 25 + 25);
+      if (error) throw new Error(error.message);
+      return data as {
+        id: string;
+        year: number;
+        number: number;
+        client_name: string;
+        subject: string;
+      }[];
+    },
+  });
   const activeCount = useQuery({
     queryKey: ["contract-register", user?.id, "count-active"],
     refetchInterval: 60000,
@@ -24,13 +49,14 @@ function Contracts() {
   });
   const list = useQuery({
     queryKey: ["contract-register", user?.id, filter, page],
+    enabled: filter !== "propostas",
     refetchOnMount: "always",
     refetchInterval: 60000,
     queryFn: async () => {
       let q = table("contract_register").select("*");
       if (filter !== "todos") q = q.eq("status", filter);
       const { data, error } = await q
-        .order("created_at", { ascending: false })
+        .order(filter === "ativo" ? "ends_on" : "created_at", { ascending: filter === "ativo" })
         .order("proposal_id")
         .range(page * 25, page * 25 + 25);
       if (error) throw new Error(error.message);
@@ -59,20 +85,54 @@ function Contracts() {
               <span className="ml-1 tabular-nums">({activeCount.data})</span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="propostas">Propostas aprovadas</TabsTrigger>
+          <TabsTrigger value="assinatura">Assinaturas</TabsTrigger>
           <TabsTrigger value="aguardando">Aguardando vigência</TabsTrigger>
           <TabsTrigger value="agendado">Início futuro</TabsTrigger>
           <TabsTrigger value="encerrado">Encerrados</TabsTrigger>
-          <TabsTrigger value="todos">Todos</TabsTrigger>
         </TabsList>
         <TabsContent value={filter} className="space-y-3">
           <h2 className="font-semibold">
             {filter === "ativo"
               ? "Contratos ativos"
-              : filter === "todos"
-                ? "Todos os contratos"
-                : statuses[filter as keyof typeof statuses]}
+              : filter === "propostas"
+                ? "Preparar contratos"
+                : filter === "todos"
+                  ? "Todos os contratos"
+                  : statuses[filter as keyof typeof statuses]}
           </h2>
-          {list.isPending ? (
+          {filter === "propostas" ? (
+            approvals.isPending ? (
+              "Carregando propostas aprovadas…"
+            ) : approvals.isError ? (
+              <p role="alert">{approvals.error.message}</p>
+            ) : approvals.data.length ? (
+              <div className="divide-y rounded-xl border bg-card">
+                {approvals.data.slice(0, 25).map((p) => (
+                  <article
+                    key={p.id}
+                    className="flex flex-wrap items-center justify-between gap-3 p-4"
+                  >
+                    <div>
+                      <p className="text-xs text-muted-foreground">{proposalCode(p)}</p>
+                      <strong>{p.client_name}</strong>
+                      <p className="text-sm">{p.subject}</p>
+                    </div>
+                    <ContractAction
+                      id={p.id}
+                      showIssued={(target) => {
+                        openPdfPreview(target);
+                        setPage(0);
+                        setFilter("assinatura");
+                      }}
+                    />
+                  </article>
+                ))}
+              </div>
+            ) : (
+              "Nenhuma proposta aprovada pendente de contrato."
+            )
+          ) : list.isPending ? (
             "Carregando contratos…"
           ) : list.isError ? (
             <p role="alert">{list.error.message}</p>
@@ -91,10 +151,10 @@ function Contracts() {
                     className="font-semibold text-primary underline"
                     onClick={() => {
                       setPage(0);
-                      setFilter("aguardando");
+                      setFilter("propostas");
                     }}
                   >
-                    Ver contratos aguardando vigência
+                    Ver propostas aprovadas
                   </button>
                 </>
               ) : (
@@ -108,7 +168,7 @@ function Contracts() {
                 Anterior
               </Button>
             )}
-            {(list.data?.length ?? 0) > 25 && (
+            {((filter === "propostas" ? approvals.data : list.data)?.length ?? 0) > 25 && (
               <Button variant="outline" onClick={() => setPage(page + 1)}>
                 Próxima
               </Button>
@@ -116,6 +176,7 @@ function Contracts() {
           </div>
         </TabsContent>
       </Tabs>
+      {pdfPreviewDialog}
     </main>
   );
 }

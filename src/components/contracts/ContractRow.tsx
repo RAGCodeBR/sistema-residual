@@ -1,3 +1,5 @@
+import { SignatureControl } from "./SignatureControl";
+import { ContractAction } from "./ContractAction";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -10,6 +12,7 @@ import { usePdfPreview } from "@/components/PdfPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 export const statuses = {
+  assinatura: "Aguardando assinaturas",
   ativo: "Ativo",
   aguardando: "Aguardando vigência",
   agendado: "Início futuro",
@@ -27,6 +30,10 @@ export type ContractRecord = {
   ends_on: string | null;
   created_at: string;
   term_months: number | null;
+  customer_signer: string | null;
+  customer_signed_on: string | null;
+  residual_signer: string | null;
+  residual_signed_on: string | null;
   term_clause: string | null;
   status: keyof typeof statuses;
 };
@@ -37,6 +44,12 @@ export function ContractRow({ row: r, remaining }: { row: ContractRecord; remain
     [first, setFirst] = useState(""),
     [last, setLast] = useState(""),
     [busy, setBusy] = useState(false);
+  if (remaining === undefined && r.status === "ativo" && r.ends_on) {
+    const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(
+      new Date(),
+    );
+    remaining = Math.round((Date.parse(r.ends_on) - Date.parse(today)) / 86400000);
+  }
   function start(value: string) {
     setFirst(value);
     if (!value || !r.term_months) {
@@ -121,7 +134,11 @@ export function ContractRow({ row: r, remaining }: { row: ContractRecord; remain
           <p className="mt-1 text-muted-foreground">{r.term_clause}</p>
         </details>
       )}
-      {!r.starts_on && !edit && (
+      {!r.customer_signer && !r.residual_signer && (
+        <ContractAction id={r.proposal_id} edit showIssued={openPdfPreview} />
+      )}
+      <SignatureControl row={r} />
+      {r.status === "aguardando" && !r.starts_on && !edit && (
         <Button size="sm" variant="ghost" onClick={() => setEdit(true)}>
           Registrar vigência
         </Button>

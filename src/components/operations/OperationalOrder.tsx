@@ -1,4 +1,3 @@
-import { ContractAction } from "@/components/proposals/ContractAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -48,7 +47,7 @@ export function OperationalOrder({
   order: EquipmentOrder;
   deliveryOnly?: boolean;
 }) {
-  const { user, hasPermission } = useAuth(),
+  const { user } = useAuth(),
     qc = useQueryClient(),
     { openPdfPreview, pdfPreviewDialog } = usePdfPreview();
   const [chosenAction, setAction] = useState<Kind | null>(null);
@@ -154,7 +153,6 @@ export function OperationalOrder({
         </>
       )}
       <DeliveryPhotos proposalId={order.id} />
-      {hasPermission("proposals") && <ContractAction id={order.id} />}
       {order.revision > 0 && (
         <Button
           variant="ghost"

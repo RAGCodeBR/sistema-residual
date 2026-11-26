@@ -127,7 +127,7 @@ export function StatusDialog({ proposal, status, onClose }: { proposal: Proposal
     try {
       await changeStatus(proposal, status, { date, note: note.trim(), by: profile?.full_name ?? null });
       qc.removeQueries({ queryKey: ["operational-queue"], type: "inactive" });
-      await Promise.all([qc.invalidateQueries({ queryKey: ["approved-billing"] }), qc.invalidateQueries({ queryKey: ["operational-queue"] }), qc.invalidateQueries({ queryKey: ["proposals"] }), qc.invalidateQueries({ queryKey: ["proposal", proposal.id] })]);
+      await Promise.all([qc.invalidateQueries({ queryKey:["contract-register"] }), qc.invalidateQueries({ queryKey: ["approved-billing"] }), qc.invalidateQueries({ queryKey: ["operational-queue"] }), qc.invalidateQueries({ queryKey: ["proposals"] }), qc.invalidateQueries({ queryKey: ["proposal", proposal.id] })]);
       toast.success(copy.success);
       onClose();
     } catch (error) {
