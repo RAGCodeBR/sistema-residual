@@ -1,8 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { FilePlus2, FileText, PencilLine, TriangleAlert } from "lucide-react";
+import { Button, type ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { usePdfPreview, type PdfPreviewTarget } from "@/components/PdfPreviewDialog";
@@ -16,11 +18,20 @@ export function ContractAction({
   id,
   edit = false,
   showIssued,
+  onIssued,
+  context,
+  triggerProps,
 }: {
   id: string;
   edit?: boolean;
   showIssued?: (target: PdfPreviewTarget) => void;
+  /** Chamado depois de emitir ou salvar, para a tela abrir o contrato. */
+  onIssued?: (id: string) => void;
+  /** Linha de contexto no topo da janela (proposta · cliente). */
+  context?: string;
+  triggerProps?: ButtonProps;
 }) {
+  const [heading, setHeading] = useState(context ?? "");
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [number, setNumber] = useState(""),
@@ -96,6 +107,7 @@ export function ContractAction({
           cnpj = cnpj || clients[0].cnpj;
         }
       }
+      setHeading(context ?? proposalCode(p) + " · " + p.client_name);
       setNumber(proposalCode(p).replace("RESD ", ""));
       prepare(
         "CONTRATO DE PRESTAÇÃO DE SERVIÇO DE ASSESSORIA AMBIENTAL\n\n" +
@@ -144,6 +156,7 @@ export function ContractAction({
         await preview(number, finalText);
       } finally {
         await qc.invalidateQueries({ queryKey: ["contract-register"] });
+        onIssued?.(id);
       }
     } catch (e) {
       toast.error((e as Error).message);
@@ -151,121 +164,219 @@ export function ContractAction({
       setBusy(false);
     }
   }
+  const shortFields = fields
+    .map((field, index) => ({ field, index }))
+    .filter(({ field }) => field.months || field.label === "Cidade da assinatura");
+  const longFields = fields
+    .map((field, index) => ({ field, index }))
+    .filter(({ field }) => !field.months && field.label !== "Cidade da assinatura");
+  const update = (index: number, value: string) =>
+    setFields((current) => current.map((item, i) => (i === index ? { ...item, value } : item)));
+  const pendingCount = missing.filter((k) => !values[k]?.trim()).length;
   return (
     <>
-      <Button type="button" variant="outline" disabled={busy} onClick={() => void load()}>
-        {edit ? "Editar contrato" : "Preparar contrato"}
+      <Button
+        type="button"
+        variant="outline"
+        {...triggerProps}
+        disabled={busy || triggerProps?.disabled}
+        onClick={() => void load()}
+      >
+        {edit ? <PencilLine aria-hidden /> : <FilePlus2 aria-hidden />}
+        {edit ? "Editar contrato" : "Gerar contrato"}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
-          <DialogTitle>Revisar contrato</DialogTitle>
-          {missing.length > 0 && (
-            <section className="space-y-2 rounded-lg border p-3">
-              <h3 className="text-sm font-semibold">Dados para completar o contrato</h3>
-              {missing.map((key, i) => (
-                <label key={key} className="grid gap-1 text-sm">
-                  {label(key)}
-                  <Input
-                    id={"contract-missing-" + id + "-" + i}
-                    value={values[key] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
-                  />
-                </label>
-              ))}
+        <DialogContent className="gap-0 p-0 sm:max-w-3xl">
+          <header className="space-y-1 border-b px-6 py-5 pr-12">
+            <DialogTitle className="text-xl">
+              {edit ? "Editar contrato " + number : "Gerar contrato"}
+            </DialogTitle>
+            <DialogDescription>{heading || "Confira os dados antes de emitir."}</DialogDescription>
+          </header>
+
+          <div className="space-y-8 px-6 py-6">
+            <Section step={1} title="Identificação" hint="Por padrão, o mesmo número da proposta.">
+              <label className="grid max-w-xs gap-1 text-sm">
+                Número do contrato
+                <Input maxLength={80} value={number} onChange={(e) => setNumber(e.target.value)} />
+              </label>
+            </Section>
+
+            {missing.length > 0 && (
+              <Section
+                step={2}
+                title="Dados que faltam"
+                hint="A proposta não trouxe estas informações. Elas entram direto no texto."
+                aside={
+                  pendingCount > 0 ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <TriangleAlert className="size-3.5" aria-hidden />
+                      {pendingCount} {pendingCount === 1 ? "pendente" : "pendentes"}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium text-emerald-600">Tudo preenchido</span>
+                  )
+                }
+              >
+                <div
+                  className={cn(
+                    "grid gap-3 rounded-xl border p-4 sm:grid-cols-2",
+                    pendingCount > 0 && "border-amber-500/30 bg-amber-500/5",
+                  )}
+                >
+                  {missing.map((key, i) => (
+                    <label key={key} className="grid gap-1 text-sm">
+                      <span className="first-letter:uppercase">{label(key)}</span>
+                      <Input
+                        id={"contract-missing-" + id + "-" + i}
+                        value={values[key] ?? ""}
+                        onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            <Section
+              step={missing.length > 0 ? 3 : 2}
+              title={fullEditor ? "Texto do contrato" : "Condições do contrato"}
+              hint={
+                fullEditor
+                  ? "Edição livre do documento inteiro."
+                  : "Vêm da proposta aprovada. Ajuste o que mudou na negociação."
+              }
+              aside={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (fullEditor) prepare(body);
+                    else {
+                      setBody(documentText);
+                      setFullEditor(true);
+                    }
+                  }}
+                >
+                  {fullEditor ? "Voltar aos campos" : "Editar texto completo"}
+                </Button>
+              }
+            >
+              {fullEditor ? (
+                <Textarea
+                  aria-label="Texto para emissão"
+                  className="h-[50dvh] font-mono text-xs leading-relaxed"
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                />
+              ) : fields.length ? (
+                <div className="space-y-4">
+                  {shortFields.length > 0 && (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {shortFields.map(({ field, index }) => (
+                        <label key={field.label} className="grid gap-1 text-sm">
+                          {field.label}
+                          <Input
+                            type={field.months ? "number" : "text"}
+                            min={field.months ? 1 : undefined}
+                            max={field.months ? 999 : undefined}
+                            value={field.value}
+                            onChange={(e) => update(index, e.target.value)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {longFields.map(({ field, index }) => (
+                    <label key={field.label} className="grid gap-1 text-sm">
+                      {field.label}
+                      <Textarea
+                        rows={field.label === "Escopo dos serviços" ? 6 : 3}
+                        value={field.value}
+                        onChange={(e) => update(index, e.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  Este texto não segue o modelo padrão. Use “Editar texto completo” para ajustá-lo.
+                </p>
+              )}
+            </Section>
+          </div>
+
+          <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-6 py-4 backdrop-blur">
+            <p className="max-w-sm text-xs text-muted-foreground">
+              {edit
+                ? "Só é possível editar antes da primeira assinatura."
+                : "Ao emitir, esta versão fica guardada para consulta e assinatura."}
+            </p>
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                size="sm"
                 variant="outline"
-                disabled={!missing.some((k) => values[k]?.trim())}
-                onClick={() => (fullEditor ? setBody(finalText) : prepare(finalText))}
+                disabled={busy || !body.trim()}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    await preview(number, finalText, true);
+                  } catch {
+                    toast.error("Não foi possível visualizar o PDF.");
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
               >
-                Aplicar ao texto
+                <FileText aria-hidden /> Prévia do PDF
               </Button>
-            </section>
-          )}
-          <label className="grid gap-1 text-sm">
-            Número do contrato
-            <Input maxLength={80} value={number} onChange={(e) => setNumber(e.target.value)} />
-          </label>
-          {!fullEditor &&
-            fields.map((field, index) => {
-              const update = (value: string) =>
-                setFields((current) =>
-                  current.map((item, i) => (i === index ? { ...item, value } : item)),
-                );
-              return (
-                <label key={field.label} className="grid gap-1 text-sm">
-                  {field.label}
-                  {field.label === "Cidade da assinatura" || field.months ? (
-                    <Input
-                      type={field.months ? "number" : "text"}
-                      min={field.months ? 1 : undefined}
-                      max={field.months ? 999 : undefined}
-                      value={field.value}
-                      onChange={(e) => update(e.target.value)}
-                    />
-                  ) : (
-                    <Textarea
-                      rows={field.label === "Escopo dos serviços" ? 6 : 3}
-                      value={field.value}
-                      onChange={(e) => update(e.target.value)}
-                    />
-                  )}
-                </label>
-              );
-            })}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              if (fullEditor) prepare(body);
-              else {
-                setBody(documentText);
-                setFullEditor(true);
-              }
-            }}
-          >
-            {fullEditor ? "Voltar aos campos" : "Editar texto completo"}
-          </Button>
-          {fullEditor && (
-            <label className="grid gap-1 text-sm">
-              Texto para emissão
-              <Textarea
-                className="h-[45dvh]"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-              />
-            </label>
-          )}
-          <p className="text-xs text-muted-foreground">
-            Confira as partes, o escopo, os valores e o prazo. A emissão guarda esta versão para
-            consulta e assinatura.
-          </p>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy || !body.trim()}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await preview(number, finalText, true);
-                } catch {
-                  toast.error("Não foi possível visualizar o PDF.");
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              Visualizar PDF
-            </Button>
-            <Button disabled={busy || !number.trim() || !body.trim()} onClick={() => void issue()}>
-              {edit ? "Salvar alterações" : "Emitir contrato"}
-            </Button>
-          </div>
+              <Button
+                disabled={busy || !number.trim() || !body.trim()}
+                onClick={() => void issue()}
+              >
+                {edit ? "Salvar alterações" : "Emitir contrato"}
+              </Button>
+            </div>
+          </footer>
         </DialogContent>
       </Dialog>
       {pdfPreviewDialog}
     </>
+  );
+}
+
+function Section({
+  step,
+  title,
+  hint,
+  aside,
+  children,
+}: {
+  step: number;
+  title: string;
+  hint?: string;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex gap-3">
+          <span
+            className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary tabular-nums"
+            aria-hidden
+          >
+            {step}
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold leading-6">{title}</h3>
+            {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+          </div>
+        </div>
+        {aside && <div className="shrink-0">{aside}</div>}
+      </div>
+      <div className="sm:pl-9">{children}</div>
+    </section>
   );
 }
