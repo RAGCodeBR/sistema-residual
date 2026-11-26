@@ -6,7 +6,7 @@ const source = readFileSync(new URL("../src/lib/proposal-billing.ts", import.met
 const code = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 }).outputText;
-const { billingLines, executionDays, minimumUnits } = await import(
+const { billingLines, executionDays, minimumUnits, freightLast } = await import(
   "data:text/javascript;base64," + Buffer.from(code).toString("base64")
 );
 const waste = { description: "Material", unit: "kg", price: 0.6, minimum: "1 tonelada" };
@@ -33,4 +33,12 @@ test("respeita prazo contratado e sinaliza condições livres sem vencimento ine
     15,
   );
   assert.equal(executionDays({ due_days: 10, payment_terms: "10 dias úteis após emissão" }), null);
+});
+
+test("frete encerra o grupo inclusive em propostas anteriores", () => {
+  const custom = { ...freight, description: "Rota A", freight: true };
+  const second = { ...waste, description: "Madeira" };
+  const original = [freight, waste, custom, second];
+  assert.deepEqual(freightLast(original), [waste, second, freight, custom]);
+  assert.equal(original[0], freight);
 });

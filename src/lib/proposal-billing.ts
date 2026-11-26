@@ -16,6 +16,9 @@ export function minimumUnits(item: PriceItem) {
 }
 export const isFreight = (i: PriceItem) =>
   i.freight ?? /\b(frete|transporte)\b/i.test(i.description);
+export function freightLast(items: PriceItem[]) {
+  return [...items.filter(item => !isFreight(item)), ...items.filter(isFreight)];
+}
 export function billingLines(group: PriceGroup) {
   const freight = group.items.filter(isFreight);
   return group.items

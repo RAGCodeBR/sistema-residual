@@ -219,7 +219,7 @@ export function defaultContent(template: Template): WasteContent | ConsultingCon
         {
           id: uid(),
           title: "",
-          items: [item("", null, "caçamba"), item("", null, "caçamba")],
+          items: [item("", null, "caçamba"), item("Frete", null, "caçamba")],
         },
       ],
       rental_days: null,

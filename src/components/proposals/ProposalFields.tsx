@@ -1,4 +1,4 @@
-import { isFreight } from "@/lib/proposal-billing";
+import { freightLast, isFreight } from "@/lib/proposal-billing";
 /**
  * Campos do editor de propostas: preço em reais, tabela de preços (resíduos)
  * e escopo da assessoria.
@@ -71,8 +71,9 @@ export function MoneyInput({ value, onChange, placeholder = "0,00", className = 
 }
 
 export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: PriceGroup[]; onChange: (g: PriceGroup[]) => void; disabled?: boolean }) {
-  const setGroup = (id: string, patch: Partial<PriceGroup>) => onChange(groups.map((g) => (g.id === id ? { ...g, ...patch } : g)));
-  const setItem = (g: PriceGroup, itemId: string, patch: Partial<PriceItem>) => setGroup(g.id, { items: g.items.map((i) => (i.id === itemId ? { ...i, ...patch } : i)) });
+  const orderedGroups = groups.map(g => ({ ...g, items: freightLast(g.items) }));
+  const setGroup = (id: string, patch: Partial<PriceGroup>) => onChange(orderedGroups.map((g) => (g.id === id ? { ...g, ...patch, items: freightLast(patch.items ?? g.items) } : g)));
+  const setItem = (g: PriceGroup, itemId: string, patch: Partial<PriceItem>) => setGroup(g.id, { items: g.items.map((i) => (i.id === itemId ? { ...i, freight: isFreight(i), ...patch } : i)) });
   const move = (g: PriceGroup, index: number, delta: number) => {
     const items = [...g.items];
     const [it] = items.splice(index, 1);
@@ -82,7 +83,7 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
 
   return (
     <div className="space-y-4">
-      {groups.map((g) => (
+      {orderedGroups.map((g) => (
         <div key={g.id} className="overflow-hidden rounded-xl border">
           <div className="flex items-center gap-2 border-b bg-primary/5 px-3 py-2">
             <Input value={g.title} disabled={disabled} onChange={(e) => setGroup(g.id, { title: e.target.value })} className="h-9 border-transparent bg-transparent font-semibold text-primary shadow-none focus-visible:bg-background" aria-label="Nome do grupo" placeholder="Ex.: Resíduo Classe I" />
@@ -96,7 +97,7 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
           <ul className="divide-y xl:divide-y-0">
             {g.items.map((it, index) => (
               <li key={it.id} className="grid grid-cols-2 gap-2 p-3 xl:grid-cols-[1fr_8.5rem_7.5rem_10rem_2.5rem] xl:items-center xl:py-1.5">
-                <div className="col-span-2 space-y-1 xl:col-span-1"><Input value={it.description} disabled={disabled} onChange={(e) => setItem(g, it.id, { description: e.target.value })} placeholder="Ex.: Madeira, Frete, Destinação" aria-label="Item" /><label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={isFreight(it)} disabled={disabled} onChange={(e)=>setItem(g,it.id,{freight:e.target.checked})}/>Frete</label></div>
+                <Input className="col-span-2 xl:col-span-1" value={it.description} disabled={disabled} onChange={(e) => setItem(g, it.id, { description: e.target.value })} placeholder={isFreight(it) ? "Frete" : "Ex.: Madeira, Destinação"} aria-label={isFreight(it) ? "Frete" : "Item"} />
                 <MoneyInput value={it.price} onChange={(price) => setItem(g, it.id, { price })} placeholder="A combinar" ariaLabel="Valor" />
                 <Select value={it.unit} disabled={disabled} onValueChange={(unit) => setItem(g, it.id, { unit })}>
                   <SelectTrigger aria-label="Unidade"><SelectValue /></SelectTrigger>
@@ -104,8 +105,8 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
                 </Select>
                 <Input className="col-span-2 sm:col-span-1" value={it.minimum} disabled={disabled} onChange={(e) => setItem(g, it.id, { minimum: e.target.value })} placeholder="Ex.: 1 tonelada (opcional)" aria-label="Faturamento mínimo" />
                 <div className="col-span-2 flex items-center justify-end gap-0.5 sm:col-span-1">
-                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 xl:hidden" disabled={disabled || index === 0} onClick={() => move(g, index, -1)} aria-label="Subir"><ArrowUp className="h-4 w-4" /></Button>
-                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 xl:hidden" disabled={disabled || index === g.items.length - 1} onClick={() => move(g, index, 1)} aria-label="Descer"><ArrowDown className="h-4 w-4" /></Button>
+                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 xl:hidden" disabled={disabled || index === 0 || isFreight(it) !== isFreight(g.items[index - 1])} onClick={() => move(g, index, -1)} aria-label="Subir"><ArrowUp className="h-4 w-4" /></Button>
+                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 xl:hidden" disabled={disabled || index === g.items.length - 1 || isFreight(it) !== isFreight(g.items[index + 1])} onClick={() => move(g, index, 1)} aria-label="Descer"><ArrowDown className="h-4 w-4" /></Button>
                   <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" disabled={disabled} onClick={() => setGroup(g.id, { items: g.items.filter((x) => x.id !== it.id) })} aria-label="Remover item" title="Remover item"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </li>
@@ -115,13 +116,13 @@ export function PriceGroupsEditor({ groups, onChange, disabled }: { groups: Pric
             <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "", price: null, unit: "kg", minimum: "" }] })}>
               <Plus className="h-4 w-4" />Item
             </Button>
-            <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "Frete", freight: true, price: null, unit: "viagem", minimum: "" }] })}>
+            {!g.items.some(isFreight) && <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setGroup(g.id, { items: [...g.items, { id: uid(), description: "Frete", freight: true, price: null, unit: "viagem", minimum: "" }] })}>
               <Plus className="h-4 w-4" />Frete
-            </Button>
+            </Button>}
           </div>
         </div>
       ))}
-      <Button type="button" variant="outline" disabled={disabled} onClick={() => onChange([...groups, { id: uid(), title: "", items: [{ id: uid(), description: "", price: null, unit: "kg", minimum: "" }] }])}>
+      <Button type="button" variant="outline" disabled={disabled} onClick={() => onChange([...groups, { id: uid(), title: "", items: [{ id: uid(), description: "", price: null, unit: "kg", minimum: "" }, { id: uid(), description: "Frete", freight: true, price: null, unit: "viagem", minimum: "" }] }])}>
         <Plus className="h-4 w-4" />Grupo de resíduo
       </Button>
     </div>

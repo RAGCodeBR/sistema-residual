@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { table } from "@/lib/company";
 import { commercialRpc } from "@/lib/commercial-clients";
-import { billingLines, executionDays } from "@/lib/proposal-billing";
+import { billingLines, executionDays, freightLast } from "@/lib/proposal-billing";
 import {
   addDays,
   isWaste,
@@ -157,7 +157,7 @@ function BillingRow({ p }: { p: Bill }) {
             (waste.groups || []).map((g) => (
               <section key={g.id} className="space-y-1">
                 <h4 className="font-medium">{g.title || "Condições comerciais"}</h4>
-                {g.items.map((i) => (
+                {freightLast(g.items).map((i) => (
                   <p key={i.id} className="text-sm">
                     {i.description || "Item"} · {money(i.price)} / {i.unit}
                     {i.minimum && " · mínimo: " + i.minimum}

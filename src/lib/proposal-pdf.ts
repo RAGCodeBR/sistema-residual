@@ -1,3 +1,4 @@
+import { freightLast } from "@/lib/proposal-billing";
 /**
  * PDF das propostas comerciais (A4). Desenhado direto com jsPDF para sair um
  * arquivo leve, com texto selecionável, pronto para enviar pelo WhatsApp.
@@ -384,7 +385,7 @@ export async function buildProposalPdf(p: ProposalFields): Promise<Blob> {
       { label: "Faturamento mínimo", w: CONTENT_W * 0.24 },
     ];
     for (const g of c.groups) {
-      const items = g.items.filter(i => i.description.trim() || i.minimum.trim() || i.price != null);
+      const items = freightLast(g.items).filter(i => i.description.trim() || i.minimum.trim() || i.price != null);
       if (!items.length) continue;
       tableBlock(
         cols,
