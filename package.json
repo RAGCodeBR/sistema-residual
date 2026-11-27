@@ -16,8 +16,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "build:cloudflare": "vite build --config vite.cloudflare.config.ts && node scripts/prepare-cloudflare.mjs",
-    "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy",
-    "preview:cloudflare": "wrangler dev"
+    "deploy:cloudflare": "npm run build:cloudflare && node scripts/cloudflare.mjs deploy",
+    "preview:cloudflare": "node scripts/cloudflare.mjs dev",
+    "cloudflare:whoami": "node scripts/cloudflare.mjs whoami",
+    "cloudflare:login": "node scripts/cloudflare.mjs login --scopes user:read account:read workers:write workers_scripts:write workers_routes:write"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

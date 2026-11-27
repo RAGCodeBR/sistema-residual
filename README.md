@@ -10,7 +10,7 @@ Sistema de gestão da Jacoby Soluções, criado como uma cópia independente e v
 
 ## Publicação
 
-O endereço Cloudflare é https://residual.hotelrovi-ponto.workers.dev/. Use `npm run deploy:cloudflare` para gerar e publicar o aplicativo estático. A configuração da conta, o build automático e os ajustes do Supabase estão em [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md).
+O endereço Cloudflare é https://residual.verticedg.workers.dev/. Use `npm run deploy:cloudflare` para gerar e publicar o aplicativo estático. A configuração da conta, o build automático e os ajustes do Supabase estão em [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md).
 
 O projeto gera uma versão estática compatível com GitHub Pages por meio de `npm run build:pages`.
 
