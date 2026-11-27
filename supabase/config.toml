@@ -1,6 +1,6 @@
 project_id = "fjqexkzxvcflhvwsdzhc"
 
 [auth]
-site_url = "https://ragcodebr.github.io/sistema-residual/"
-additional_redirect_urls = ["https://ragcodebr.github.io/sistema-residual/auth"]
+site_url = "https://residual.hotelrovi-ponto.workers.dev/"
+additional_redirect_urls = ["https://residual.hotelrovi-ponto.workers.dev/auth", "https://vertice-dg.github.io/sistema-residual/", "https://vertice-dg.github.io/sistema-residual/auth"]
 enable_signup = false

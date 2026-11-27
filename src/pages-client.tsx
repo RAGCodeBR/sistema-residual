@@ -11,9 +11,8 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-// GitHub Pages hosts this repository under /sistema-residual.
-// The router basepath must match vite.pages.config.ts.
-const router = getRouter("/sistema-residual");
+// Match the hosting base: GitHub Pages uses a subdirectory; Cloudflare uses /.
+const router = getRouter(import.meta.env.BASE_URL.replace(/\/$/, "") || "/");
 
 // Registra o service worker que permite instalar o sistema no celular
 // ("Adicionar à Tela de Início" no iPhone, "Instalar app" no Android).

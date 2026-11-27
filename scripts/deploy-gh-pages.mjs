@@ -5,7 +5,7 @@ import path from "node:path";
 
 const pagesDir = path.resolve(".gh-pages-dist");
 const publishDir = path.resolve(".gh-pages-worktree");
-const publicUrl = "https://ragcodebr.github.io/sistema-residual/";
+const publicUrl = "https://vertice-dg.github.io/sistema-residual/";
 
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
