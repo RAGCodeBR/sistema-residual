@@ -43,14 +43,18 @@ Login com e-mail e senha usa diretamente a API do Supabase. Redirecionamentos de
 
 ## Publicação automática pelo GitHub
 
-Em **Workers & Pages → residual → Settings → Builds**, conecte o repositório `Vertice-DG/sistema-residual` usando uma conta GitHub com acesso a ele.
+O fluxo escolhido usa **GitHub Actions**, definido em `.github/workflows/deploy-cloudflare.yml`. Alterações enviadas à `main` executam instalação, TypeScript, testes de autenticação e gestão de acessos, build e deploy. A versão publicada é conferida pelo seu identificador. O workflow também permite execução manual pela aba Actions.
 
-- Branch de produção: a branch aprovada pela equipe (`main` depois de integrar a migração).
-- Build command: `npm run build:cloudflare`.
-- Deploy command: `node scripts/cloudflare.mjs deploy`.
-- Build variables: as quatro variáveis públicas descritas acima.
+No repositório `Vertice-DG/sistema-residual`, em **Settings → Secrets and variables → Actions**, configure:
 
-Essa conexão depende da autorização da integração GitHub na conta Cloudflare. Publicar pelo terminal não a habilita automaticamente. Pré-visualizações da interface não isolam o Supabase: para testes que alteram dados, configure um projeto Supabase separado.
+- **Variables:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_ISO_STORAGE`, `VITE_ENABLE_GOOGLE_AUTH`.
+- **Secrets:** `CLOUDFLARE_API_TOKEN`, criado na conta `contato@verticedg.com.br` e autorizado a editar o Worker `residual`.
+
+O token da Cloudflare só fica disponível na etapa de deploy, depois da instalação e dos testes. `wrangler.jsonc` fixa a conta de destino, e publicações concorrentes são serializadas. A chave privada do Supabase, o token de gerenciamento do Supabase e a chave Android não devem ser cadastrados nesse workflow.
+
+O workflow testa os oito cenários de `client-portal-session` e `client-portal-rules`. A suíte completa atualmente tem dois testes antigos de permissões financeiras que divergem das regras implementadas; essa revisão de negócio deve ser tratada separadamente, sem mudar permissões para liberar a migração.
+
+A integração nativa Workers Builds é uma alternativa ao GitHub Actions. Mantenha um único fluxo de publicação de produção para evitar deploys concorrentes. Pré-visualizações da interface não isolam o Supabase: para testes que alteram dados, configure um projeto Supabase separado.
 
 ## Android
 
